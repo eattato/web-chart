@@ -86,6 +86,7 @@ fetch("/data/weather3.json")
 
     addOptions(dailyChart.find("select"), Object.keys(data));
     addOptions(ratioChart.find("select"), Object.keys(data));
+    addOptions(rainMonthChart.find("select"), Object.keys(data));
 
     function updateDailyChart(val) {
         let element = dailyChart;
@@ -156,6 +157,67 @@ fetch("/data/weather3.json")
         })
     }
 
+    function updateRainChart(val) {
+        let element = rainMonthChart;
+        destroyChart(element.attr("id"));
+
+        let locationData = getLocationDataAverage(val);
+        let rainData = {};
+        let snowData = {};
+
+        for (let date in locationData) {
+            let dayData = locationData[date];
+            let month = Number(date.split("-")[1]);
+            if (rainData[month] == null) {
+                rainData[month] = [];
+                snowData[month] = [];
+            }
+            rainData[month].push(dayData.rain);
+            snowData[month].push(dayData.snow);
+        }
+
+        // 월 별로 평균 내기
+        for (let month in rainData) {
+            rainData[month] = getAverage(rainData[month]);
+        }
+        for (let month in snowData) {
+            snowData[month] = getAverage(snowData[month]);
+        }
+
+        charts[element.attr("id")] = new Chart(element.find(".chart_body"), {
+            type: "bar",
+            data: {
+                labels: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
+                datasets: [
+                    {
+                        label: "강우량",
+                        data: Object.values(rainData),
+                        backgroundColor: "#1E85E6"
+                    },
+                    {
+                        label: "눈",
+                        data: Object.values(snowData),
+                        backgroundColor: "#EEEEEE"
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    x: {
+                      stacked: true,
+                    },
+                    y: {
+                      stacked: true
+                    }
+                  }
+            }
+        });
+    }
+
+    function updateRainRanking(val) {
+        
+    }
+
     // 업데이트
     dailyChart.find("select").change(function() {
         let val = $(this).val();
@@ -167,7 +229,13 @@ fetch("/data/weather3.json")
         updateWeatherRatio(val);
     });
 
+    rainMonthChart.find("select").change(function() {
+        let val = $(this).val();
+        updateRainChart(val);
+    });
+
     // 기본 표시
     updateDailyChart("all");
     updateWeatherRatio("all");
+    updateRainChart("all");
 });
