@@ -96,12 +96,14 @@ fetch("/data/weather3.json")
 
     let dailyChart = $("#daily");
     let rainMonthChart = $("#rain_month");
-    let temperatureRank = $("#temperature");
     let ratioChart = $("#weather_ratio");
+    let temperatureRank = $("#temperature");
+    let rainRank = $("#rain");
 
     addOptions(dailyChart.find("select"), Object.keys(data));
     addOptions(ratioChart.find("select"), Object.keys(data));
     addOptions(temperatureRank.find("select"), Object.keys(data));
+    addOptions(rainRank.find("select"), Object.keys(data));
 
     function updateDailyChart(val) {
         let element = dailyChart;
@@ -229,8 +231,7 @@ fetch("/data/weather3.json")
         });
     }
 
-    function updateTemperatureRanking(val) {
-        let element = temperatureRank;
+    function updateRanking(element, column, val, name, color) {
         destroyChart(element.attr("id"));
 
         val = Number(val);
@@ -243,7 +244,7 @@ fetch("/data/weather3.json")
 
         globalData = getMonthData(globalData, val);
         for (let location in globalData) {
-            globalData[location] = getAverage(getColumn(globalData[location], "temperature"));
+            globalData[location] = getAverage(getColumn(globalData[location], column));
         }
 
         // 정렬
@@ -267,9 +268,9 @@ fetch("/data/weather3.json")
                 labels: Object.keys(newGlobalData),
                 datasets: [
                     {
-                        label: "기온",
+                        label: name,
                         data: Object.values(newGlobalData),
-                        backgroundColor: "#FFF04D"
+                        backgroundColor: color
                     }
                 ]
             },
@@ -297,12 +298,18 @@ fetch("/data/weather3.json")
 
     temperatureRank.find("select").change(function() {
         let val = $(this).val();
-        updateTemperatureRanking(val)
+        updateRanking(temperatureRank, "temperature", val, "기온", "#FFF04D");
+    });
+
+    rainRank.find("select").change(function() {
+        let val = $(this).val();
+        updateRanking(rainRank, "rain", val, "강우량(mm)", "#1E85E6");
     });
 
     // 기본 표시
     updateDailyChart("all");
     updateWeatherRatio("all");
     updateRainChart("all");
-    updateTemperatureRanking("1");
+    updateRanking(temperatureRank, "temperature", "1", "기온", "#FFF04D");
+    updateRanking(rainRank, "rain", "1", "강우량(mm)", "#1E85E6");
 });
