@@ -190,12 +190,12 @@ fetch("/data/weather3.json")
                 labels: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
                 datasets: [
                     {
-                        label: "강우량",
+                        label: "강우량(mm)",
                         data: Object.values(rainData),
                         backgroundColor: "#1E85E6"
                     },
                     {
-                        label: "눈",
+                        label: "적설량(cm)",
                         data: Object.values(snowData),
                         backgroundColor: "#EEEEEE"
                     }
