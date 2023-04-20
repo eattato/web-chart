@@ -50,6 +50,21 @@ const getLocationDataAverage = (location) => {
     return result;
 }
 
+const getMonthData = (data, month) => {
+    let result = {};
+    for (let location in data) {
+        let locationResult = [];
+        let locationData = data[location];
+        for (let date in locationData) {
+            if (Number(date.split("-")[1]) == month) {
+                locationResult.push(locationData[date]);
+            }
+        }
+        result[location] = locationResult;
+    }
+    return result;
+}
+
 const getColumn = (data, column) => {
     let result = [];
     for (let i in data) {
@@ -80,13 +95,13 @@ fetch("/data/weather3.json")
     data = res;
 
     let dailyChart = $("#daily");
-    let rainLocChart = $("#rain_top");
     let rainMonthChart = $("#rain_month");
+    let temperatureRank = $("#temperature");
     let ratioChart = $("#weather_ratio");
 
     addOptions(dailyChart.find("select"), Object.keys(data));
     addOptions(ratioChart.find("select"), Object.keys(data));
-    addOptions(rainMonthChart.find("select"), Object.keys(data));
+    addOptions(temperatureRank.find("select"), Object.keys(data));
 
     function updateDailyChart(val) {
         let element = dailyChart;
@@ -214,8 +229,54 @@ fetch("/data/weather3.json")
         });
     }
 
-    function updateRainRanking(val) {
-        
+    function updateTemperatureRanking(val) {
+        let element = temperatureRank;
+        destroyChart(element.attr("id"));
+
+        val = Number(val);
+        let globalData = {};
+        Object.assign(globalData, data);
+
+        for (let location in globalData) {
+            globalData[location] = getLocationDataAverage(location);
+        }
+
+        globalData = getMonthData(globalData, val);
+        for (let location in globalData) {
+            globalData[location] = getAverage(getColumn(globalData[location], "tempurature"));
+        }
+
+        // 정렬
+        globalData = Object.keys(globalData).map(function(key) {
+            return [key, globalData[key]];
+        });
+
+        globalData.sort(function(first, second) {
+            return second[1] - first[1];
+        });
+
+        let newGlobalData = {}
+        for (let i in globalData) {
+            let locationData = globalData[i];
+            newGlobalData[locationData[0]] = locationData[1];
+        }
+
+        charts[element.attr("id")] = new Chart(element.find(".chart_body"), {
+            type: "bar",
+            data: {
+                labels: Object.keys(newGlobalData),
+                datasets: [
+                    {
+                        label: "기온",
+                        data: Object.values(newGlobalData),
+                        backgroundColor: "#FFF04D"
+                    }
+                ]
+            },
+            options: {
+                indexAxis: "y"
+            }
+        });
     }
 
     // 업데이트
@@ -234,8 +295,14 @@ fetch("/data/weather3.json")
         updateRainChart(val);
     });
 
+    temperatureRank.find("select").change(function() {
+        let val = $(this).val();
+        updateTemperatureRanking(val)
+    });
+
     // 기본 표시
     updateDailyChart("all");
     updateWeatherRatio("all");
     updateRainChart("all");
+    updateTemperatureRanking("1");
 });
