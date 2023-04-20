@@ -1,12 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>기상 통계</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script th:src="@{/js/jquery.js}" defer></script>
+    <script th:src="@{/js/script.js}" defer></script>
 </head>
 <body>
+    <div class="chart_holder">
+        <div id="daily" class="chart_frame">
+            <div class="chart_header">
+                <div class="chart_title">일일 기온 및 습도</div>
+                <select name="" id="">
+                    <option value="">전체 지역 평균</option>
+                    <option value="">경기도</option>
+                </select>
+            </div>
+            <canvas class="chart_body" width="600" height="310"></canvas>
+        </div>
     
+        <div id="rain_top" class="chart_frame">
+            <div class="chart_header">
+                <div class="chart_title">지역별 강수량 순위</div>
+                <select name="" id="">
+                    <option value="">1월</option>
+                </select>
+            </div>
+            <div class="chart_body"></div>
+        </div>
+    
+        <div id="rain_month" class="chart_frame">
+            <div class="chart_header">
+                <div class="chart_title">월 별 강수량</div>
+                <select name="" id="">
+                    <option value="">전체 지역 평균</option>
+                    <option value="">경기도</option>
+                </select>
+            </div>
+            <div class="chart_body"></div>
+        </div>
+    
+        <div id="weather_ratio" class="chart_frame">
+            <div class="chart_header">
+                <div class="chart_title">연간 날씨 비율</div>
+                <select name="" id="">
+                    <option value="">경기도</option>
+                </select>
+            </div>
+            <div class="chart_body"></div>
+        </div>
+    </div>
 </body>
 </html>
