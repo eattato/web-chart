@@ -26,7 +26,7 @@ const getLocationDataAverage = (location) => {
         let dateRecord = result[dayData.date];
         if (dateRecord == null) {
             result[dayData.date] = {
-                "tempurature": [],
+                "temperature": [],
                 "humidity": [],
                 "rain": [],
                 "snow": []
@@ -115,7 +115,7 @@ fetch("/data/weather3.json")
                 datasets: [
                     {
                         label: "기온",
-                        data: getColumn(dailyData, "tempurature"),
+                        data: getColumn(dailyData, "temperature"),
                         borderColor: "rgb(150, 150, 0)",
                         showLine: true,
                         spanGaps: true,
@@ -243,7 +243,7 @@ fetch("/data/weather3.json")
 
         globalData = getMonthData(globalData, val);
         for (let location in globalData) {
-            globalData[location] = getAverage(getColumn(globalData[location], "tempurature"));
+            globalData[location] = getAverage(getColumn(globalData[location], "temperature"));
         }
 
         // 정렬
