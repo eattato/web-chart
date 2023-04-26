@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>기상 통계</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" href="/css/style.css" />
     <link rel="stylesheet" href="https://uicdn.toast.com/chart/latest/toastui-chart.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script src="https://uicdn.toast.com/chart/latest/toastui-chart.min.js"></script>
-    <script th:src="@{/js/jquery.js}" defer></script>
-    <script th:src="@{/js/script.js}" defer></script>
+    <script src="/js/jquery.js" defer></script>
+    <script type="module" src="/js/chartBase.js"></script>
+    <script type="module" src="/js/jschart.js"></script>
+    <script type="module" src="js/script.js" defer></script>
 </head>
 <body>
     <div class="chart_holder">
