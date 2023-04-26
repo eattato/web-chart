@@ -1,9 +1,6 @@
-const toastChart = toastui.Chart;
-import { getAverage, getData, getColumn, addOptions, destroyChart } from "/js/chartBase.js";
 import * as jsChart from "/js/jschart.js";
 
 let weatherData = {};
-let charts = {};
 
 fetch("/data/weather3.json")
 .then(res => res.json())
