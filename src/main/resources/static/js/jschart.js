@@ -73,7 +73,7 @@ export const weatherRatio = (element, weatherData) => {
             }
         }
 
-        let el = element[0];
+        let el = element.find(".chart_body")[0];
         let data = {
             categories: ["날씨 비율"],
             series: [

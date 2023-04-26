@@ -22,7 +22,4 @@ fetch("/data/weather3.json")
     jsChart.rankingChart(rainRank, "rain", "강우량(mm)", "#1E85E6", weatherData);
     jsChart.heatmap(heatmap, weatherData);
     jsChart.boxplot(boxplot, weatherData);
-
-    // 기본 표시
-    updateHeatmap();
 });
