@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <title>기상 통계</title>
     <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" href="https://uicdn.toast.com/chart/latest/toastui-chart.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://uicdn.toast.com/chart/latest/toastui-chart.min.js"></script>
     <script th:src="@{/js/jquery.js}" defer></script>
     <script th:src="@{/js/script.js}" defer></script>
 </head>
@@ -81,6 +83,13 @@
                 </select>
             </div>
             <canvas class="chart_body" width="310" height="310"></canvas>
+        </div>
+
+        <div id="heatmap" class="chart_frame">
+            <div class="chart_header">
+                <div class="chart_title">한 달 기온 히트맵</div>
+            </div>
+            <div class="chart_body" width="600" height="310"></div>
         </div>
     </div>
 </body>

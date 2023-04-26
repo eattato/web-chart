@@ -1,4 +1,6 @@
-let data = {};
+const toastChart = toastui.Chart;
+
+let weatherData = {};
 let charts = {};
 
 const getAverage = (list) => {
@@ -9,59 +11,64 @@ const getAverage = (list) => {
     return sum / list.length;
 }
 
-const getLocationDataAverage = (location) => {
-    let locationData = [];
-    if (location && location != "all") {
-        locationData = data[location];
-    } else {
-        for (let loc in data) {
-            locationData = locationData.concat(data[loc]);
-        }
-    }
-
-    let result = {};
-    for (let i in locationData) {
-        let dayData = locationData[i];
-
-        let dateRecord = result[dayData.date];
-        if (dateRecord == null) {
-            result[dayData.date] = {
+const mergeDatesAverage = (data) => {
+    let summary = {};
+    for (let i in data) {
+        let dayData = data[i];
+        if (!summary[dayData.date]) {
+            let daySummary = {
                 "temperature": [],
                 "humidity": [],
                 "rain": [],
-                "snow": []
+                "snow": [],
             }
-            dateRecord = result[dayData.date];
+            summary[dayData.date] = daySummary;
         }
 
-        for (let column in dayData) {
-            if (column != "date") {
-                dateRecord[column].push(dayData[column]);
-            }
+        for (let column in summary[dayData.date]) {
+            summary[dayData.date][column].push(dayData[column]);
         }
     }
 
-    for (let date in result) {
-        let dayData = result[date];
-        for (let column in dayData) {
-            dayData[column] = getAverage(dayData[column]);
+    let result = []
+    for (let date in summary) {
+        let daySummary = summary[date];
+        let dayData = { "date": date }
+        for (let column in daySummary) {
+            dayData[column] = getAverage(daySummary[column]);
         }
+        result.push(dayData);
     }
     return result;
 }
 
-const getMonthData = (data, month) => {
-    let result = {};
-    for (let location in data) {
-        let locationResult = [];
-        let locationData = data[location];
-        for (let date in locationData) {
-            if (Number(date.split("-")[1]) == month) {
-                locationResult.push(locationData[date]);
+const getData = (location, date) => {
+    let result = [];
+    if (location && location != "all") {
+        result = weatherData[location];
+    } else {
+        for (let loc in weatherData) {
+            result = result.concat(weatherData[loc]);
+        }
+    }
+    result = mergeDatesAverage(result);
+
+    if (date) {
+        if (typeof date == "number") {
+            date = [date, date];
+        }
+
+        let filter = []
+        for (let i in result) {
+            let dayData = result[i];
+            let month = Number(dayData.date.split("-")[1]);
+            if (date[0] <= month && month <= date[1]) {
+                filter.push(dayData);
             }
         }
-        result[location] = locationResult;
+        result = filter;
     }
+    console.log(result);
     return result;
 }
 
@@ -92,24 +99,25 @@ const destroyChart = (element) => {
 fetch("/data/weather3.json")
 .then(res => res.json())
 .then((res) => {
-    data = res;
+    weatherData = res;
 
     let dailyChart = $("#daily");
     let rainMonthChart = $("#rain_month");
     let ratioChart = $("#weather_ratio");
     let temperatureRank = $("#temperature");
     let rainRank = $("#rain");
+    let heatmap = $("#heatmap");
 
-    addOptions(dailyChart.find("select"), Object.keys(data));
-    addOptions(ratioChart.find("select"), Object.keys(data));
-    addOptions(temperatureRank.find("select"), Object.keys(data));
-    addOptions(rainRank.find("select"), Object.keys(data));
+    addOptions(dailyChart.find("select"), Object.keys(weatherData));
+    addOptions(ratioChart.find("select"), Object.keys(weatherData));
+    addOptions(temperatureRank.find("select"), Object.keys(weatherData));
+    addOptions(rainRank.find("select"), Object.keys(weatherData));
 
     function updateDailyChart(val) {
         let element = dailyChart;
         destroyChart(element.attr("id"));
 
-        let dailyData = getLocationDataAverage(val);
+        let dailyData = getData(val);
         charts[dailyChart.attr("id")] = new Chart(dailyChart.find(".chart_body"), {
             type: "line",
             data: {
@@ -142,7 +150,7 @@ fetch("/data/weather3.json")
         let element = ratioChart;
         destroyChart(element.attr("id"));
 
-        let locationData = getLocationDataAverage(val);
+        let locationData = getData(val);
         let rainCount = 0;
         let snowCount = 0;
         let sunnyCount = 0;
@@ -178,13 +186,13 @@ fetch("/data/weather3.json")
         let element = rainMonthChart;
         destroyChart(element.attr("id"));
 
-        let locationData = getLocationDataAverage(val);
+        let locationData = getData(val);
         let rainData = {};
         let snowData = {};
 
-        for (let date in locationData) {
-            let dayData = locationData[date];
-            let month = Number(date.split("-")[1]);
+        for (let i in locationData) {
+            let dayData = locationData[i];
+            let month = Number(dayData.date.split("-")[1]);
             if (rainData[month] == null) {
                 rainData[month] = [];
                 snowData[month] = [];
@@ -236,15 +244,10 @@ fetch("/data/weather3.json")
 
         val = Number(val);
         let globalData = {};
-        Object.assign(globalData, data);
+        Object.assign(globalData, weatherData);
 
         for (let location in globalData) {
-            globalData[location] = getLocationDataAverage(location);
-        }
-
-        globalData = getMonthData(globalData, val);
-        for (let location in globalData) {
-            globalData[location] = getAverage(getColumn(globalData[location], column));
+            globalData[location] = getAverage(getColumn(getData(location, val), column));
         }
 
         // 정렬
@@ -280,6 +283,36 @@ fetch("/data/weather3.json")
         });
     }
 
+    function updateHeatmap() {
+        // let element = heatmap;
+        // destroyChart(element.attr("id"));
+
+        let labels = []
+        let heatDatas = []
+        
+        for (let location in weatherData) {
+            labels.push(location);
+            let locationData = getLocationDataAverage(location);
+            for (let i = 1; i <= 12; i++) {
+                let monthData = getMonthData(locationData, i);
+                console.log(monthData);
+                heatDatas.push(getAverage(getColumn(monthData, "temperature")));
+            }
+        }
+        // console.log(heatDatas);
+
+        let el = heatmap.find(".chart_body")[0];
+        let data = {
+            categories: {
+                x: [],
+                y: [],
+            },
+            series: heatDatas
+        }
+        let options = {}
+        let chart = Chart.heatmapChart({ el, data, options });
+    }
+
     // 업데이트
     dailyChart.find("select").change(function() {
         let val = $(this).val();
@@ -312,4 +345,5 @@ fetch("/data/weather3.json")
     updateRainChart("all");
     updateRanking(temperatureRank, "temperature", "1", "기온", "#FFF04D");
     updateRanking(rainRank, "rain", "1", "강우량(mm)", "#1E85E6");
+    // updateHeatmap();
 });

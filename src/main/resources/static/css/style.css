@@ -31,6 +31,14 @@
 }
 
 .chart_body {
-    width: 100%;
+    width: 600px;
     height: 310px;
+}
+
+.chart_selection {
+    display: flex;
+}
+
+.chart_selection > select {
+    margin-left: 10px;
 }
