@@ -68,7 +68,6 @@ const getData = (location, date) => {
         }
         result = filter;
     }
-    console.log(result);
     return result;
 }
 
@@ -292,25 +291,32 @@ fetch("/data/weather3.json")
         
         for (let location in weatherData) {
             labels.push(location);
-            let locationData = getLocationDataAverage(location);
-            for (let i = 1; i <= 12; i++) {
-                let monthData = getMonthData(locationData, i);
-                console.log(monthData);
-                heatDatas.push(getAverage(getColumn(monthData, "temperature")));
+            let locationData = getData(location);
+            let yearData = [];
+
+            for (let month = 1; month <= 12; month++) {
+                let monthData = [];
+                for (let i in locationData) {
+                    let dayData = locationData[i];
+                    if (Number(dayData.date.split("-")[1]) == month) {
+                        monthData.push(dayData);
+                    }
+                }
+                yearData.push(getAverage(getColumn(monthData, "temperature")));
             }
+            heatDatas.push(yearData);
         }
-        // console.log(heatDatas);
 
         let el = heatmap.find(".chart_body")[0];
         let data = {
             categories: {
-                x: [],
-                y: [],
+                x: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
+                y: labels,
             },
             series: heatDatas
         }
         let options = {}
-        let chart = Chart.heatmapChart({ el, data, options });
+        let chart = toastChart.heatmapChart({ el, data, options });
     }
 
     // 업데이트
@@ -345,5 +351,5 @@ fetch("/data/weather3.json")
     updateRainChart("all");
     updateRanking(temperatureRank, "temperature", "1", "기온", "#FFF04D");
     updateRanking(rainRank, "rain", "1", "강우량(mm)", "#1E85E6");
-    // updateHeatmap();
+    updateHeatmap();
 });
