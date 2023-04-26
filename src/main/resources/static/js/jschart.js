@@ -1,4 +1,5 @@
 import { getAverage, getData, getColumn, addOptions, destroyChart } from "/js/chartBase.js";
+const toastChart = toastui.Chart;
 
 // 일일 기온/습도 차트
 export const dailyChart = (element, weatherData) => {
@@ -12,32 +13,53 @@ export const dailyChart = (element, weatherData) => {
         }
 
         let dailyData = getData(weatherData, val);
-        chart = new Chart(element.find(".chart_body"), {
-            type: "line",
-            data: {
-                labels: getColumn(dailyData, "date"),
-                datasets: [
-                    {
-                        label: "기온",
-                        data: getColumn(dailyData, "temperature"),
-                        borderColor: "rgb(150, 150, 0)",
-                        showLine: true,
-                        spanGaps: true,
-                        pointRadius: 0,
-                        borderWidth: 0.75
-                    },
-                    {
-                        label: "습도",
-                        data: getColumn(dailyData, "humidity"),
-                        borderColor: "rgb(70, 70, 255)",
-                        showLine: true,
-                        spanGaps: true,
-                        pointRadius: 0,
-                        borderWidth: 0.75
-                    }
-                ]
-            }
-        })
+
+        let el = element.find(".chart_body")[0];
+        let data = {
+            categories: getColumn(dailyData, "date"),
+            series: [
+                {
+                    name: "기온",
+                    data: getColumn(dailyData, "temperature"),
+                    // borderColor: "rgb(150, 150, 0)",
+                },
+                {
+                    name: "습도",
+                    data: getColumn(dailyData, "humidity")
+                    // borderColor: "rgb(70, 70, 255)",
+                }
+            ]
+        };
+        let options = {};
+
+        chart = toastChart.lineChart({ el, data, options });
+
+        // chart = new Chart(element.find(".chart_body"), {
+        //     type: "line",
+        //     data: {
+        //         labels: getColumn(dailyData, "date"),
+        //         datasets: [
+        //             {
+        //                 label: "기온",
+        //                 data: getColumn(dailyData, "temperature"),
+        //                 borderColor: "rgb(150, 150, 0)",
+        //                 showLine: true,
+        //                 spanGaps: true,
+        //                 pointRadius: 0,
+        //                 borderWidth: 0.75
+        //             },
+        //             {
+        //                 label: "습도",
+        //                 data: getColumn(dailyData, "humidity"),
+        //                 borderColor: "rgb(70, 70, 255)",
+        //                 showLine: true,
+        //                 spanGaps: true,
+        //                 pointRadius: 0,
+        //                 borderWidth: 0.75
+        //             }
+        //         ]
+        //     }
+        // })
     }
     update("all");
 
@@ -73,21 +95,43 @@ export const weatherRatio = (element, weatherData) => {
             }
         }
 
-        chart = new Chart(element.find(".chart_body"), {
-            type: "pie",
-            data: {
-                labels: ["맑음", "비", "눈"],
-                datasets: [{
-                    label: "날씨 비율",
-                    data: [sunnyCount, rainCount, snowCount],
-                    backgroundColor: [
-                        "#FFF04D",
-                        "#1E85E6",
-                        "#EEEEEE"
-                    ]
-                }]
-            }
-        })
+        let el = element[0];
+        let data = {
+            categories: ["날씨 비율"],
+            series: [
+                {
+                    name: "맑음",
+                    data: sunnyCount
+                },
+                {
+                    name: "비",
+                    data: rainCount
+                },
+                {
+                    name: "눈",
+                    data: snowCount
+                }
+            ]
+        };
+        let options = {};
+
+        chart = toastChart.pieChart({ el, data, options });
+
+        // chart = new Chart(element.find(".chart_body"), {
+        //     type: "pie",
+        //     data: {
+        //         labels: ["맑음", "비", "눈"],
+        //         datasets: [{
+        //             label: "날씨 비율",
+        //             data: [sunnyCount, rainCount, snowCount],
+        //             backgroundColor: [
+        //                 "#FFF04D",
+        //                 "#1E85E6",
+        //                 "#EEEEEE"
+        //             ]
+        //         }]
+        //     }
+        // })
     }
     update();
 
@@ -131,34 +175,60 @@ export const rainChart = (element, weatherData) => {
             snowData[month] = getAverage(snowData[month]);
         }
 
-        chart = new Chart(element.find(".chart_body"), {
-            type: "bar",
-            data: {
-                labels: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
-                datasets: [
-                    {
-                        label: "강우량(mm)",
-                        data: Object.values(rainData),
-                        backgroundColor: "#1E85E6"
-                    },
-                    {
-                        label: "적설량(cm)",
-                        data: Object.values(snowData),
-                        backgroundColor: "#EEEEEE"
-                    }
-                ]
+        let el = element.find(".chart_body")[0];
+        let data = {
+            categories: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
+            series: [
+                {
+                    name: "강우량(mm)",
+                    data: Object.values(rainData),
+                    // backgroundColor: "#1E85E6"
+                },
+                {
+                    name: "적설량(cm)",
+                    data: Object.values(snowData),
+                    // backgroundColor: "#EEEEEE"
+                }
+            ]
+        };
+        let options = {
+            series: {
+                stack: {
+                    type: "normal",
+                },
             },
-            options: {
-                scales: {
-                    x: {
-                      stacked: true,
-                    },
-                    y: {
-                      stacked: true
-                    }
-                  }
-            }
-        });
+        };
+
+        chart = toastChart.columnChart({ el, data, options });
+
+        // chart = new Chart(element.find(".chart_body"), {
+        //     type: "bar",
+        //     data: {
+        //         labels: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
+        //         datasets: [
+        //             {
+        //                 label: "강우량(mm)",
+        //                 data: Object.values(rainData),
+        //                 backgroundColor: "#1E85E6"
+        //             },
+        //             {
+        //                 label: "적설량(cm)",
+        //                 data: Object.values(snowData),
+        //                 backgroundColor: "#EEEEEE"
+        //             }
+        //         ]
+        //     },
+        //     options: {
+        //         scales: {
+        //             x: {
+        //               stacked: true,
+        //             },
+        //             y: {
+        //               stacked: true
+        //             }
+        //           }
+        //     }
+        // });
     }
     update("all");
 
@@ -201,22 +271,36 @@ export const rankingChart = (element, column, name, color, weatherData) => {
             newGlobalData[locationData[0]] = locationData[1];
         }
 
-        chart = new Chart(element.find(".chart_body"), {
-            type: "bar",
-            data: {
-                labels: Object.keys(newGlobalData),
-                datasets: [
-                    {
-                        label: name,
-                        data: Object.values(newGlobalData),
-                        backgroundColor: color
-                    }
-                ]
-            },
-            options: {
-                indexAxis: "y"
-            }
-        });
+        let el = element.find(".chart_body")[0];
+        let data = {
+            categories: Object.keys(newGlobalData),
+            series: [
+                {
+                    name: name,
+                    data: Object.values(newGlobalData)
+                }
+            ]
+        };
+        let options = {};
+
+        chart = toastChart.barChart({ el, data, options });
+
+        // chart = new Chart(element.find(".chart_body"), {
+        //     type: "bar",
+        //     data: {
+        //         labels: Object.keys(newGlobalData),
+        //         datasets: [
+        //             {
+        //                 label: name,
+        //                 data: Object.values(newGlobalData),
+        //                 backgroundColor: color
+        //             }
+        //         ]
+        //     },
+        //     options: {
+        //         indexAxis: "y"
+        //     }
+        // });
     }
     update("1");
 
@@ -225,4 +309,142 @@ export const rankingChart = (element, column, name, color, weatherData) => {
         let val = $(this).val();
         update(val);
     });
+}
+
+export const boxplot = (element, weatherData) => {
+    let chart = null;
+    addOptions(element.find("select"), Object.keys(weatherData));
+
+    // 업데이트
+    function update(val) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        let locationData = getData(weatherData, val);
+        let tempData = [];
+        let rainData = [];
+
+        for (let i in locationData) {
+            let dayData = locationData[i];
+            let month = Number(dayData.date.split("-")[1]);
+            if (rainData[month] == null) {
+                tempData[month] = [];
+                rainData[month] = [];
+            }
+            tempData[month].push(dayData.temperature);
+            rainData[month].push(dayData.rain);
+        }
+
+        let el = element.find(".chart_body")[0];
+        let data = {
+            categories: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
+            series: [
+                {
+                    name: "기온",
+                    data: Object.values(tempData),
+                    // backgroundColor: "#1E85E6"
+                },
+                {
+                    name: "습도",
+                    data: Object.values(rainData),
+                    // backgroundColor: "#EEEEEE"
+                }
+            ]
+        };
+        let options = {
+            series: {
+                stack: {
+                    type: "normal",
+                },
+            },
+        };
+
+        chart = toastChart.boxPlotChart({ el, data, options });
+        //     type: "bar",
+        //     data: {
+        //         labels: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
+        //         datasets: [
+        //             {
+        //                 label: "강우량(mm)",
+        //                 data: Object.values(rainData),
+        //                 backgroundColor: "#1E85E6"
+        //             },
+        //             {
+        //                 label: "적설량(cm)",
+        //                 data: Object.values(snowData),
+        //                 backgroundColor: "#EEEEEE"
+        //             }
+        //         ]
+        //     },
+        //     options: {
+        //         scales: {
+        //             x: {
+        //               stacked: true,
+        //             },
+        //             y: {
+        //               stacked: true
+        //             }
+        //           }
+        //     }
+        // });
+    }
+    update("all");
+
+    // 바인딩
+    element.find("select").change(function() {
+        let val = $(this).val();
+        update(val);
+    });
+}
+
+export const heatmap = (element, weatherData) => {
+    let chart = null;
+    addOptions(element.find("select"), Object.keys(weatherData));
+
+    // 업데이트
+    function update() {
+        if (chart) {
+            chart.destroy();
+        }
+
+        let labels = []
+        let heatDatas = []
+        
+        for (let location in weatherData) {
+            labels.push(location);
+            let locationData = getData(weatherData, location);
+            let yearData = [];
+
+            for (let month = 1; month <= 12; month++) {
+                let monthData = [];
+                for (let i in locationData) {
+                    let dayData = locationData[i];
+                    if (Number(dayData.date.split("-")[1]) == month) {
+                        monthData.push(dayData);
+                    }
+                }
+                yearData.push(getAverage(getColumn(monthData, "temperature")));
+            }
+            heatDatas.push(yearData);
+        }
+
+        let el = element.find(".chart_body")[0];
+        let data = {
+            categories: {
+                x: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
+                y: labels,
+            },
+            series: heatDatas
+        }
+        let options = {}
+        chart = toastChart.heatmapChart({ el, data, options });
+    }
+    update();
+
+    // 바인딩
+    // element.find("select").change(function() {
+    //     let val = $(this).val();
+    //     update(val);
+    // });
 }
