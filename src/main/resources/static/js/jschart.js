@@ -34,6 +34,9 @@ export const dailyChart = (element, weatherData) => {
                     lineWidth: 0.75,
                     colors: ["#FFD400", "#1E85E6"]
                 }
+            },
+            series: {
+                zoomable: true
             }
         };
 
