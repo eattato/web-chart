@@ -15,7 +15,7 @@ export const dailyChart = (element, weatherData) => {
         chart = new Chart(element.find(".chart_body"), {
             type: "line",
             data: {
-                labels: Object.keys(dailyData),
+                labels: getColumn(dailyData, "date"),
                 datasets: [
                     {
                         label: "기온",
