@@ -42,3 +42,59 @@
 .chart_selection > select {
     margin-left: 10px;
 }
+
+/* predict */
+.predict_frame {
+    display: flex;
+    flex-direction: column;
+    width: 600px;
+    height: 310px;
+}
+
+.predict_header {
+    display: flex;
+    flex-direction: column;
+    width: 600px;
+    height: 120px;
+    padding-left: 10px;
+}
+
+.predict_row {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    width: 600px;
+    height: 30px;
+}
+
+.predict_input {
+    display: flex;
+    margin-right: 10px;
+}
+
+.predict_input input {
+    margin-left: 10px;
+    width: 50px;
+    height: 20px;
+}
+
+.predict_input select {
+    margin-left: 10px;
+}
+
+.predict_title {
+    font-size: 18px;
+    font-weight: bold
+}
+
+.predict_body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 600px;
+    height: 190px;
+}
+
+.predict_body.hide {
+    display: none;
+}

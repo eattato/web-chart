@@ -100,6 +100,58 @@
             </div>
             <div class="chart_body"></div>
         </div>
+
+        <div id="predict" class="chart_frame">
+            <div class="chart_header">
+                <div class="chart_title">날씨 예측</div>
+            </div>
+            <div class="predict_frame">
+                <div class="predict_header">
+                    <div class="predict_title">온도와 습도를 입력해 날씨를 예측할 수 있습니다.</div>
+                    <div class="predict_row">
+                        <div class="predict_input">
+                            <div class="predict_label">지역</div>
+                            <select id="predict_location"></select>
+                        </div>
+                        <div class="predict_input">
+                            <select id="predict_month">
+                                <option value="1">1월</option>
+                                <option value="2">2월</option>
+                                <option value="3">3월</option>
+                                <option value="4">4월</option>
+                                <option value="5">5월</option>
+                                <option value="6">6월</option>
+                                <option value="7">7월</option>
+                                <option value="8">8월</option>
+                                <option value="9">9월</option>
+                                <option value="10">10월</option>
+                                <option value="11">11월</option>
+                                <option value="12">12월</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="predict_row">
+                        <div class="predict_input">
+                            <div class="predict_label">온도</div>
+                            <input id="predict_temperature" type="number">
+                        </div>
+                        <div class="predict_input">
+                            <div class="predict_label">습도</div>
+                            <input id="predict_humidity" type="number">
+                        </div>
+                    </div>
+                    <div class="predict_row">
+                        <button class="predict_submit" type="button">예측해보기</button>
+                    </div>
+                </div>
+
+                <div class="predict_body hide">
+                    <div class="predict_title">오늘의 날씨는..</div>
+                    <div class="predict_result"></div>
+                    <div class="predict_subtitle">예측된 강우량은 ~mm, 적설량은 ~cm입니다.</div>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
