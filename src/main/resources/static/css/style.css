@@ -90,6 +90,7 @@
 .predict_body {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
     width: 600px;
     height: 190px;
@@ -97,4 +98,8 @@
 
 .predict_body.hide {
     display: none;
+}
+
+.predict_result {
+    font-size: 40px;
 }

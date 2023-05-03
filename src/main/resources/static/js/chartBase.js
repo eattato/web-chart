@@ -89,3 +89,13 @@ export const destroyChart = (charts, element) => {
         charts[element].destroy();
     }
 }
+
+export const clamp = (min, val, max) => {
+    if (val < min) {
+        return min;
+    } else if (max && val > max) {
+        return max;
+    } else {
+        return val;
+    }
+}

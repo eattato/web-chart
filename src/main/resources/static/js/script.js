@@ -1,5 +1,5 @@
 import * as jsChart from "/js/jschart.js";
-import { addOptions } from "/js/chartBase.js";
+import { addOptions, clamp } from "/js/chartBase.js";
 
 let weatherData = {};
 
@@ -25,7 +25,7 @@ fetch("/data/weather3.json")
     jsChart.boxplot(boxplot, weatherData);
 
     let canSubmit = true
-    let predict = $("#predict");
+    let predictBody = $(".predict_body");
     addOptions($("#predict_location"), Object.keys(weatherData));
 
     $("#predict_submit").click(() => {
@@ -51,6 +51,21 @@ fetch("/data/weather3.json")
                 }).then(res => res.json())
                 .then((res) => {
                     console.log(res);
+                    let rain = clamp(0, res.rain);
+                    let snow = clamp(0, res.snow);
+                    let weather = "맑음";
+
+                    if (snow > 0) {
+                        weather = "눈";
+                    } else if (rain >= 0.5) {
+                        weather = "비";
+                    }
+
+                    predictBody.removeClass("hide");
+                    $(".predict_result").text(weather);
+                    $(".predict_subtitle").text(
+                        `예측된 강우량은 ${rain}mm, 적설량은 ${snow}cm입니다.`
+                    );
                 }).finally(() => {
                     canSubmit = true;
                 });
