@@ -5,12 +5,17 @@
     <title>기상 통계</title>
     <link rel="stylesheet" href="/css/style.css" />
     <link rel="stylesheet" href="https://uicdn.toast.com/chart/latest/toastui-chart.min.css" />
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script src="https://uicdn.toast.com/chart/latest/toastui-chart.min.js"></script>
+    <script src="https://d3js.org/d3.v7.js"></script>
+
     <script src="/js/jquery.js" defer></script>
     <script type="module" src="/js/chartBase.js"></script>
     <script type="module" src="/js/jschart.js"></script>
+    <script type="module" src="/js/d3ext.js"></script>
+
     <script type="module" src="js/script.js" defer></script>
 </head>
 <body>
@@ -165,6 +170,11 @@
     <div class="chart_category">
         <div class="chart_drawer">Chart.js 차트</div>
         <div class="chart_holder hide" id="legacy_holder"></div>
+    </div>
+
+    <div class="chart_category">
+        <div class="chart_drawer">D3 차트</div>
+        <div class="chart_holder" id="d3_holder"></div>
     </div>
 </body>
 </html>

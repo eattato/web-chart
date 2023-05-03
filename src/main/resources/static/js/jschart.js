@@ -644,3 +644,65 @@ export const rankingChartLegacy = (element, column, name, color, weatherData) =>
         update(val);
     });
 }
+
+// D3 쓰는 차트
+export const rankingChartD3 = (element, column, name, color, weatherData) => {
+    let chart = null;
+
+    // 업데이트
+    function update(val) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        val = Number(val);
+        let globalData = {};
+        Object.assign(globalData, weatherData);
+
+        for (let location in globalData) {
+            globalData[location] = getAverage(getColumn(getData(weatherData, location, val), column));
+        }
+
+        // 정렬
+        globalData = Object.keys(globalData).map(function(key) {
+            return [key, globalData[key]];
+        });
+
+        globalData.sort(function(first, second) {
+            return second[1] - first[1];
+        });
+
+        let newGlobalData = {}
+        for (let i in globalData) {
+            let locationData = globalData[i];
+            newGlobalData[locationData[0]] = locationData[1];
+        }
+
+        let el = element.find(".chart_body")[0];
+        let data = {
+            categories: Object.keys(newGlobalData),
+            series: [
+                {
+                    name: name,
+                    data: Object.values(newGlobalData)
+                }
+            ]
+        };
+        let options = {
+            theme: {
+                series: {
+                    colors: [color]
+                }
+            }
+        };
+
+        chart = toastChart.barChart({ el, data, options });
+    }
+    update("1");
+
+    // 바인딩
+    element.find("select").change(function() {
+        let val = $(this).val();
+        update(val);
+    });
+}

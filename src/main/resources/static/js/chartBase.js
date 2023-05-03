@@ -129,3 +129,18 @@ export const getLocationChartFrameLegacy = (title, parent) => {
     frame.appendTo(parent);
     return frame;
 }
+
+// D3 차트 프레임
+export const getMonthChartFrameD3 = (title, parent) => {
+    let frame = $($.parseHTML('<div class="chart_frame"><div class="chart_header"><div class="chart_title"></div><select name="" id=""><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select></div><svg class="chart_body" width: "600" "height: 310"></svg></div>'));
+    frame.find(".chart_title").text(title);
+    frame.appendTo(parent);
+    return frame;
+}
+
+export const getLocationChartFrameD3 = (title, parent) => {
+    let frame = $($.parseHTML('<div class="chart_frame"><div class="chart_header"><div class="chart_title"></div><select name="" id=""><option value="">전체 지역 평균</option></select></div><svg class="chart_body" width: "600" "height: 310"></svg></div>'));
+    frame.find(".chart_title").text(title);
+    frame.appendTo(parent);
+    return frame;
+}

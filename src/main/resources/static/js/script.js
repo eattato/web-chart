@@ -1,5 +1,6 @@
 import * as jsChart from "/js/jschart.js";
-import { addOptions, clamp, getMonthChartFrame, getLocationChartFrame, getMonthChartFrameLegacy, getLocationChartFrameLegacy } from "/js/chartBase.js";
+import { addOptions, clamp, getMonthChartFrame, getLocationChartFrame, getMonthChartFrameLegacy, getLocationChartFrameLegacy, getLocationChartFrameD3, getMonthChartFrameD3 } from "/js/chartBase.js";
+import { horizontalBar } from "/js/d3ext.js";
 
 let weatherData = {};
 
@@ -139,4 +140,14 @@ fetch("/data/weather3.json")
     jsChart.rainChartLegacy(rainMonthChartLegacy, weatherData);
     jsChart.rankingChartLegacy(temperatureRankLegacy, "temperature", "기온", "#FFF04D", weatherData);
     jsChart.rankingChartLegacy(rainRankLegacy, "rain", "강우량(mm)", "#1E85E6", weatherData);
+
+    // D3 쓰는 차트 생성
+    let d3Holder = $("#d3_holder");
+
+    let rainRankD3 = getMonthChartFrameD3("지역별 강우량 순위", d3Holder);
+    let chartD3 = rainRankD3.find(".chart_body");
+    horizontalBar(chartD3, {
+        labels: ["a", "b", "c"],
+        values: [5, 3, 7]
+    });
 });
