@@ -1,5 +1,5 @@
 import * as jsChart from "/js/jschart.js";
-import { addOptions, clamp } from "/js/chartBase.js";
+import { addOptions, clamp, getMonthChartFrame, getLocationChartFrame, getMonthChartFrameLegacy, getLocationChartFrameLegacy } from "/js/chartBase.js";
 
 let weatherData = {};
 
@@ -96,4 +96,8 @@ fetch("/data/weather3.json")
             }
         }
     });
+
+    // Chart.js쓰는 차트 생성
+    let dailyChartLegacy = getLocationChartFrameLegacy("일일 기온 및 습도");
+    jsChart.dailyChartLegacy(dailyChartLegacy, weatherData);
 });
