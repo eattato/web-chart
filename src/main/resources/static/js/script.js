@@ -98,6 +98,6 @@ fetch("/data/weather3.json")
     });
 
     // Chart.js쓰는 차트 생성
-    let dailyChartLegacy = getLocationChartFrameLegacy("일일 기온 및 습도");
-    jsChart.dailyChartLegacy(dailyChartLegacy, weatherData);
+    // let dailyChartLegacy = getLocationChartFrameLegacy("일일 기온 및 습도");
+    // jsChart.dailyChartLegacy(dailyChartLegacy, weatherData);
 });
