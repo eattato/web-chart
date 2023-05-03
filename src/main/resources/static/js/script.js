@@ -26,7 +26,7 @@ fetch("/data/weather3.json")
 
     let canSubmit = true
     let predict = $("#predict");
-    addOptions(predictLocation, Object.keys(weatherData));
+    addOptions($("#predict_location"), Object.keys(weatherData));
 
     $("#predict_submit").click(() => {
         if (canSubmit) {
@@ -35,7 +35,7 @@ fetch("/data/weather3.json")
             let temperature = $("#predict_temperature").val();
             let humidity = $("#predict_humidity").val();
 
-            if (!isNaN(temperature) && !isNaN(humidity)) {
+            if (temperature.length > 0 && humidity.length > 0 && !isNaN(temperature) && !isNaN(humidity)) {
                 canSubmit = false;
                 fetch("/predict", {
                     method: "POST",
@@ -47,13 +47,13 @@ fetch("/data/weather3.json")
                         month: Number(month),
                         temperature: Number(temperature),
                         humidity: Number(humidity)
-                    }).then(res => res.json())
-                    .then((res) => {
-                        console.log(res);
-                    }).finally(() => {
-                        canSubmit = true;
                     })
-                })
+                }).then(res => res.json())
+                .then((res) => {
+                    console.log(res);
+                }).finally(() => {
+                    canSubmit = true;
+                });
             } else {
                 alert("온도와 습도를 입력해주세요.");
             }
