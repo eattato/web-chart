@@ -25,7 +25,7 @@ export const horizontalBar = (element, data, option) => {
         .range([axisPadding + axisSize, width - axisPadding]); // 시작: 패딩 + y 액시스 공간, 끝: full - 패딩
 
     let yScale = d3.scaleBand()
-        .domain([0, y.length - 1])
+        .domain(y)
         .range([axisPadding, height - axisPadding - axisSize]) // 시작: 패딩, 끝: full - 패딩 - x 액시스 공간
 
     // 축 생성
