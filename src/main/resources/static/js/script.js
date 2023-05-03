@@ -54,11 +54,32 @@ fetch("/data/weather3.json")
                     let rain = clamp(0, res.rain);
                     let snow = clamp(0, res.snow);
                     let weather = "맑음";
+                    let comment = "";
 
                     if (snow > 0) {
                         weather = "눈";
+                        if (snow <= 2) {
+                            comment = "눈이 조금 내립니다..";
+                        } else if (snow <= 5) {
+                            comment = "눈이 꽤나 쌓였습니다..";
+                        } else {
+                            comment = "교통사고 발생 확률이 높으니 운전을 자제하세요."
+                        }
                     } else if (rain >= 0.5) {
                         weather = "비";
+                        if (rain <= 1) {
+                            comment = "비가 흩날리듯이 내립니다..";
+                        } else if (rain <= 2.5) {
+                            comment = "비가 가늘게 내립니다..\n우산을 챙기는 것을 권장합니다.";
+                        } else if (rain <= 5) {
+                            comment = "비가 부슬부슬 내립니다..\n우산을 챙기세요.";
+                        } else if (rain <= 10) {
+                            comment = "비가 추적추적 내립니다..\n우산을 꼭 챙기세요.";
+                        } else if (rain <= 20) {
+                            comment = "비가 거세게 내립니다..\n우산을 꼭 챙기세요.";
+                        } else {
+                            comment = "비가 매우 거세게 내립니다..\n외출을 자제하세요.";
+                        }
                     }
 
                     predictBody.removeClass("hide");
@@ -66,6 +87,7 @@ fetch("/data/weather3.json")
                     $(".predict_subtitle").text(
                         `예측된 강우량은 ${rain}mm, 적설량은 ${snow}cm입니다.`
                     );
+                    $(".predict_comment").text(comment);
                 }).finally(() => {
                     canSubmit = true;
                 });
