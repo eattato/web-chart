@@ -8,6 +8,34 @@ fetch("/data/weather3.json")
 .then((res) => {
     weatherData = res;
 
+    $(".chart_category").each((ind, obj) => {
+        let category = $(obj);
+        let drawer = category.find(".chart_drawer");
+        let holder = category.find(".chart_holder");
+
+        let drawerText = drawer.text();
+        function activate(change) {
+            if (change) {
+                if (holder.hasClass("hide")) {
+                    holder.removeClass("hide");
+                } else {
+                    holder.addClass("hide");
+                }
+            }
+
+            if (holder.hasClass("hide")) {
+                drawer.text(drawerText + " 열기");
+            } else {
+                drawer.text(drawerText + " 닫기");
+            }
+        }
+        
+        drawer.click(() => {
+            activate(true);
+        })
+        activate(false);
+    })
+
     let dailyChart = $("#daily");
     let rainMonthChart = $("#rain_month");
     let ratioChart = $("#weather_ratio");
@@ -98,6 +126,17 @@ fetch("/data/weather3.json")
     });
 
     // Chart.js쓰는 차트 생성
-    // let dailyChartLegacy = getLocationChartFrameLegacy("일일 기온 및 습도");
-    // jsChart.dailyChartLegacy(dailyChartLegacy, weatherData);
+    let legacyHolder = $("#legacy_holder");
+
+    let dailyChartLegacy = getLocationChartFrameLegacy("일일 기온 및 습도 (Chart.js)", legacyHolder);
+    let temperatureRankLegacy = getMonthChartFrameLegacy("지역별 온도 순위 (Chart.js)", legacyHolder);
+    let rainRankLegacy = getMonthChartFrameLegacy("지역별 강우량 순위 (Chart.js)", legacyHolder);
+    let rainMonthChartLegacy = getMonthChartFrameLegacy("월 별 강수량 (Chart.js)", legacyHolder);
+    let ratioChartLegacy = getLocationChartFrameLegacy("연간 날씨 비율 (Chart.js)", legacyHolder);
+
+    jsChart.dailyChartLegacy(dailyChartLegacy, weatherData);
+    jsChart.weatherRatioLegacy(ratioChartLegacy, weatherData);
+    jsChart.rainChartLegacy(rainMonthChartLegacy, weatherData);
+    jsChart.rankingChartLegacy(temperatureRankLegacy, "temperature", "기온", "#FFF04D", weatherData);
+    jsChart.rankingChartLegacy(rainRankLegacy, "rain", "강우량(mm)", "#1E85E6", weatherData);
 });

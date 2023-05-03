@@ -4,12 +4,41 @@
     padding: 0;
 }
 
+.hide {
+    display: none !important;
+}
+
 /* chart */
+.chart_category {
+    display: flex;
+    flex-direction: column;
+    margin-top: 30px;
+}
+
+.chart_category:first-child {
+    margin-top: 5px;
+}
+
+.chart_drawer {
+    width: 100%;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    border-top: 1px solid lightgray;
+    border-bottom: 1px solid lightgray;
+    cursor: pointer;
+    user-select: none;
+}
+.chart_drawer:hover {
+    background-color: lightgray;
+    border-top: 1px solid gray;
+    border-bottom: 1px solid gray;
+}
+
 .chart_holder {
     display: flex;
     flex-wrap: wrap;
-    width: 100%;
-    height: 100%;
+    border-bottom: 1px solid lightgray;
 }
 
 .chart_frame {
@@ -94,10 +123,6 @@
     align-items: center;
     width: 600px;
     height: 190px;
-}
-
-.predict_body.hide {
-    display: none;
 }
 
 .predict_result {

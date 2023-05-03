@@ -503,7 +503,7 @@ export const weatherRatioLegacy = (element, weatherData) => {
                     ]
                 }]
             }
-        })
+        });
     }
     update();
 

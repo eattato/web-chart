@@ -14,148 +14,157 @@
     <script type="module" src="js/script.js" defer></script>
 </head>
 <body>
-    <div class="chart_holder">
-        <div id="daily" class="chart_frame">
-            <div class="chart_header">
-                <div class="chart_title">일일 기온 및 습도</div>
-                <select name="" id="">
-                    <option value="all">전체 지역 평균</option>
-                </select>
+    <div class="chart_category">
+        <div class="chart_drawer">Toast ui 차트</div>
+        <div class="chart_holder">
+            <div id="daily" class="chart_frame">
+                <div class="chart_header">
+                    <div class="chart_title">일일 기온 및 습도</div>
+                    <select name="" id="">
+                        <option value="all">전체 지역 평균</option>
+                    </select>
+                </div>
+                <div class="chart_body"></div>
             </div>
-            <div class="chart_body"></div>
-        </div>
+        
+            <div id="temperature" class="chart_frame">
+                <div class="chart_header">
+                    <div class="chart_title">지역별 온도 순위</div>
+                    <select name="" id="">
+                        <option value="1">1월</option>
+                        <option value="2">2월</option>
+                        <option value="3">3월</option>
+                        <option value="4">4월</option>
+                        <option value="5">5월</option>
+                        <option value="6">6월</option>
+                        <option value="7">7월</option>
+                        <option value="8">8월</option>
+                        <option value="9">9월</option>
+                        <option value="10">10월</option>
+                        <option value="11">11월</option>
+                        <option value="12">12월</option>
+                    </select>
+                </div>
+                <div class="chart_body"></div>
+            </div>
+        
+            <div id="rain" class="chart_frame">
+                <div class="chart_header">
+                    <div class="chart_title">지역별 강우량 순위</div>
+                    <select name="" id="">
+                        <option value="1">1월</option>
+                        <option value="2">2월</option>
+                        <option value="3">3월</option>
+                        <option value="4">4월</option>
+                        <option value="5">5월</option>
+                        <option value="6">6월</option>
+                        <option value="7">7월</option>
+                        <option value="8">8월</option>
+                        <option value="9">9월</option>
+                        <option value="10">10월</option>
+                        <option value="11">11월</option>
+                        <option value="12">12월</option>
+                    </select>
+                </div>
+                <div class="chart_body"></div>
+            </div>
     
-        <div id="temperature" class="chart_frame">
-            <div class="chart_header">
-                <div class="chart_title">지역별 온도 순위</div>
-                <select name="" id="">
-                    <option value="1">1월</option>
-                    <option value="2">2월</option>
-                    <option value="3">3월</option>
-                    <option value="4">4월</option>
-                    <option value="5">5월</option>
-                    <option value="6">6월</option>
-                    <option value="7">7월</option>
-                    <option value="8">8월</option>
-                    <option value="9">9월</option>
-                    <option value="10">10월</option>
-                    <option value="11">11월</option>
-                    <option value="12">12월</option>
-                </select>
+            <div id="rain_month" class="chart_frame">
+                <div class="chart_header">
+                    <div class="chart_title">월 별 강수량</div>
+                    <select name="" id="">
+                        <option value="">전체 지역 평균</option>
+                    </select>
+                </div>
+                <div class="chart_body"></div>
             </div>
-            <div class="chart_body"></div>
-        </div>
+        
+            <div id="weather_ratio" class="chart_frame">
+                <div class="chart_header">
+                    <div class="chart_title">연간 날씨 비율</div>
+                    <select name="" id="">
+                        <option value="all">전체 지역 평균</option>
+                    </select>
+                </div>
+                <div class="chart_body"></div>
+            </div>
     
-        <div id="rain" class="chart_frame">
-            <div class="chart_header">
-                <div class="chart_title">지역별 강우량 순위</div>
-                <select name="" id="">
-                    <option value="1">1월</option>
-                    <option value="2">2월</option>
-                    <option value="3">3월</option>
-                    <option value="4">4월</option>
-                    <option value="5">5월</option>
-                    <option value="6">6월</option>
-                    <option value="7">7월</option>
-                    <option value="8">8월</option>
-                    <option value="9">9월</option>
-                    <option value="10">10월</option>
-                    <option value="11">11월</option>
-                    <option value="12">12월</option>
-                </select>
+            <div id="heatmap" class="chart_frame">
+                <div class="chart_header">
+                    <div class="chart_title">지역별 기온 히트맵</div>
+                </div>
+                <div class="chart_body"></div>
             </div>
-            <div class="chart_body"></div>
-        </div>
-
-        <div id="rain_month" class="chart_frame">
-            <div class="chart_header">
-                <div class="chart_title">월 별 강수량</div>
-                <select name="" id="">
-                    <option value="">전체 지역 평균</option>
-                </select>
-            </div>
-            <div class="chart_body"></div>
-        </div>
     
-        <div id="weather_ratio" class="chart_frame">
-            <div class="chart_header">
-                <div class="chart_title">연간 날씨 비율</div>
-                <select name="" id="">
-                    <option value="all">전체 지역 평균</option>
-                </select>
+            <div id="boxplot" class="chart_frame">
+                <div class="chart_header">
+                    <div class="chart_title">월 별 기온 및 습도 박스 플롯</div>
+                    <select name="" id="">
+                        <option value="all">전체 지역 평균</option>
+                    </select>
+                </div>
+                <div class="chart_body"></div>
             </div>
-            <div class="chart_body"></div>
-        </div>
-
-        <div id="heatmap" class="chart_frame">
-            <div class="chart_header">
-                <div class="chart_title">지역별 기온 히트맵</div>
-            </div>
-            <div class="chart_body"></div>
-        </div>
-
-        <div id="boxplot" class="chart_frame">
-            <div class="chart_header">
-                <div class="chart_title">월 별 기온 및 습도 박스 플롯</div>
-                <select name="" id="">
-                    <option value="all">전체 지역 평균</option>
-                </select>
-            </div>
-            <div class="chart_body"></div>
-        </div>
-
-        <div id="predict" class="chart_frame">
-            <div class="chart_header">
-                <div class="chart_title">날씨 예측</div>
-            </div>
-            <div class="predict_frame">
-                <div class="predict_header">
-                    <div class="predict_title">온도와 습도를 입력해 날씨를 예측할 수 있습니다.</div>
-                    <div class="predict_row">
-                        <div class="predict_input">
-                            <div class="predict_label">지역</div>
-                            <select id="predict_location"></select>
+    
+            <div id="predict" class="chart_frame">
+                <div class="chart_header">
+                    <div class="chart_title">날씨 예측</div>
+                </div>
+                <div class="predict_frame">
+                    <div class="predict_header">
+                        <div class="predict_title">온도와 습도를 입력해 날씨를 예측할 수 있습니다.</div>
+                        <div class="predict_row">
+                            <div class="predict_input">
+                                <div class="predict_label">지역</div>
+                                <select id="predict_location"></select>
+                            </div>
+                            <div class="predict_input">
+                                <select id="predict_month">
+                                    <option value="1">1월</option>
+                                    <option value="2">2월</option>
+                                    <option value="3">3월</option>
+                                    <option value="4">4월</option>
+                                    <option value="5">5월</option>
+                                    <option value="6">6월</option>
+                                    <option value="7">7월</option>
+                                    <option value="8">8월</option>
+                                    <option value="9">9월</option>
+                                    <option value="10">10월</option>
+                                    <option value="11">11월</option>
+                                    <option value="12">12월</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="predict_input">
-                            <select id="predict_month">
-                                <option value="1">1월</option>
-                                <option value="2">2월</option>
-                                <option value="3">3월</option>
-                                <option value="4">4월</option>
-                                <option value="5">5월</option>
-                                <option value="6">6월</option>
-                                <option value="7">7월</option>
-                                <option value="8">8월</option>
-                                <option value="9">9월</option>
-                                <option value="10">10월</option>
-                                <option value="11">11월</option>
-                                <option value="12">12월</option>
-                            </select>
+                        <div class="predict_row">
+                            <div class="predict_input">
+                                <div class="predict_label">온도</div>
+                                <input id="predict_temperature" type="number">
+                            </div>
+                            <div class="predict_input">
+                                <div class="predict_label">습도</div>
+                                <input id="predict_humidity" type="number">
+                            </div>
+                        </div>
+                        <div class="predict_row">
+                            <button id="predict_submit" type="button">예측해보기</button>
                         </div>
                     </div>
-                    <div class="predict_row">
-                        <div class="predict_input">
-                            <div class="predict_label">온도</div>
-                            <input id="predict_temperature" type="number">
-                        </div>
-                        <div class="predict_input">
-                            <div class="predict_label">습도</div>
-                            <input id="predict_humidity" type="number">
-                        </div>
-                    </div>
-                    <div class="predict_row">
-                        <button id="predict_submit" type="button">예측해보기</button>
+    
+                    <div class="predict_body hide">
+                        <div class="predict_title">오늘의 날씨는..</div>
+                        <div class="predict_result"></div>
+                        <div class="predict_subtitle">예측된 강우량은 ~mm, 적설량은 ~cm입니다.</div>
+                        <div class="predict_comment"></div>
                     </div>
                 </div>
-
-                <div class="predict_body hide">
-                    <div class="predict_title">오늘의 날씨는..</div>
-                    <div class="predict_result"></div>
-                    <div class="predict_subtitle">예측된 강우량은 ~mm, 적설량은 ~cm입니다.</div>
-                    <div class="predict_comment"></div>
-                </div>
             </div>
         </div>
+
+    </div>
+
+    <div class="chart_category">
+        <div class="chart_drawer">Chart.js 차트</div>
+        <div class="chart_holder hide" id="legacy_holder"></div>
     </div>
 </body>
 </html>
