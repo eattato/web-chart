@@ -1,8 +1,10 @@
 package spring.DTO;
 
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Getter;
 import lombok.Setter;
 
+@JsonNaming
 @Getter
 @Setter
 public class PredictDTO {

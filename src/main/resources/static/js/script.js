@@ -52,7 +52,7 @@ fetch("/data/weather3.json")
                         console.log(res);
                     }).finally(() => {
                         canSubmit = true;
-                    });
+                    })
                 })
             } else {
                 alert("온도와 습도를 입력해주세요.");
