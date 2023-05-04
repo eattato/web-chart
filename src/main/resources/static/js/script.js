@@ -144,5 +144,8 @@ fetch("/data/weather3.json")
     let d3Holder = $("#d3_holder");
 
     let rainRankD3 = getMonthChartFrameD3("지역별 강우량 순위", d3Holder);
+    let temperatureRankD3 = getMonthChartFrameD3("지역별 온도 순위", d3Holder);
+
     jsChart.rankingChartD3(rainRankD3, "rain", "강우량(mm)", "#1E85E6", weatherData);
+    jsChart.rankingChartD3(temperatureRankD3, "temperature", "기온", "#FFF04D", weatherData);
 });

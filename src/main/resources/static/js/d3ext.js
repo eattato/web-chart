@@ -7,7 +7,7 @@
  * @returns a와 b중 더 큰 값의 Alt값
  */
 const maxAlt = (a, b, aAlt, bAlt) => {
-    if (a > b) {
+    if (a >= b) {
         return aAlt;
     } else {
         return bAlt;
@@ -95,7 +95,7 @@ export class horizontalBar extends ChartBase {
             .append("rect") // 데이터 갯수에 맞춰 사각형 생성
             .attr("width", (v) => xScale(Math.abs(v)) - xZeroPoint - 1) // 각 값의 절대값(마이너스 방지)를 xScale에 돌리고 영점에 맞춤 - 겹침 방지
             .attr("height", heightResized) // height는 미리 설정한 오프셋으로 설정
-            .attr("x", (v) => maxAlt(v, 0, xZeroPoint, this.axisPadding + this.axisSize) + 1) // 겹침 방지하고 양수값이면 영점값만큼 오른쪽으로 밀고, 음수값이면 패딩만큼만 밀기
+            .attr("x", (v) => maxAlt(v, 0, xZeroPoint, xZeroPoint - (xScale(Math.abs(v)) - xZeroPoint)) + 1) // 겹침 방지하고 양수값이면 영점값만큼 오른쪽으로 밀고, 음수값이면 영점값 - 본인 width만큼 밀기
             .data(y) // 이후 사용할 데이터를 y 데이터로 변경, +1하고 width에 -1한건 액시스랑 겹치지 않기 위함임
             .attr("y", (v) => yScale(v) + yOffset) // 각 라벨(v)을 yScale에 돌리고 오프셋 적용해서 y위치를 설정
             .attr("fill", color); // 색상 채움
