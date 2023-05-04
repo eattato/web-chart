@@ -111,42 +111,71 @@ class ChartBase {
 
     /** 
      * 차트 기본 정보 및 요소를 제공
-     * @returns [d3Element, x, y, width, height]
+     * @param {boolean} noScale true라면 xScale, yScale을 제공하지 않음
+     * @returns [d3Element, x, y, width, height, xScale, yScale]
     */
-    getBase() {
+    getBase(noScale) {
         let d3Element = d3.select(this.element[0]);
         let x = this.data.values;
         let y = this.data.labels;
         let width = this.element.width();
         let height = this.element.height();
-        return [d3Element, x, y, width, height]
+        let xScale = null, yScale = null;
+
+        if (!noScale) {
+            let firstKey = Object.keys(y)[0];
+            if (typeof y[firstKey] == "object") { // 히트맵이나 꺾은선 - ex: {labels: {x: [], y: []}}
+                xScale = this.getScaleX(y.x, width);
+                yScale = this.getScaleY(y.y, width);
+            } else { // 평범한 경우 - ex: {labels: []}
+                xScale = this.getScaleX(x, width);
+                yScale = this.getScaleY(y, height);
+            }
+        }
+        return [d3Element, x, y, width, height, xScale, yScale];
     }
 
     /**
-     * 차트 사이즈에 따라 패딩, 액시스 사이즈를 적용한 range를 리턴
+     * 데이터 자료형에 따라서 scaleLinear 또는 scaleBand 리턴
+     * @param {*} data 대상 데이터
+     * @param {*} range 차트 사이즈
+     * @returns scaleLinear 또는 scaleBand
+     */
+    getScale(data, range) {
+        let firstKey = Object.keys(data)[0];
+        if (typeof data[firstKey] == "number") { // scaleLinear 리턴
+            // data내에서 최소값, 최대값을 가진 리스트. 이 때 최소값이 양수라면 대신 0부터 시작한다.
+            let domain = [Math.min(d3.min(data), 0), d3.max(data)];
+            return d3.scaleLinear().domain(domain).range(range);
+        } else if (typeof data[firstKey] == "object") { // 히트맵이나 꺾은선 등에 쓰임
+            if (data.x) { // x, y가 있는 데이터
+
+            }
+        } else { // scaleBand 리턴
+            return d3.scaleBand().domain(data).range(range);
+        }
+    }
+
+    /**
+     * 데이터 자료형에 따라서 차트 사이즈에 맞는 x축 스케일링 함수 리턴
+     * @param {*} data 사용할 데이터
      * @param {number} width 차트 width
-     * @returns 적용 완료된 range
+     * @returns x축 스케일링 함수
      */
-    getChartX(width) {
-        return [this.paddingX + this.axisSize, width - this.paddingX];
+    getScaleX(data, width) {
+        let range = [this.paddingX + this.axisSize, width - this.paddingX];
+        return this.getScale(data, range);
     }
 
     /**
-     * 차트 사이즈에 따라 패딩, 액시스 사이즈를 적용한 range를 리턴
+     * 데이터 자료형에 따라서 차트 사이즈에 맞는 y축 스케일링 함수 리턴
+     * @param {*} data 사용할 데이터
      * @param {number} height 차트 height
-     * @returns 적용 완료된 range
+     * @returns x축 스케일링 함수
      */
-    getChartY(height) {
-        return [this.paddingY, height - this.paddingY - this.axisSize];
-    }
-
-    /**
-     * data내에서 최소값, 최대값을 가진 리스트 리턴. 이 때 최소값이 양수라면 대신 0부터 시작한다.
-     * @param {*} data 검색할 리스트
-     * @returns [min, max]
-     */
-    getLinear(data) {
-        return [Math.min(d3.min(data), 0), d3.max(data)];
+    getScaleY(data, height) {
+        let range = [this.paddingY, height - this.paddingY - this.axisSize];
+        return this.getScale(data, range);
     }
 
     /** 
@@ -192,13 +221,11 @@ export class horizontalBar extends ChartBase {
      */
     update() {
         // 값 정의
-        let [d3Element, x, y, width, height] = this.getBase();
+        let [d3Element, x, y, width, height, xScale, yScale] = this.getBase();
 
-        // 스케일은 domain값을 range 사이즈로 스케일링해주는 함?수임
-        let xScale = d3.scaleLinear().domain(this.getLinear(x)).range(this.getChartX(width));
-        let yScale = d3.scaleBand().domain(y).range(this.getChartY(height));
-        // let xScale = this.getScaleLinearX(x, width);
-        // let yScale = this.getScaleBandY(y, height);
+        // 스케일은 domain값을 range 사이즈로 스케일링해주는 함?수임 - 이젠 getBase로 받음
+        // let xScale = this.getScaleX(x, width);
+        // let yScale = this.getScaleY(y, height);
 
         // 축 생성
         this.createAxis(d3Element, height, xScale, yScale);
@@ -250,11 +277,9 @@ export class heatmap extends ChartBase {
      */
     update() {
         // 값 정의
-        let [d3Element, x, y, width, height] = this.getBase();
-        let xScale = d3.scaleBand().domain(y.x).range(this.getChartX(width));
-        let yScale = d3.scaleBand().domain(y.y).range(this.getChartY(height));
-        // let xScale = this.getScaleBandX(y.x, width);
-        // let yScale = this.getScaleBandY(y.y, height);
+        let [d3Element, x, y, width, height] = this.getBase(true);
+        let xScale = this.getScaleX(y.x, width);
+        let yScale = this.getScaleY(y.y, width);
 
         // 축 생성
         this.createAxis(d3Element, height, xScale, yScale);
@@ -305,6 +330,35 @@ export class heatmap extends ChartBase {
      * @param {*} data ex: {labels: {x: ["1월", "5월", "8월"], y: ["a", "b", "c"]}, values: [ [10, 9, 12], [20, 18, 24], [32, 28, 34] ]}
      * @param {*} option 
      */
+    constructor(element, data, option) {
+        if (!option) {option = {}}
+        super(element, data, option); // ChartBase의 생성자 실행
+
+        // 스케일링
+        this.barSize = option.barSize || 0.75;
+        this.update();
+    }
+}
+
+// 꺾은선
+export class line extends ChartBase {
+    /**
+     * 차트를 업데이트함
+     */
+    update() {
+        // 값 정의
+        let [d3Element, x, y, width, height, xScale, yScale] = this.getBase();
+
+        // 축 생성
+        this.createAxis(d3Element, height, xScale, yScale);
+
+        // 옵션 추출
+        if (!this.option) { this.option = {}; } // option이 null인데 액세스하려고 할 때 에러 막는 용도
+        let color = this.option.color || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
+
+        // 데이터 표시
+    }
+
     constructor(element, data, option) {
         if (!option) {option = {}}
         super(element, data, option); // ChartBase의 생성자 실행
