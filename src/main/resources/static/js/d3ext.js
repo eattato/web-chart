@@ -1,3 +1,19 @@
+/**
+ * Math.max인데 비교해서 큰 쪽의 Alt값을 대신 리턴함
+ * @param {*} a 비교할 값 a
+ * @param {*} b 비교할 값 b
+ * @param {*} aAlt a가 클 경우 리턴되는 Alt 값
+ * @param {*} bAlt b가 클 경우 리턴되는 Alt 값
+ * @returns a와 b중 더 큰 값의 Alt값
+ */
+const maxAlt = (a, b, aAlt, bAlt) => {
+    if (a > b) {
+        return aAlt;
+    } else {
+        return bAlt;
+    }
+}
+
 // 차트 베이스
 class ChartBase {
     /**
@@ -40,7 +56,7 @@ export class horizontalBar extends ChartBase {
          * @returns range에 맞게 스케일링해서 width를 리턴
          */
         let xScale = d3.scaleLinear()
-        .domain([0, d3.max(x)])
+        .domain([d3.min(x), d3.max(x)])
         .range([this.axisPadding + this.axisSize, width - this.axisPadding]);
 
         /**
@@ -68,17 +84,18 @@ export class horizontalBar extends ChartBase {
         let color = this.option.color || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
 
         // 데이터 표시
-        let widthOffset = this.axisPadding + this.axisSize + 1 // 패딩 반영하고 액시스랑 겹치는 거 방지로 1px 넣음
+        let xZeroPoint = xScale(0); // x축 영점 크기, xScale를 거쳤다와서 패딩이 적용되어 있음
         let heightResized = yScale.bandwidth() * this.barSize; // height는 y 스케일의 한 칸 사이즈 * bar 사이즈 배율로
         let yOffset = (yScale.bandwidth() - heightResized) / 2; // 조정된 height의 작아진 크기의 반절을 빼서 오프셋 만듬
 
+        // (v) => {return ~} 또는 (v) => ~를 통해 현재 사용하는 데이터를 foreach해 적용할 수 있음.
         d3Element.selectAll("rect")
             .data(x) // x 데이터를 사용
             .enter()
             .append("rect") // 데이터 갯수에 맞춰 사각형 생성
-            .attr("width", (v) => xScale(v) - widthOffset) // width는 각 데이터(foreach를 통해 x의 요소인 v를 얻음) 값을 xScale에 돌린거에 패딩 길이 등을 뺌
+            .attr("width", (v) => xScale(Math.abs(v)) - xZeroPoint - 1) // 각 값의 절대값(마이너스 방지)를 xScale에 돌리고 영점에 맞춤 - 겹침 방지
             .attr("height", heightResized) // height는 미리 설정한 오프셋으로 설정
-            .attr("x", widthOffset) // 가로 오프셋만큼 왼쪽으로 밈
+            .attr("x", (v) => maxAlt(v, 0, xZeroPoint, this.axisPadding + this.axisSize) + 1) // 겹침 방지하고 양수값이면 영점값만큼 오른쪽으로 밀고, 음수값이면 패딩만큼만 밀기
             .data(y) // 이후 사용할 데이터를 y 데이터로 변경, +1하고 width에 -1한건 액시스랑 겹치지 않기 위함임
             .attr("y", (v) => yScale(v) + yOffset) // 각 라벨(v)을 yScale에 돌리고 오프셋 적용해서 y위치를 설정
             .attr("fill", color); // 색상 채움

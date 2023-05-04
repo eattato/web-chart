@@ -148,6 +148,6 @@ fetch("/data/weather3.json")
     let chartD3 = rainRankD3.find(".chart_body");
     let chartd3 = new horizontalBar(chartD3, {
         labels: ["a", "b", "c"],
-        values: [5, 3, 7]
+        values: [5, -3, 7]
     });
 });
