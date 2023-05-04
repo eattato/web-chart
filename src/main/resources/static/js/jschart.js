@@ -1,6 +1,6 @@
 import { getAverage, getData, getColumn, addOptions, destroyChart } from "/js/chartBase.js";
 const toastChart = toastui.Chart;
-import { horizontalBar } from "./d3ext.js";
+import * as d3ext from "./d3ext.js";
 
 // 일일 기온/습도 차트
 export const dailyChart = (element, weatherData) => {
@@ -689,7 +689,7 @@ export const rankingChartD3 = (element, column, name, color, weatherData) => {
             paddingX: 60
         };
 
-        chart = new horizontalBar(el, data, options);
+        chart = new d3ext.horizontalBar(el, data, options);
     }
     update("1");
 
@@ -698,4 +698,57 @@ export const rankingChartD3 = (element, column, name, color, weatherData) => {
         let val = $(this).val();
         update(val);
     });
+}
+
+export const heatmapD3 = (element, weatherData) => {
+    let chart = null;
+    addOptions(element.find("select"), Object.keys(weatherData));
+
+    // 업데이트
+    function update() {
+        if (chart) {
+            chart.destroy();
+        }
+
+        let labels = []
+        let heatDatas = []
+        
+        for (let location in weatherData) {
+            labels.push(location);
+            let locationData = getData(weatherData, location);
+            let yearData = [];
+
+            for (let month = 1; month <= 12; month++) {
+                let monthData = [];
+                for (let i in locationData) {
+                    let dayData = locationData[i];
+                    if (Number(dayData.date.split("-")[1]) == month) {
+                        monthData.push(dayData);
+                    }
+                }
+                yearData.push(getAverage(getColumn(monthData, "temperature")));
+            }
+            heatDatas.push(yearData);
+        }
+
+        let el = element.find(".chart_body");
+        let data = {
+            labels: {
+                x: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
+                y: labels
+            },
+            values: heatDatas
+        }
+        let options = {
+            paddingX: 60
+        }
+        chart = new d3ext.heatmap(el, data, options);
+    }
+    update();
+
+    // 바인딩
+    // element.find("select").change(function() {
+    //     let val = $(this).val();
+    //     update(val);
+    // });
 }

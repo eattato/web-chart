@@ -1,5 +1,5 @@
 import * as jsChart from "/js/jschart.js";
-import { addOptions, clamp, getMonthChartFrame, getLocationChartFrame, getMonthChartFrameLegacy, getLocationChartFrameLegacy, getLocationChartFrameD3, getMonthChartFrameD3 } from "/js/chartBase.js";
+import * as cb from "/js/chartBase.js";
 
 let weatherData = {};
 
@@ -54,7 +54,7 @@ fetch("/data/weather3.json")
 
     let canSubmit = true
     let predictBody = $(".predict_body");
-    addOptions($("#predict_location"), Object.keys(weatherData));
+    cb.addOptions($("#predict_location"), Object.keys(weatherData));
 
     $("#predict_submit").click(() => {
         if (canSubmit) {
@@ -79,8 +79,8 @@ fetch("/data/weather3.json")
                 }).then(res => res.json())
                 .then((res) => {
                     console.log(res);
-                    let rain = clamp(0, res.rain);
-                    let snow = clamp(0, res.snow);
+                    let rain = cb.clamp(0, res.rain);
+                    let snow = cb.clamp(0, res.snow);
                     let weather = "맑음";
                     let comment = "";
 
@@ -128,11 +128,11 @@ fetch("/data/weather3.json")
     // Chart.js쓰는 차트 생성
     let legacyHolder = $("#legacy_holder");
 
-    let dailyChartLegacy = getLocationChartFrameLegacy("일일 기온 및 습도 (Chart.js)", legacyHolder);
-    let temperatureRankLegacy = getMonthChartFrameLegacy("지역별 온도 순위 (Chart.js)", legacyHolder);
-    let rainRankLegacy = getMonthChartFrameLegacy("지역별 강우량 순위 (Chart.js)", legacyHolder);
-    let rainMonthChartLegacy = getMonthChartFrameLegacy("월 별 강수량 (Chart.js)", legacyHolder);
-    let ratioChartLegacy = getLocationChartFrameLegacy("연간 날씨 비율 (Chart.js)", legacyHolder);
+    let dailyChartLegacy = cb.getLocationChartFrameLegacy("일일 기온 및 습도 (Chart.js)", legacyHolder);
+    let temperatureRankLegacy = cb.getMonthChartFrameLegacy("지역별 온도 순위 (Chart.js)", legacyHolder);
+    let rainRankLegacy = cb.getMonthChartFrameLegacy("지역별 강우량 순위 (Chart.js)", legacyHolder);
+    let rainMonthChartLegacy = cb.getMonthChartFrameLegacy("월 별 강수량 (Chart.js)", legacyHolder);
+    let ratioChartLegacy = cb.getLocationChartFrameLegacy("연간 날씨 비율 (Chart.js)", legacyHolder);
 
     jsChart.dailyChartLegacy(dailyChartLegacy, weatherData);
     jsChart.weatherRatioLegacy(ratioChartLegacy, weatherData);
@@ -143,9 +143,11 @@ fetch("/data/weather3.json")
     // D3 쓰는 차트 생성
     let d3Holder = $("#d3_holder");
 
-    let rainRankD3 = getMonthChartFrameD3("지역별 강우량 순위", d3Holder);
-    let temperatureRankD3 = getMonthChartFrameD3("지역별 온도 순위", d3Holder);
+    let rainRankD3 = cb.getMonthChartFrameD3("지역별 강우량 순위", d3Holder);
+    let temperatureRankD3 = cb.getMonthChartFrameD3("지역별 온도 순위", d3Holder);
+    let heatmapD3 = cb.getChartFrameD3("지역별 기온 히트맵", d3Holder);
 
     jsChart.rankingChartD3(rainRankD3, "rain", "강우량(mm)", "#1E85E6", weatherData);
     jsChart.rankingChartD3(temperatureRankD3, "temperature", "기온", "#FFF04D", weatherData);
+    jsChart.heatmapD3(heatmapD3, weatherData);
 });

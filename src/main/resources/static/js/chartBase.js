@@ -144,3 +144,10 @@ export const getLocationChartFrameD3 = (title, parent) => {
     frame.appendTo(parent);
     return frame;
 }
+
+export const getChartFrameD3 = (title, parent) => {
+    let frame = $($.parseHTML('<div class="chart_frame"><div class="chart_header"><div class="chart_title"></div></div><svg class="chart_body" width: "600" "height: 310"></svg></div>'));
+    frame.find(".chart_title").text(title);
+    frame.appendTo(parent);
+    return frame;
+}

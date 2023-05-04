@@ -24,6 +24,82 @@ const clamp = (min, val, max) => {
     }
 }
 
+const hex = (x) => {
+    let result = 0;
+    let hexDict = {
+        "0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "A": 10, "B": 11, "C": 12, "D": 13, "E": 14, "F": 15, "a": 10, "b": 11, "c": 12, "d": 13, "e": 14, "f": 15
+    }
+
+    for (let i = 0; i < x.length; i++) {
+        let val = x.charAt(i);
+        val = hexDict[val];
+        val *= Math.pow(16, x.length - i - 1);
+        result += val;
+    }
+    return result;
+}
+
+const toHex = (x, formatLength) => {
+    let resMult = "";
+    if (x < 0) { resMult = "-" }
+
+    let factor = 0;
+    while (Math.pow(16, factor) <= x) {
+        factor++;
+    }
+
+    let hexDict = {
+        0: "0", 1: "1", 2: "2", 3: "3", 4: "4", 5: "5", 6: "6", 7: "7", 8: "8", 9: "9", 10: "A", 11: "B", 12: "C", 13: "D", 14: "E", 15: "F"
+    }
+
+    let result = "";
+    for (let i = factor - 1; i >= 0; i--) {
+        let mult = Math.pow(16, i);
+        let v = Math.floor(x / mult);
+        x -= v * mult;
+        result += hexDict[v];
+    }
+    if (factor == 0) { // 0이 들어와서 결과가 안 나온 경우
+        result = "0";
+    }
+
+    if (formatLength) {
+        let fillCount = formatLength - result.length;
+        for (let i = 1; i <= fillCount; i++) {
+            result = "0" + result;
+        }
+    }
+    return resMult + result;
+}
+
+const lerp = (start, end, alpha) => {
+    if (start > end) {
+        let temp = start;
+        start = end
+        end = temp;
+    }
+    return end - (end - start) * alpha;
+}
+
+/**
+ * 시작, 끝, 변환값(alpha)를 통해 색의 중간값을 얻음
+ * @param {string} start 시작이 되는 16진수 색
+ * @param {string} end 끝이 되는 16진수 색
+ * @param {number} alpha 알파값
+ * @returns 중간색
+ */
+const colorLerp = (start, end, alpha) => {
+    let startRGB = [hex(start.substring(1, 3)), hex(start.substring(3, 5)), hex(start.substring(5, 7))];
+    let endRGB = [hex(end.substring(1, 3)), hex(end.substring(3, 5)), hex(end.substring(5, 7))];
+
+    let result = "#";
+    for (let i in startRGB) {
+        let lerped = Math.round(lerp(startRGB[i], endRGB[i], alpha));
+        result += toHex(lerped, 2);
+    }
+    return result;
+}
+
 // 차트 베이스
 class ChartBase {
     /**
@@ -51,7 +127,7 @@ class ChartBase {
      * @param {*} width 차트 가로 사이즈
      * @returns 파라미터에 따른 xScale
      */    
-    getScaleX(x, width) {
+    getScaleLinearX(x, width) {
         /**
          * 파라미터(x값)를 넣으면 0||min ~ max의 범위에서 스케일링하는 함수.
          * 시작: 패딩 + y 액시스 공간, 끝: full - 패딩
@@ -66,11 +142,49 @@ class ChartBase {
     }
 
     /**
+     * @param {*} x x 데이터 전체
+     * @param {*} width 차트 가로 사이즈
+     * @returns 파라미터에 따른 xScale
+     */    
+    getScaleBandX(x, width) {
+        /**
+         * 파라미터(x값, 라벨)을 넣으면 라벨의 순서에 따라 스케일링하는 함수.
+         * 시작: 패딩 + y 액시스 공간, 끝: full - 패딩
+         * @param {string} x 해당 라벨 위치를 사용해 차트 위치 & 사이즈에 맞게 스케일링
+         * @returns range에 맞게 스케일링해서 y 위치를 리턴
+         */
+        let xScale = d3.scaleBand()
+        .domain(x)
+        .range([this.paddingX + this.axisSize, width - this.paddingX]);
+
+        return xScale;
+    }
+
+    /**
+     * @param {*} y y 데이터 전체
+     * @param {*} height 차트 세로 사이즈
+     * @returns 파라미터에 따른 yScale
+     */    
+    getScaleLinearY(y, height) {
+        /**
+         * 파라미터(y값)를 넣으면 0||min ~ max의 범위에서 스케일링하는 함수.
+         * 시작: 패딩, 끝: full - 패딩 - x 액시스 공간
+         * @param {number} y 해당 값을 차트 위치 & 사이즈에 맞게 스케일링
+         * @returns range에 맞게 스케일링해서 height를 리턴
+         */
+        let yScale = d3.scaleLinear()
+        .domain([Math.min(d3.min(y), 0), d3.max(y)])
+        .range([this.paddingY, height - this.paddingY - this.axisSize]);
+
+        return yScale;
+    }
+
+    /**
      * @param {*} y y 데이터 전체
      * @param {*} height 차트 세로 사이즈
      * @returns 파라미터에 따른 yScale
      */
-    getScaleY(y, height) {
+    getScaleBandY(y, height) {
         /**
          * 파라미터(y값, 라벨)을 넣으면 라벨의 순서에 따라 스케일링하는 함수.
          * 시작: 패딩, 끝: full - 패딩 - x 액시스 공간
@@ -128,8 +242,8 @@ export class horizontalBar extends ChartBase {
     update() {
         // 값 정의
         let [d3Element, x, y, width, height] = this.getBase();
-        let xScale = this.getScaleX(x, width);
-        let yScale = this.getScaleY(y, height);
+        let xScale = this.getScaleLinearX(x, width);
+        let yScale = this.getScaleBandY(y, height);
 
         // 축 생성
         this.createAxis(d3Element, height, xScale, yScale);
@@ -164,6 +278,76 @@ export class horizontalBar extends ChartBase {
             .attr("x2", xScale(0) + 1).attr("y2", yScale(y[y.length - 1]) + yScale.bandwidth()); // 2번째 점(밑)
     }
 
+    constructor(element, data, option) {
+        if (!option) {option = {}}
+        super(element, data, option); // ChartBase의 생성자 실행
+
+        // 스케일링
+        this.barSize = option.barSize || 0.75;
+        this.update();
+    }
+}
+
+// 히트맵
+export class heatmap extends ChartBase {
+    /**
+     * 차트를 업데이트함
+     */
+    update() {
+        // 값 정의
+        let [d3Element, x, y, width, height] = this.getBase();
+        let xScale = this.getScaleBandX(y.x, width);
+        let yScale = this.getScaleBandY(y.y, height);
+
+        // 축 생성
+        this.createAxis(d3Element, height, xScale, yScale);
+
+        // 옵션 추출
+        if (!this.option) { this.option = {}; } // option이 null인데 액세스하려고 할 때 에러 막는 용도
+        let startColor = this.option.startColor || "#FFFF00";
+        let endColor = this.option.endColor || "#FF0000";
+
+        // 최대값, 최소값 찾기
+        let vMin = null, vMax = null;
+        for (let c in x) {
+            let row = x[c];
+            for (let r in row) {
+                let v = row[r];
+                if (vMin == null && vMax == null) {
+                    vMin = v;
+                    vMax = v;
+                } else {
+                    vMin = Math.min(vMin, v);
+                    vMax = Math.max(vMax, v);
+                }
+            }
+        }
+
+        // 데이터 표시
+        for (let c in x) {
+            let row = x[c];
+            for (let r in row) {
+                let v = row[r]; // 실제 데이터
+                let yx = y.x[r]; // x축 라벨
+                let yy = y.y[c]; // y축 라벨
+                let alpha = (v - vMin) / (vMax - vMin) // (v / vMax) 인데 모두 vMin을 뺀 상태
+                // console.log(`v: ${v}, x: ${yx}, y: ${yy}, alpha: ${alpha}`);
+                
+                d3Element.append("rect")
+                    .attr("width", xScale.bandwidth())
+                    .attr("height", yScale.bandwidth())
+                    .attr("x", xScale(yx) + 1)
+                    .attr("y", yScale(yy) - 1)
+                    .attr("fill", colorLerp(startColor, endColor, alpha));
+            }
+        }
+    }
+
+    /**
+     * 히트맵을 만듬. 데이터 형식 조금 다름.
+     * @param {*} data ex: {labels: {x: ["1월", "5월", "8월"], y: ["a", "b", "c"]}, values: [ [10, 9, 12], [20, 18, 24], [32, 28, 34] ]}
+     * @param {*} option 
+     */
     constructor(element, data, option) {
         if (!option) {option = {}}
         super(element, data, option); // ChartBase의 생성자 실행
