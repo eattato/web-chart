@@ -33,6 +33,57 @@ class ChartBase {
         this.element.empty();
     }
 
+    /** 
+     * 차트 기본 정보 및 요소를 제공
+     * @returns [d3Element, x, y, width, height]
+    */
+    getBase() {
+        let d3Element = d3.select(this.element[0]);
+        let x = this.data.values;
+        let y = this.data.labels;
+        let width = this.element.width();
+        let height = this.element.height();
+        return [d3Element, x, y, width, height]
+    }
+
+    /**
+     * @param {*} x x 데이터 전체
+     * @param {*} width 차트 가로 사이즈
+     * @returns 파라미터에 따른 xScale
+     */    
+    getScaleX(x, width) {
+        /**
+         * 파라미터(x값)를 넣으면 0||min ~ max의 범위에서 스케일링하는 함수.
+         * 시작: 패딩 + y 액시스 공간, 끝: full - 패딩
+         * @param {number} x 해당 값을 차트 위치 & 사이즈에 맞게 스케일링
+         * @returns range에 맞게 스케일링해서 width를 리턴
+         */
+        let xScale = d3.scaleLinear()
+        .domain([Math.min(d3.min(x), 0), d3.max(x)])
+        .range([this.paddingX + this.axisSize, width - this.paddingX]);
+
+        return xScale;
+    }
+
+    /**
+     * @param {*} y y 데이터 전체
+     * @param {*} height 차트 세로 사이즈
+     * @returns 파라미터에 따른 yScale
+     */
+    getScaleY(y, height) {
+        /**
+         * 파라미터(y값, 라벨)을 넣으면 라벨의 순서에 따라 스케일링하는 함수.
+         * 시작: 패딩, 끝: full - 패딩 - x 액시스 공간
+         * @param {string} y 해당 라벨 위치를 사용해 차트 위치 & 사이즈에 맞게 스케일링
+         * @returns range에 맞게 스케일링해서 y 위치를 리턴
+         */
+        let yScale = d3.scaleBand()
+            .domain(y)
+            .range([this.paddingY, height - this.paddingY - this.axisSize]);
+
+        return yScale;
+    }
+
     /**
      * 차트를 만듬
      * @param {*} element 차트가 생성될 svg jQuery 요소
@@ -53,37 +104,15 @@ export class horizontalBar extends ChartBase {
      */
     update() {
         // 값 정의
-        let d3Element = d3.select(this.element[0]);
-        let x = this.data.values;
-        let y = this.data.labels;
-        let width = this.element.width();
-        let height = this.element.height();
-
-        /**
-         * 파라미터(x값)를 넣으면 0||min ~ max의 범위에서 스케일링하는 함수.
-         * 시작: 패딩 + y 액시스 공간, 끝: full - 패딩
-         * @param {number} x 해당 값을 차트 위치 & 사이즈에 맞게 스케일링
-         * @returns range에 맞게 스케일링해서 width를 리턴
-         */
-        let xScale = d3.scaleLinear()
-        .domain([Math.min(d3.min(x), 0), d3.max(x)])
-        .range([this.axisPaddingX + this.axisSize, width - this.axisPaddingX]);
-
-        /**
-         * 파라미터(y값, 라벨)을 넣으면 라벨의 순서에 따라 스케일링하는 함수.
-         * 시작: 패딩, 끝: full - 패딩 - x 액시스 공간
-         * @param {string} y 해당 라벨 위치를 사용해 차트 위치 & 사이즈에 맞게 스케일링
-         * @returns range에 맞게 스케일링해서 y 위치를 리턴
-         */
-        let yScale = d3.scaleBand()
-            .domain(y)
-            .range([this.axisPaddingY, height - this.axisPaddingY - this.axisSize]);
+        let [d3Element, x, y, width, height] = this.getBase();
+        let xScale = this.getScaleX(x, width);
+        let yScale = this.getScaleY(y, height);
 
         // 축 생성
         let xAxisFrame = d3Element.append("g")
-            .attr("transform", `translate(0, ${height - this.axisSize - this.axisPaddingY})`); // 위에 생성되니까 y위치를 끝 - y 액시스 공간 - 패딩으로 설정
+            .attr("transform", `translate(0, ${height - this.axisSize - this.paddingY})`); // 위에 생성되니까 y위치를 끝 - y 액시스 공간 - 패딩으로 설정
         let yAxisFrame = d3Element.append("g")
-            .attr("transform", `translate(${this.axisSize + this.axisPaddingX}, 0)`); // 패딩과 액시스 사이즈 적용
+            .attr("transform", `translate(${this.axisSize + this.paddingX}, 0)`); // 패딩과 액시스 사이즈 적용
         let xAxis = d3.axisBottom(xScale)
         let yAxis = d3.axisLeft(yScale);
         xAxis(xAxisFrame);
@@ -124,8 +153,8 @@ export class horizontalBar extends ChartBase {
         super(element, data, option); // ChartBase의 생성자 실행
 
         // 스케일링
-        this.axisPaddingX = option.axisPaddingX || 20;
-        this.axisPaddingY = option.axisPaddingY || 20;
+        this.paddingX = option.paddingX || 20;
+        this.paddingY = option.paddingY || 20;
         this.axisSize = option.axisSize || 20;
         this.barSize = option.barSize || 0.75;
         this.update();

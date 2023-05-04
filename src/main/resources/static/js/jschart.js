@@ -686,7 +686,7 @@ export const rankingChartD3 = (element, column, name, color, weatherData) => {
         };
         let options = {
             color: color,
-            axisPaddingX: 60
+            paddingX: 60
         };
 
         chart = new horizontalBar(el, data, options);
