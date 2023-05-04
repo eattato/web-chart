@@ -1,5 +1,6 @@
 import { getAverage, getData, getColumn, addOptions, destroyChart } from "/js/chartBase.js";
 const toastChart = toastui.Chart;
+import { horizontalBar } from "./d3ext.js";
 
 // 일일 기온/습도 차트
 export const dailyChart = (element, weatherData) => {
@@ -678,25 +679,16 @@ export const rankingChartD3 = (element, column, name, color, weatherData) => {
             newGlobalData[locationData[0]] = locationData[1];
         }
 
-        let el = element.find(".chart_body")[0];
+        let el = element.find(".chart_body");
         let data = {
-            categories: Object.keys(newGlobalData),
-            series: [
-                {
-                    name: name,
-                    data: Object.values(newGlobalData)
-                }
-            ]
+            labels: Object.keys(newGlobalData),
+            values: Object.values(newGlobalData)
         };
         let options = {
-            theme: {
-                series: {
-                    colors: [color]
-                }
-            }
+            color: color
         };
 
-        chart = toastChart.barChart({ el, data, options });
+        chart = new horizontalBar(el, data, options);
     }
     update("1");
 

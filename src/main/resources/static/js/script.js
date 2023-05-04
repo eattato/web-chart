@@ -1,6 +1,5 @@
 import * as jsChart from "/js/jschart.js";
 import { addOptions, clamp, getMonthChartFrame, getLocationChartFrame, getMonthChartFrameLegacy, getLocationChartFrameLegacy, getLocationChartFrameD3, getMonthChartFrameD3 } from "/js/chartBase.js";
-import { horizontalBar } from "/js/d3ext.js";
 
 let weatherData = {};
 
@@ -145,16 +144,5 @@ fetch("/data/weather3.json")
     let d3Holder = $("#d3_holder");
 
     let rainRankD3 = getMonthChartFrameD3("지역별 강우량 순위", d3Holder);
-    let chartD3 = rainRankD3.find(".chart_body");
-    let chartd3 = new horizontalBar(chartD3, {
-        labels: ["a", "b", "c"],
-        values: [5, -3, 7]
-    });
-
-    let altrainRankD3 = getMonthChartFrameD3("지역별 강우량 순위", d3Holder);
-    let altchartD3 = altrainRankD3.find(".chart_body");
-    let altchartd3 = new horizontalBar(altchartD3, {
-        labels: ["um", "jun", "sik"],
-        values: [5, 3, 7]
-    });
+    jsChart.rankingChartD3(rainRankD3, "rain", "강우량(mm)", "#1E85E6", weatherData);
 });
