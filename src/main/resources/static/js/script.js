@@ -146,7 +146,7 @@ fetch("/data/weather3.json")
 
     let rainRankD3 = getMonthChartFrameD3("지역별 강우량 순위", d3Holder);
     let chartD3 = rainRankD3.find(".chart_body");
-    horizontalBar(chartD3, {
+    let chartd3 = new horizontalBar(chartD3, {
         labels: ["a", "b", "c"],
         values: [5, 3, 7]
     });
