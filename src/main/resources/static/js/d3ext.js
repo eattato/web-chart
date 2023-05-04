@@ -14,6 +14,16 @@ const maxAlt = (a, b, aAlt, bAlt) => {
     }
 }
 
+const clamp = (min, val, max) => {
+    if (val < min) {
+        return min;
+    } else if (max && val > max) {
+        return max;
+    } else {
+        return val;
+    }
+}
+
 // 차트 베이스
 class ChartBase {
     /**
@@ -57,7 +67,7 @@ export class horizontalBar extends ChartBase {
          */
         let xScale = d3.scaleLinear()
         .domain([Math.min(d3.min(x), 0), d3.max(x)])
-        .range([this.axisPadding + this.axisSize, width - this.axisPadding]);
+        .range([this.axisPaddingX + this.axisSize, width - this.axisPaddingX]);
 
         /**
          * 파라미터(y값, 라벨)을 넣으면 라벨의 순서에 따라 스케일링하는 함수.
@@ -67,13 +77,13 @@ export class horizontalBar extends ChartBase {
          */
         let yScale = d3.scaleBand()
             .domain(y)
-            .range([this.axisPadding, height - this.axisPadding - this.axisSize]);
+            .range([this.axisPaddingY, height - this.axisPaddingY - this.axisSize]);
 
         // 축 생성
         let xAxisFrame = d3Element.append("g")
-            .attr("transform", `translate(0, ${height - this.axisSize - this.axisPadding})`); // 위에 생성되니까 y위치를 끝 - y 액시스 공간 - 패딩으로 설정
+            .attr("transform", `translate(0, ${height - this.axisSize - this.axisPaddingY})`); // 위에 생성되니까 y위치를 끝 - y 액시스 공간 - 패딩으로 설정
         let yAxisFrame = d3Element.append("g")
-            .attr("transform", `translate(${this.axisSize + this.axisPadding}, 0)`); // 패딩과 액시스 사이즈 적용
+            .attr("transform", `translate(${this.axisSize + this.axisPaddingX}, 0)`); // 패딩과 액시스 사이즈 적용
         let xAxis = d3.axisBottom(xScale)
         let yAxis = d3.axisLeft(yScale);
         xAxis(xAxisFrame);
@@ -93,7 +103,7 @@ export class horizontalBar extends ChartBase {
             .data(x) // x 데이터를 사용
             .enter()
             .append("rect") // 데이터 갯수에 맞춰 사각형 생성
-            .attr("width", (v) => xScale(Math.abs(v)) - xZeroPoint - 1) // 각 값의 절대값(마이너스 방지)를 xScale에 돌리고 영점에 맞춤 - 겹침 방지
+            .attr("width", (v) => clamp(0, xScale(Math.abs(v)) - xZeroPoint - 1)) // 각 값의 절대값(마이너스 방지)를 xScale에 돌리고 영점에 맞춤 - 겹침 방지
             .attr("height", heightResized) // height는 미리 설정한 오프셋으로 설정
             .attr("x", (v) => maxAlt(v, 0, xZeroPoint, xZeroPoint - (xScale(Math.abs(v)) - xZeroPoint)) + 1) // 겹침 방지하고 양수값이면 영점값만큼 오른쪽으로 밀고, 음수값이면 영점값 - 본인 width만큼 밀기
             .data(y) // 이후 사용할 데이터를 y 데이터로 변경, +1하고 width에 -1한건 액시스랑 겹치지 않기 위함임
@@ -110,12 +120,14 @@ export class horizontalBar extends ChartBase {
     }
 
     constructor(element, data, option) {
+        if (!option) {option = {}}
         super(element, data, option); // ChartBase의 생성자 실행
 
         // 스케일링
-        this.axisPadding = 20;
-        this.axisSize = 20;
-        this.barSize = 0.75;
+        this.axisPaddingX = option.axisPaddingX || 20;
+        this.axisPaddingY = option.axisPaddingY || 20;
+        this.axisSize = option.axisSize || 20;
+        this.barSize = option.barSize || 0.75;
         this.update();
     }
 }
