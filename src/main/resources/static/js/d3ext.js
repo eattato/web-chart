@@ -94,6 +94,11 @@ class ChartBase {
         this.element = element;
         this.data = data;
         this.option = option;
+
+        // 스케일링
+        this.paddingX = option.paddingX || 20;
+        this.paddingY = option.paddingY || 20;
+        this.axisSize = option.axisSize || 20;
     }
 }
 
@@ -153,9 +158,6 @@ export class horizontalBar extends ChartBase {
         super(element, data, option); // ChartBase의 생성자 실행
 
         // 스케일링
-        this.paddingX = option.paddingX || 20;
-        this.paddingY = option.paddingY || 20;
-        this.axisSize = option.axisSize || 20;
         this.barSize = option.barSize || 0.75;
         this.update();
     }
