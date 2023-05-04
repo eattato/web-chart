@@ -150,4 +150,11 @@ fetch("/data/weather3.json")
         labels: ["a", "b", "c"],
         values: [5, -3, 7]
     });
+
+    let altrainRankD3 = getMonthChartFrameD3("지역별 강우량 순위", d3Holder);
+    let altchartD3 = altrainRankD3.find(".chart_body");
+    let altchartd3 = new horizontalBar(altchartD3, {
+        labels: ["um", "jun", "sik"],
+        values: [5, 3, 7]
+    });
 });

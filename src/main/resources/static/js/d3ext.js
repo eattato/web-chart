@@ -50,13 +50,13 @@ export class horizontalBar extends ChartBase {
         let height = this.element.height();
 
         /**
-         * 파라미터(x값)를 넣으면 0 ~ max의 범위에서 스케일링하는 함수.
+         * 파라미터(x값)를 넣으면 0||min ~ max의 범위에서 스케일링하는 함수.
          * 시작: 패딩 + y 액시스 공간, 끝: full - 패딩
          * @param {number} x 해당 값을 차트 위치 & 사이즈에 맞게 스케일링
          * @returns range에 맞게 스케일링해서 width를 리턴
          */
         let xScale = d3.scaleLinear()
-        .domain([d3.min(x), d3.max(x)])
+        .domain([Math.min(d3.min(x), 0), d3.max(x)])
         .range([this.axisPadding + this.axisSize, width - this.axisPadding]);
 
         /**
@@ -99,6 +99,14 @@ export class horizontalBar extends ChartBase {
             .data(y) // 이후 사용할 데이터를 y 데이터로 변경, +1하고 width에 -1한건 액시스랑 겹치지 않기 위함임
             .attr("y", (v) => yScale(v) + yOffset) // 각 라벨(v)을 yScale에 돌리고 오프셋 적용해서 y위치를 설정
             .attr("fill", color); // 색상 채움
+
+        // 영점 선 표시
+        d3Element.append("line")
+            .attr("stroke", "#000000")
+            .attr("stroke-width", "1px")
+            .style("shape-rendering", "crispEdges") // 이걸 넣어야 진짜 1px 짜리 선이 됨
+            .attr("x1", xScale(0) + 1).attr("y1", yScale(y[0])) // 1번째 점(위) 그리고 좀 왼쪽에 있어서 1px 밀었음
+            .attr("x2", xScale(0) + 1).attr("y2", yScale(y[y.length - 1]) + yScale.bandwidth()); // 2번째 점(밑)
     }
 
     constructor(element, data, option) {
