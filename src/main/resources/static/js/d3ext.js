@@ -123,79 +123,30 @@ class ChartBase {
     }
 
     /**
-     * @param {*} x x 데이터 전체
-     * @param {*} width 차트 가로 사이즈
-     * @returns 파라미터에 따른 xScale
-     */    
-    getScaleLinearX(x, width) {
-        /**
-         * 파라미터(x값)를 넣으면 0||min ~ max의 범위에서 스케일링하는 함수.
-         * 시작: 패딩 + y 액시스 공간, 끝: full - 패딩
-         * @param {number} x 해당 값을 차트 위치 & 사이즈에 맞게 스케일링
-         * @returns range에 맞게 스케일링해서 width를 리턴
-         */
-        let xScale = d3.scaleLinear()
-        .domain([Math.min(d3.min(x), 0), d3.max(x)])
-        .range([this.paddingX + this.axisSize, width - this.paddingX]);
-
-        return xScale;
-    }
-
-    /**
-     * @param {*} x x 데이터 전체
-     * @param {*} width 차트 가로 사이즈
-     * @returns 파라미터에 따른 xScale
-     */    
-    getScaleBandX(x, width) {
-        /**
-         * 파라미터(x값, 라벨)을 넣으면 라벨의 순서에 따라 스케일링하는 함수.
-         * 시작: 패딩 + y 액시스 공간, 끝: full - 패딩
-         * @param {string} x 해당 라벨 위치를 사용해 차트 위치 & 사이즈에 맞게 스케일링
-         * @returns range에 맞게 스케일링해서 y 위치를 리턴
-         */
-        let xScale = d3.scaleBand()
-        .domain(x)
-        .range([this.paddingX + this.axisSize, width - this.paddingX]);
-
-        return xScale;
-    }
-
-    /**
-     * @param {*} y y 데이터 전체
-     * @param {*} height 차트 세로 사이즈
-     * @returns 파라미터에 따른 yScale
-     */    
-    getScaleLinearY(y, height) {
-        /**
-         * 파라미터(y값)를 넣으면 0||min ~ max의 범위에서 스케일링하는 함수.
-         * 시작: 패딩, 끝: full - 패딩 - x 액시스 공간
-         * @param {number} y 해당 값을 차트 위치 & 사이즈에 맞게 스케일링
-         * @returns range에 맞게 스케일링해서 height를 리턴
-         */
-        let yScale = d3.scaleLinear()
-        .domain([Math.min(d3.min(y), 0), d3.max(y)])
-        .range([this.paddingY, height - this.paddingY - this.axisSize]);
-
-        return yScale;
-    }
-
-    /**
-     * @param {*} y y 데이터 전체
-     * @param {*} height 차트 세로 사이즈
-     * @returns 파라미터에 따른 yScale
+     * 차트 사이즈에 따라 패딩, 액시스 사이즈를 적용한 range를 리턴
+     * @param {number} width 차트 width
+     * @returns 적용 완료된 range
      */
-    getScaleBandY(y, height) {
-        /**
-         * 파라미터(y값, 라벨)을 넣으면 라벨의 순서에 따라 스케일링하는 함수.
-         * 시작: 패딩, 끝: full - 패딩 - x 액시스 공간
-         * @param {string} y 해당 라벨 위치를 사용해 차트 위치 & 사이즈에 맞게 스케일링
-         * @returns range에 맞게 스케일링해서 y 위치를 리턴
-         */
-        let yScale = d3.scaleBand()
-            .domain(y)
-            .range([this.paddingY, height - this.paddingY - this.axisSize]);
+    getChartX(width) {
+        return [this.paddingX + this.axisSize, width - this.paddingX];
+    }
 
-        return yScale;
+    /**
+     * 차트 사이즈에 따라 패딩, 액시스 사이즈를 적용한 range를 리턴
+     * @param {number} height 차트 height
+     * @returns 적용 완료된 range
+     */
+    getChartY(height) {
+        return [this.paddingY, height - this.paddingY - this.axisSize];
+    }
+
+    /**
+     * data내에서 최소값, 최대값을 가진 리스트 리턴. 이 때 최소값이 양수라면 대신 0부터 시작한다.
+     * @param {*} data 검색할 리스트
+     * @returns [min, max]
+     */
+    getLinear(data) {
+        return [Math.min(d3.min(data), 0), d3.max(data)];
     }
 
     /** 
@@ -242,8 +193,12 @@ export class horizontalBar extends ChartBase {
     update() {
         // 값 정의
         let [d3Element, x, y, width, height] = this.getBase();
-        let xScale = this.getScaleLinearX(x, width);
-        let yScale = this.getScaleBandY(y, height);
+
+        // 스케일은 domain값을 range 사이즈로 스케일링해주는 함?수임
+        let xScale = d3.scaleLinear().domain(this.getLinear(x)).range(this.getChartX(width));
+        let yScale = d3.scaleBand().domain(y).range(this.getChartY(height));
+        // let xScale = this.getScaleLinearX(x, width);
+        // let yScale = this.getScaleBandY(y, height);
 
         // 축 생성
         this.createAxis(d3Element, height, xScale, yScale);
@@ -296,8 +251,10 @@ export class heatmap extends ChartBase {
     update() {
         // 값 정의
         let [d3Element, x, y, width, height] = this.getBase();
-        let xScale = this.getScaleBandX(y.x, width);
-        let yScale = this.getScaleBandY(y.y, height);
+        let xScale = d3.scaleBand().domain(y.x).range(this.getChartX(width));
+        let yScale = d3.scaleBand().domain(y.y).range(this.getChartY(height));
+        // let xScale = this.getScaleBandX(y.x, width);
+        // let yScale = this.getScaleBandY(y.y, height);
 
         // 축 생성
         this.createAxis(d3Element, height, xScale, yScale);
