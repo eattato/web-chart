@@ -84,6 +84,24 @@ class ChartBase {
         return yScale;
     }
 
+    /** 
+     * x, y 액시스를 그려줌
+     * @param {d3Element} d3Element 액시스를 그릴 대상 d3 요소
+     * @param {number} height 대상 세로 넓이
+     * @param {xScale} xScale 기준 xScale
+     * @param {yScale} yScale 기준 yScale
+     */
+    createAxis(d3Element, height, xScale, yScale) {
+        let xAxisFrame = d3Element.append("g")
+            .attr("transform", `translate(0, ${height - this.axisSize - this.paddingY})`); // 위에 생성되니까 y위치를 끝 - y 액시스 공간 - 패딩으로 설정
+        let yAxisFrame = d3Element.append("g")
+            .attr("transform", `translate(${this.axisSize + this.paddingX}, 0)`); // 패딩과 액시스 사이즈 적용
+        let xAxis = d3.axisBottom(xScale)
+        let yAxis = d3.axisLeft(yScale);
+        xAxis(xAxisFrame);
+        yAxis(yAxisFrame);
+    }
+
     /**
      * 차트를 만듬
      * @param {*} element 차트가 생성될 svg jQuery 요소
@@ -114,14 +132,7 @@ export class horizontalBar extends ChartBase {
         let yScale = this.getScaleY(y, height);
 
         // 축 생성
-        let xAxisFrame = d3Element.append("g")
-            .attr("transform", `translate(0, ${height - this.axisSize - this.paddingY})`); // 위에 생성되니까 y위치를 끝 - y 액시스 공간 - 패딩으로 설정
-        let yAxisFrame = d3Element.append("g")
-            .attr("transform", `translate(${this.axisSize + this.paddingX}, 0)`); // 패딩과 액시스 사이즈 적용
-        let xAxis = d3.axisBottom(xScale)
-        let yAxis = d3.axisLeft(yScale);
-        xAxis(xAxisFrame);
-        yAxis(yAxisFrame);
+        this.createAxis(d3Element, height, xScale, yScale);
 
         // 옵션 추출
         if (!this.option) { this.option = {}; } // option이 null인데 액세스하려고 할 때 에러 막는 용도
