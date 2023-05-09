@@ -111,28 +111,18 @@ class ChartBase {
 
     /** 
      * 차트 기본 정보 및 요소를 제공
-     * @param {boolean} noScale true라면 xScale, yScale을 제공하지 않음
-     * @returns [d3Element, x, y, width, height, xScale, yScale]
+     * @param {*} x x축이 될 데이터 또는 라벨 값
+     * @param {*} y y축이 될 데이터 또는 라벨 값
+     * @returns [d3Element, width, height, xScale, yScale]
     */
-    getBase(noScale) {
+    getBase(x, y) {
         let d3Element = d3.select(this.element[0]);
-        let x = this.data.values;
-        let y = this.data.labels;
         let width = this.element.width();
         let height = this.element.height();
-        let xScale = null, yScale = null;
 
-        if (!noScale) {
-            let firstKey = Object.keys(y)[0];
-            if (typeof y[firstKey] == "object") { // 히트맵이나 꺾은선 - ex: {labels: {x: [], y: []}}
-                xScale = this.getScaleX(y.x, width);
-                yScale = this.getScaleY(y.y, width);
-            } else { // 평범한 경우 - ex: {labels: []}
-                xScale = this.getScaleX(x, width);
-                yScale = this.getScaleY(y, height);
-            }
-        }
-        return [d3Element, x, y, width, height, xScale, yScale];
+        let xScale = this.getScaleX(x, width);
+        let yScale = this.getScaleY(y, height);
+        return [d3Element, width, height, xScale, yScale];
     }
 
     /**
@@ -221,18 +211,15 @@ export class horizontalBar extends ChartBase {
      */
     update() {
         // 값 정의
-        let [d3Element, x, y, width, height, xScale, yScale] = this.getBase();
-
-        // 스케일은 domain값을 range 사이즈로 스케일링해주는 함?수임 - 이젠 getBase로 받음
-        // let xScale = this.getScaleX(x, width);
-        // let yScale = this.getScaleY(y, height);
+        let x = this.data.values;
+        let y = this.data.labels;
+        let [d3Element, width, height, xScale, yScale] = this.getBase(x, y);
 
         // 축 생성
         this.createAxis(d3Element, height, xScale, yScale);
 
         // 옵션 추출
-        if (!this.option) { this.option = {}; } // option이 null인데 액세스하려고 할 때 에러 막는 용도
-        let color = this.option.color || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
+        let color = (this.option && this.option.color) || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
 
         // 데이터 표시
         let xZeroPoint = xScale(0); // x축 영점 크기, xScale를 거쳤다와서 패딩이 적용되어 있음
@@ -277,17 +264,16 @@ export class heatmap extends ChartBase {
      */
     update() {
         // 값 정의
-        let [d3Element, x, y, width, height] = this.getBase(true);
-        let xScale = this.getScaleX(y.x, width);
-        let yScale = this.getScaleY(y.y, width);
+        let x = this.data.values;
+        let y = this.data.labels;
+        let [d3Element, width, height, xScale, yScale] = this.getBase(y.x, y.y);
 
         // 축 생성
         this.createAxis(d3Element, height, xScale, yScale);
 
         // 옵션 추출
-        if (!this.option) { this.option = {}; } // option이 null인데 액세스하려고 할 때 에러 막는 용도
-        let startColor = this.option.startColor || "#FFFF00";
-        let endColor = this.option.endColor || "#FF0000";
+        let startColor = (this.option && this.option.startColor) || "#FFFF00";
+        let endColor = (this.option && this.option.endColor) || "#FF0000";
 
         // 최대값, 최소값 찾기
         let vMin = null, vMax = null;
@@ -347,14 +333,15 @@ export class line extends ChartBase {
      */
     update() {
         // 값 정의
-        let [d3Element, x, y, width, height, xScale, yScale] = this.getBase();
+        let x = this.data.values;
+        let y = this.data.labels;
+        let [d3Element, width, height, xScale, yScale] = this.getBase(x, y);
 
         // 축 생성
         this.createAxis(d3Element, height, xScale, yScale);
 
         // 옵션 추출
-        if (!this.option) { this.option = {}; } // option이 null인데 액세스하려고 할 때 에러 막는 용도
-        let color = this.option.color || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
+        let color = (this.option && this.option.color) || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
 
         // 데이터 표시
     }
