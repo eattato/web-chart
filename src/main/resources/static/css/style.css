@@ -128,3 +128,47 @@
 .predict_result {
     font-size: 40px;
 }
+
+/* tooltip */
+.tooltip_frame {
+    position: absolute;
+    display: none;
+    flex-direction: column;
+    width: 170px;
+    height: 70px;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 10px;
+    z-index: 2;
+}
+.tooltip_frame.active {
+    display: flex;
+}
+
+.tooltip_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 150px;
+    height: 20px;
+}
+
+.tooltip_title {
+    font-size: 14px;
+    color: white;
+}
+
+.tooltip_color {
+    width: 20px;
+    height: 20px;
+    border: 2px solid black;
+    margin-right: 5px;
+}
+
+.tooltip_body {
+    width: 150px;
+    height: 30px;
+    padding-top: 10px;
+    color: white;
+    font-size: 14px;
+}

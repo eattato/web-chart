@@ -176,7 +176,7 @@ class ChartBase {
     createAxis(d3Element, height, xScale, yScale) {
         var insertLinebreaks = function (v) {
             var el = d3.select(this);
-            var words = `${v}`.split("\n");
+            var words = `${v}`.split("  ");
             el.text("");
         
             for (var i = 0; i < words.length; i++) {
@@ -203,6 +203,31 @@ class ChartBase {
 
             // yAxisFrame.selectAll("text").each(insertLinebreaks)
         }
+    }
+
+    bindHoverTooltip(element) {
+        let tooltip = $(".tooltip_frame");
+        if (!tooltip || tooltip.length == 0) {
+            console.log("created tooltip");
+            tooltip = $($.parseHTML('<div class="tooltip_frame"><div class="tooltip_header"><div class="tooltip_title"></div><div class="tooltip_color"></div></div><div class="tooltip_body"></div></div>'))
+            tooltip.appendTo($("body"));
+        }
+
+        element.on("mouseover", (event) => {
+            let target = $(event.target);
+            let data = JSON.parse(target.text());
+            tooltip.find(".tooltip_title").text(data.label);
+            tooltip.find(".tooltip_body").text(data.value);
+            tooltip.find(".tooltip_color").css({"background-color": data.color});
+            tooltip.addClass("active");
+        }).on("mousemove", (event) => {
+            tooltip.css({
+                "top": `${event.layerY + 10}px`,
+                "left": `${event.layerX + 10}px`
+            });
+        }).on("mouseout", () => {
+            tooltip.removeClass("active")
+        })
     }
 
     /**
@@ -285,12 +310,18 @@ export class horizontalBar extends ChartBase {
 
                     // 추가 스택 데이터 표시
                     let width = clamp(0, xScale(Math.abs(v)) - xZeroPoint - 1);
-                    d3Element.append("rect")
+                    let stackDisplay = d3Element.append("rect")
                         .attr("width", width) // 각 값의 절대값(마이너스 방지)를 xScale에 돌리고 영점에 맞춤 - 겹침 방지
                         .attr("height", heightResized) // height는 미리 설정한 오프셋으로 설정
                         .attr("x", xStackOffset) // 겹침 방지하고 양수값이면 영점값만큼 오른쪽으로 밀고, 음수값이면 영점값 - 본인 width만큼 밀기
                         .attr("y", yScale(y[i]) + yOffset) // 각 라벨(v)을 yScale에 돌리고 오프셋 적용해서 y위치를 설정
-                        .attr("fill", labelColor); // 색상 채움
+                        .attr("fill", labelColor) // 색상 채움
+                        .text(JSON.stringify({
+                            label: `${y[i]} - ${label}`,
+                            value: v,
+                            color: labelColor
+                        }));
+                    this.bindHoverTooltip(stackDisplay);
                     xStackOffset += stackDirection * width
                 }
             }
