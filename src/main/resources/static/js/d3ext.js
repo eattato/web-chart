@@ -174,11 +174,25 @@ class ChartBase {
      * @param {yScale} yScale 기준 yScale
      */
     createAxis(d3Element, height, xScale, yScale) {
+        var insertLinebreaks = function (v) {
+            var el = d3.select(this);
+            var words = `${v}`.split(" ");
+            el.text("");
+        
+            for (var i = 0; i < words.length; i++) {
+                var tspan = el.append("tspan").text(words[i]);
+                if (i > 0)
+                    tspan.attr("x", 0).attr("dy", "15");
+            }
+        };
+
         if (this.option.xAxis == undefined || this.option.xAxis) {
             let xAxisFrame = d3Element.append("g")
                 .attr("transform", `translate(0, ${height - this.axisSize - this.paddingY})`); // 위에 생성되니까 y위치를 끝 - y 액시스 공간 - 패딩으로 설정
             let xAxis = d3.axisBottom(xScale)
             xAxis(xAxisFrame);
+
+            xAxisFrame.selectAll("text").each(insertLinebreaks)
         }
 
         if (this.option.yAxis == undefined || this.option.yAxis) {
@@ -186,6 +200,8 @@ class ChartBase {
                 .attr("transform", `translate(${this.axisSize + this.paddingX}, 0)`); // 패딩과 액시스 사이즈 적용
             let yAxis = d3.axisLeft(yScale);
             yAxis(yAxisFrame);
+
+            // yAxisFrame.selectAll("text").each(insertLinebreaks)
         }
     }
 

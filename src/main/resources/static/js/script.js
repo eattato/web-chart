@@ -183,10 +183,17 @@ $().ready(() => {
                 naData.push(naRow);
             }
 
+            let labels = [];
+            for (let c in naColumns) {
+                let percent = (naColumns[c] / rows.length * 100).toFixed(2);
+                let label = `${c} (${percent}%)`;
+                labels.push(label);
+            }
+
             let el = naChart.find(".chart_body");
             let data = {
                 labels: {
-                    x: Object.keys(rows[0]),
+                    x: labels,
                     y: Object.keys(naData)
                 },
                 values: naData
