@@ -885,12 +885,6 @@ export const uniqueRankEDA = (element, rows) => {
         // console.log(stackLabels);
         // console.log(stackValues);
 
-        // 라벨 rename
-        for (let i in labels) {
-            let label = labels[i];
-            labels[i] = `${label} (${values[i]})`;
-        }
-
         let el = element.find(".chart_body");
         let data = {
             name: val,

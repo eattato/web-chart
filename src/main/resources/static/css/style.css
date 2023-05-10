@@ -135,7 +135,7 @@
     position: absolute;
     display: none;
     flex-direction: column;
-    width: 170px;
+    width: auto;
     height: auto;
     padding: 10px;
     background-color: rgba(0, 0, 0, 0.6);
@@ -150,13 +150,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 150px;
+    max-width: 200px;
+    width: auto;
     min-height: 20px;
     height: auto;
 }
 
 .tooltip_title {
-    width: 125px;
+    width: 145px;
     font-size: 14px;
     color: white;
 }
@@ -168,7 +169,7 @@
 }
 
 .tooltip_body {
-    width: 150px;
+    width: 170px;
     height: 30px;
     padding-top: 10px;
     color: white;

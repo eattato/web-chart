@@ -271,16 +271,22 @@ export class horizontalBar extends ChartBase {
         let yOffset = (yScale.bandwidth() - heightResized) / 2; // 조정된 height의 작아진 크기의 반절을 빼서 오프셋 만듬
 
         // (v) => {return ~} 또는 (v) => ~를 통해 현재 사용하는 데이터를 foreach해 적용할 수 있음.
-        d3Element.selectAll("rect")
+        let rects = d3Element.selectAll("rect")
             .data(x) // x 데이터를 사용
             .enter()
             .append("rect") // 데이터 갯수에 맞춰 사각형 생성
             .attr("width", (v) => clamp(0, xScale(Math.abs(v)) - xZeroPoint - 1)) // 각 값의 절대값(마이너스 방지)를 xScale에 돌리고 영점에 맞춤 - 겹침 방지
             .attr("height", heightResized) // height는 미리 설정한 오프셋으로 설정
             .attr("x", (v) => maxAlt(v, 0, xZeroPoint, xZeroPoint - (xScale(Math.abs(v)) - xZeroPoint)) + 1) // 겹침 방지하고 양수값이면 영점값만큼 오른쪽으로 밀고, 음수값이면 영점값 - 본인 width만큼 밀기
+            .text(JSON.stringify({
+                label: this.data.name ? this.data.name : "",
+                value: v => v,
+                color: color
+            }))
             .data(y) // 이후 사용할 데이터를 y 데이터로 변경, +1하고 width에 -1한건 액시스랑 겹치지 않기 위함임
             .attr("y", (v) => yScale(v) + yOffset) // 각 라벨(v)을 yScale에 돌리고 오프셋 적용해서 y위치를 설정
-            .attr("fill", color); // 색상 채움
+            .attr("fill", color) // 색상 채움
+        this.bindHoverTooltip(rects);
 
         // 영점 선 표시
         d3Element.append("line")
@@ -391,14 +397,21 @@ export class heatmap extends ChartBase {
                 let yx = y.x[r]; // x축 라벨
                 let yy = y.y[c]; // y축 라벨
                 let alpha = (v - vMin) / (vMax - vMin) // (v / vMax) 인데 모두 vMin을 뺀 상태
+                let color = colorLerp(startColor, endColor, alpha);
                 // console.log(`v: ${v}, x: ${yx}, y: ${yy}, alpha: ${alpha}`);
                 
-                d3Element.append("rect")
+                let map = d3Element.append("rect")
                     .attr("width", xScale.bandwidth())
                     .attr("height", yScale.bandwidth())
                     .attr("x", xScale(yx) + 1)
                     .attr("y", yScale(yy) - 1)
-                    .attr("fill", colorLerp(startColor, endColor, alpha));
+                    .attr("fill", color)
+                    .text(JSON.stringify({
+                        label: `${yy}, ${yx}`,
+                        color: color,
+                        value: v
+                    }));
+                this.bindHoverTooltip(map);
             }
         }
     }
