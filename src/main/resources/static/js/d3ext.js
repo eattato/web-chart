@@ -320,7 +320,7 @@ export class horizontalBar extends ChartBase {
                         labelText = `${y[i]}, ${label}`;
                     }
 
-                    let width = clamp(0, xScale(Math.abs(v)) - xZeroPoint - 1);
+                    let width = clamp(0, xScale(Math.abs(v)) - xZeroPoint);
                     let stackDisplay = d3Element.append("rect")
                         .attr("width", width) // 각 값의 절대값(마이너스 방지)를 xScale에 돌리고 영점에 맞춤 - 겹침 방지
                         .attr("height", heightResized) // height는 미리 설정한 오프셋으로 설정
@@ -333,7 +333,7 @@ export class horizontalBar extends ChartBase {
                             color: labelColor
                         }));
                     this.bindHoverTooltip(stackDisplay);
-                    xStackOffset += stackDirection * width
+                    xStackOffset += stackDirection * width;
                 }
             }
         }
