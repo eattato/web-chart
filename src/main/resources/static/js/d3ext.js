@@ -176,7 +176,7 @@ class ChartBase {
     createAxis(d3Element, height, xScale, yScale) {
         var insertLinebreaks = function (v) {
             var el = d3.select(this);
-            var words = `${v}`.split(" ");
+            var words = `${v}`.split("\n");
             el.text("");
         
             for (var i = 0; i < words.length; i++) {

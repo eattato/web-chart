@@ -162,9 +162,13 @@ $().ready(() => {
         }).then(() => {
             console.log(`${rows.length} rows found`);
             let naChart = cb.getChartFrameD3("결측값 비율", d3Holder);
+            let uniqueChart = cb.getEmptyOptionChartFrameD3("카테고리 순위", d3Holder);
 
             // 결측값 데이터
             jsChart.naRatioEDA(naChart, rows);
+
+            // Unique 값 순위
+            jsChart.uniqueRankEDA(uniqueChart, rows);
         });
     });
 })

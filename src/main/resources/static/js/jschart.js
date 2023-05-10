@@ -3,6 +3,26 @@ const toastChart = toastui.Chart;
 import * as d3ext from "./d3ext.js";
 import * as eda from "/js/eda.js";
 
+// 딕셔너리 값으로 정렬
+const dictSort = (dict) => {
+    dict = Object.keys(dict).map(function(key) {
+        return [key, dict[key]];
+    });
+
+    dict.sort(function(first, second) {
+        return second[1] - first[1];
+    });
+
+    let keys = [];
+    let vals = [];
+    for (let i in dict) {
+        let v = dict[i];
+        keys.push(v[0]);
+        vals.push(v[1]);
+    }
+    return [keys, vals];
+}
+
 // 일일 기온/습도 차트
 export const dailyChart = (element, weatherData) => {
     let chart = null;
@@ -666,24 +686,26 @@ export const rankingChartD3 = (element, column, name, color, weatherData) => {
         }
 
         // 정렬
-        globalData = Object.keys(globalData).map(function(key) {
-            return [key, globalData[key]];
-        });
+        let [labels, values] = dictSort(globalData)
+        // let newGlobalData = dictSort(globalData);
+        // globalData = Object.keys(globalData).map(function(key) {
+        //     return [key, globalData[key]];
+        // });
 
-        globalData.sort(function(first, second) {
-            return second[1] - first[1];
-        });
+        // globalData.sort(function(first, second) {
+        //     return second[1] - first[1];
+        // });
 
-        let newGlobalData = {}
-        for (let i in globalData) {
-            let locationData = globalData[i];
-            newGlobalData[locationData[0]] = locationData[1];
-        }
+        // let newGlobalData = {}
+        // for (let i in globalData) {
+        //     let locationData = globalData[i];
+        //     newGlobalData[locationData[0]] = locationData[1];
+        // }
 
         let el = element.find(".chart_body");
         let data = {
-            labels: Object.keys(newGlobalData),
-            values: Object.values(newGlobalData)
+            labels: labels,
+            values: values
         };
         let options = {
             color: color,
@@ -788,7 +810,7 @@ export const dailyChartD3 = (element, weatherData) => {
 }
 
 // EDA 차트
-export const naRatioEDA = (naChart, rows) => {
+export const naRatioEDA = (element, rows) => {
     let [na, naCount, naColumns] = eda.isNa(rows);
 
     let naData = [];
@@ -808,11 +830,11 @@ export const naRatioEDA = (naChart, rows) => {
     let labels = [];
     for (let c in naColumns) {
         let percent = (naColumns[c] / rows.length * 100).toFixed(2);
-        let label = `${c} (${percent}%)`;
+        let label = `${c}\n${percent}%)`;
         labels.push(label);
     }
 
-    let el = naChart.find(".chart_body");
+    let el = element.find(".chart_body");
     let data = {
         labels: {
             x: labels,
@@ -826,4 +848,42 @@ export const naRatioEDA = (naChart, rows) => {
         endColor: "#000000"
     };
     let chart = new d3ext.heatmap(el, data, option);
+}
+
+export const uniqueRankEDA = (element, rows) => {
+    let chart = null;
+    let uniqueAll = eda.uniqueCheck(rows);
+    console.log(uniqueAll);
+    addOptions(element.find("select"), Object.keys(uniqueAll));
+    
+    function update(val) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        let [labels, values] = dictSort(uniqueAll[val]);
+        for (let i in labels) {
+            let label = labels[i];
+            labels[i] = `${label} (${values[i]})`;
+        }
+
+        let el = element.find(".chart_body");
+        let data = {
+            labels: labels.slice(0, 7),
+            values: values.slice(0, 7)
+        };
+        let options = {
+            paddingX: 60
+        };
+
+        chart = new d3ext.horizontalBar(el, data, options);
+    }
+
+    // 바인딩
+    element.find("select").change(function() {
+        let val = $(this).val();
+        update(val);
+    });
+    element.find("select").val("Survived");
+    update("Survived");
 }
