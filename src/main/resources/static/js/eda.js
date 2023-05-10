@@ -50,6 +50,39 @@ export const uniqueCheck = (rows) => {
 }
 
 /**
+ * 원하는 열에 특정 조건을 만족하는 행만 추출하는 함수
+ * @param {*} rows DataFrame rows
+ * @param {*} column 조건을 검색할 컬럼명
+ * @param {*} target 값을 비교할 조건 (값이 같다면 가져옴)
+ * @returns 필터링된 rows
+ */
+export const getRowsWithCondition = (rows, column, target) => {
+    let result = [];
+    for (let i in rows) {
+        let row = rows[i];
+        if (row[column] == target) {
+            result.push(row);
+        }
+    }
+    return result;
+}
+
+/**
+ * DataFrame에서 원하는 컬럼값만 리스트로 뽑아줌
+ * @param {*} rows DataFrame rows
+ * @param {*} column 원하는 컬럼명
+ * @returns 컬럼값 리스트
+ */
+export const getColumnFromRows = (rows, column) => {
+    let result = [];
+    for (let i in rows) {
+        let row = rows[i];
+        result.push(row[column]);
+    }
+    return result;
+}
+
+/**
  * DataFrame의 설명을 리턴하는 함수
  * @param {*} rows DataFrame rows
  * @returns Common EDA 설명

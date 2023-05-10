@@ -853,15 +853,39 @@ export const naRatioEDA = (element, rows) => {
 export const uniqueRankEDA = (element, rows) => {
     let chart = null;
     let uniqueAll = eda.uniqueCheck(rows);
-    console.log(uniqueAll);
-    addOptions(element.find("select"), Object.keys(uniqueAll));
-    
-    function update(val) {
+
+    let firstSelect = element.find("select").eq(0);
+    let secondSelect = element.find("select").eq(1);
+    addOptions(firstSelect, Object.keys(uniqueAll));
+    addOptions(secondSelect, Object.keys(uniqueAll));
+
+    function update(val, condition) {
         if (chart) {
             chart.destroy();
         }
 
         let [labels, values] = dictSort(uniqueAll[val]);
+        labels = labels.slice(0, 7);
+        values = values.slice(0, 7);
+
+        // 추가 조건 (첫번째 라벨과 같은 행의 다른 컬럼 카테고리 값 추출)
+        let stackLabels = Object.keys(uniqueAll[condition]);
+        let stackValues = [];
+        for (let i in labels) {
+            let label = labels[i];
+            // console.log(`${val}: ${label}`);
+
+            // Survived, Pclass로 돌린다면 전체 중 Survived가 찾는 것과 같은 행들만 나옴
+            let stackedRows = eda.getRowsWithCondition(rows, val, label);
+            let stackedUnique = eda.uniqueCheck(stackedRows); // 찾는 조건과 맞는 행들에서 카테고리 추출
+            stackValues.push(Object.values(stackedUnique[condition]));
+            // console.log(stackedUnique[condition]);
+        }
+
+        // console.log(stackLabels);
+        // console.log(stackValues);
+
+        // 라벨 rename
         for (let i in labels) {
             let label = labels[i];
             labels[i] = `${label} (${values[i]})`;
@@ -869,21 +893,32 @@ export const uniqueRankEDA = (element, rows) => {
 
         let el = element.find(".chart_body");
         let data = {
-            labels: labels.slice(0, 7),
-            values: values.slice(0, 7)
+            labels: labels,
+            values: values,
+            stack: {
+                labels: stackLabels, // Survived, Pclass 설정일 경우, Pclass 라벨 넣으면 됨 - [1, 2, 3]
+                values: stackValues  // Survived, Pclass 설정일 경우, 각 경우의 수만큼 요소 만듬(Survived 2개, Pclass 3개 = 총 6개 요소) - [ [100, 150, 20], [10, 200, 400] ]
+            }
         };
         let options = {
-            paddingX: 60
+            paddingX: 60,
+            stackStartColor: "#47E1A8",
+            stackEndColor: "#297458"
         };
 
         chart = new d3ext.horizontalBar(el, data, options);
     }
 
     // 바인딩
-    element.find("select").change(function() {
-        let val = $(this).val();
-        update(val);
-    });
-    element.find("select").val("Survived");
-    update("Survived");
+    function selectionBind() {
+        let val1 = firstSelect.val();
+        let val2 = secondSelect.val();
+        update(val1, val2);
+    }
+    firstSelect.change(selectionBind);
+    secondSelect.change(selectionBind)
+
+    firstSelect.val("Survived");
+    secondSelect.val("Pclass");
+    update("Survived", "Pclass");
 }

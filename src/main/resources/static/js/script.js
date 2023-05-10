@@ -160,9 +160,12 @@ $().ready(() => {
         d3.csv("/data/titanic.csv", (data) => {
             rows.push(data)
         }).then(() => {
-            console.log(`${rows.length} rows found`);
+            // console.log(`${rows.length} rows found`);
             let naChart = cb.getChartFrameD3("결측값 비율", d3Holder);
-            let uniqueChart = cb.getEmptyOptionChartFrameD3("카테고리 순위", d3Holder);
+            let uniqueChart = cb.getChartFrameD3("카테고리 순위", d3Holder);
+            
+            let uniqueChartSelect = $($.parseHTML('<div class="chart_selection"><select id="unique_first"></select> and <select id="unique_second"></select></div>'));
+            uniqueChartSelect.appendTo(uniqueChart.find(".chart_header"));
 
             // 결측값 데이터
             jsChart.naRatioEDA(naChart, rows);

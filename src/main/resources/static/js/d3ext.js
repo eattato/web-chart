@@ -264,6 +264,37 @@ export class horizontalBar extends ChartBase {
             .style("shape-rendering", "crispEdges") // 이걸 넣어야 진짜 1px 짜리 선이 됨
             .attr("x1", xScale(0) + 1).attr("y1", yScale(y[0])) // 1번째 점(위) 그리고 좀 왼쪽에 있어서 1px 밀었음
             .attr("x2", xScale(0) + 1).attr("y2", yScale(y[y.length - 1]) + yScale.bandwidth()); // 2번째 점(밑)
+
+        // 스택 끼우기
+        if (this.data.stack) {
+            let stackStartColor = this.option.stackStartColor || "#47E1A8";
+            let stackEndColor = this.option.stackEndColor || "#297458";
+            let stackLabels = this.data.stack.labels;
+
+            for (let i in y) {
+                let stackValues = this.data.stack.values[i];
+                let stackDirection = x[i] > 0;
+                let xStackOffset = maxAlt(x[i], 0, xZeroPoint, xZeroPoint - (xScale(Math.abs(x[i])) - xZeroPoint)) + 1;
+
+                for (let j in stackLabels) {
+                    let label = stackLabels[j];
+                    let v = stackValues[j];
+                    let alpha = j / (stackLabels.length - 1);
+                    let labelColor = colorLerp(stackStartColor, stackEndColor, alpha);
+                    // console.log(`${y[i]} and ${label} - ${v}, color: ${labelColor}`);
+
+                    // 추가 스택 데이터 표시
+                    let width = clamp(0, xScale(Math.abs(v)) - xZeroPoint - 1);
+                    d3Element.append("rect")
+                        .attr("width", width) // 각 값의 절대값(마이너스 방지)를 xScale에 돌리고 영점에 맞춤 - 겹침 방지
+                        .attr("height", heightResized) // height는 미리 설정한 오프셋으로 설정
+                        .attr("x", xStackOffset) // 겹침 방지하고 양수값이면 영점값만큼 오른쪽으로 밀고, 음수값이면 영점값 - 본인 width만큼 밀기
+                        .attr("y", yScale(y[i]) + yOffset) // 각 라벨(v)을 yScale에 돌리고 오프셋 적용해서 y위치를 설정
+                        .attr("fill", labelColor); // 색상 채움
+                    xStackOffset += stackDirection * width
+                }
+            }
+        }
     }
 
     constructor(element, data, option) {
