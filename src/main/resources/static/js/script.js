@@ -199,7 +199,9 @@ $().ready(() => {
                 values: naData
             }
             let option = {
-                yAxis: false
+                yAxis: false,
+                startColor: "#FFFFFF",
+                endColor: "#000000"
             };
             let chart = new d3ext.heatmap(el, data, option);
         });

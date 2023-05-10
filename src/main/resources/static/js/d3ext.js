@@ -73,11 +73,11 @@ const toHex = (x, formatLength) => {
 }
 
 const lerp = (start, end, alpha) => {
-    if (start > end) {
-        let temp = start;
-        start = end
-        end = temp;
-    }
+    // if (start > end) {
+    //     let temp = start;
+    //     start = end
+    //     end = temp;
+    // }
     return end - (end - start) * alpha;
 }
 
