@@ -1,6 +1,5 @@
 import * as jsChart from "/js/jschart.js";
 import * as cb from "/js/chartBase.js";
-import * as eda from "/js/eda.js";
 import * as d3ext from "/js/d3ext.js";
 
 $().ready(() => {
@@ -162,48 +161,10 @@ $().ready(() => {
             rows.push(data)
         }).then(() => {
             console.log(`${rows.length} rows found`);
-            let [columnCount, rowCount, naCount, naPercent, columnCategory, unique] = eda.getCommonDatas(rows)
-            console.log([columnCount, rowCount, naCount, naPercent, columnCategory, unique]);
-
             let naChart = cb.getChartFrameD3("결측값 비율", d3Holder);
-            let [na, naTotal, naColumns] = eda.isNa(rows);
 
             // 결측값 데이터
-            let naData = [];
-            for (let i in na) {
-                let row = na[i];
-                let naRow = [];
-                for (let c in row) {
-                    if (row[c]) {
-                        naRow.push(1);
-                    } else {
-                        naRow.push(0);
-                    }
-                }
-                naData.push(naRow);
-            }
-
-            let labels = [];
-            for (let c in naColumns) {
-                let percent = (naColumns[c] / rows.length * 100).toFixed(2);
-                let label = `${c} (${percent}%)`;
-                labels.push(label);
-            }
-
-            let el = naChart.find(".chart_body");
-            let data = {
-                labels: {
-                    x: labels,
-                    y: Object.keys(naData)
-                },
-                values: naData
-            }
-            let option = {
-                yAxis: false,
-                startColor: "#FFFFFF",
-                endColor: "#000000"
-            };
-            let chart = new d3ext.heatmap(el, data, option);
+            jsChart.naRatioEDA(naChart, rows);
         });
     });
 })

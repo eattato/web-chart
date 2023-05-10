@@ -1,6 +1,7 @@
 import { getAverage, getData, getColumn, addOptions, destroyChart } from "/js/chartBase.js";
 const toastChart = toastui.Chart;
 import * as d3ext from "./d3ext.js";
+import * as eda from "/js/eda.js";
 
 // 일일 기온/습도 차트
 export const dailyChart = (element, weatherData) => {
@@ -784,4 +785,45 @@ export const dailyChartD3 = (element, weatherData) => {
         let val = $(this).val();
         update(val);
     });
+}
+
+// EDA 차트
+export const naRatioEDA = (naChart, rows) => {
+    let [na, naCount, naColumns] = eda.isNa(rows);
+
+    let naData = [];
+    for (let i in na) {
+        let row = na[i];
+        let naRow = [];
+        for (let c in row) {
+            if (row[c]) {
+                naRow.push(1);
+            } else {
+                naRow.push(0);
+            }
+        }
+        naData.push(naRow);
+    }
+
+    let labels = [];
+    for (let c in naColumns) {
+        let percent = (naColumns[c] / rows.length * 100).toFixed(2);
+        let label = `${c} (${percent}%)`;
+        labels.push(label);
+    }
+
+    let el = naChart.find(".chart_body");
+    let data = {
+        labels: {
+            x: labels,
+            y: Object.keys(naData)
+        },
+        values: naData
+    }
+    let option = {
+        yAxis: false,
+        startColor: "#FFFFFF",
+        endColor: "#000000"
+    };
+    let chart = new d3ext.heatmap(el, data, option);
 }
