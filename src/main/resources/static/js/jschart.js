@@ -893,9 +893,11 @@ export const uniqueRankEDA = (element, rows) => {
 
         let el = element.find(".chart_body");
         let data = {
+            name: val,
             labels: labels,
             values: values,
             stack: {
+                name: condition,
                 labels: stackLabels, // Survived, Pclass 설정일 경우, Pclass 라벨 넣으면 됨 - [1, 2, 3]
                 values: stackValues  // Survived, Pclass 설정일 경우, 각 경우의 수만큼 요소 만듬(Survived 2개, Pclass 3개 = 총 6개 요소) - [ [100, 150, 20], [10, 200, 400] ]
             }

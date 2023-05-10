@@ -309,6 +309,17 @@ export class horizontalBar extends ChartBase {
                     // console.log(`${y[i]} and ${label} - ${v}, color: ${labelColor}`);
 
                     // 추가 스택 데이터 표시
+                    let labelText = "";
+                    if (this.data.name) {
+                        if (this.data.stack.name) {
+                            labelText = `${this.data.name}: ${y[i]}, ${this.data.stack.name}: ${label}`;
+                        } else {
+                            labelText = `${this.data.name}: ${y[i]}, ${label}`;
+                        }
+                    } else {
+                        labelText = `${y[i]}, ${label}`;
+                    }
+
                     let width = clamp(0, xScale(Math.abs(v)) - xZeroPoint - 1);
                     let stackDisplay = d3Element.append("rect")
                         .attr("width", width) // 각 값의 절대값(마이너스 방지)를 xScale에 돌리고 영점에 맞춤 - 겹침 방지
@@ -317,8 +328,8 @@ export class horizontalBar extends ChartBase {
                         .attr("y", yScale(y[i]) + yOffset) // 각 라벨(v)을 yScale에 돌리고 오프셋 적용해서 y위치를 설정
                         .attr("fill", labelColor) // 색상 채움
                         .text(JSON.stringify({
-                            label: `${y[i]} - ${label}`,
-                            value: v,
+                            label: labelText,
+                            value: `${v} / ${x[i]} (${(v / x[i] * 100).toFixed(2)}%)`,
                             color: labelColor
                         }));
                     this.bindHoverTooltip(stackDisplay);
