@@ -146,8 +146,10 @@ fetch("/data/weather3.json")
     let rainRankD3 = cb.getMonthChartFrameD3("지역별 강우량 순위", d3Holder);
     let temperatureRankD3 = cb.getMonthChartFrameD3("지역별 온도 순위", d3Holder);
     let heatmapD3 = cb.getChartFrameD3("지역별 기온 히트맵", d3Holder);
+    let dailyChartD3 = cb.getLocationChartFrameD3("일일 기온 및 습도", d3Holder);
 
     jsChart.rankingChartD3(rainRankD3, "rain", "강우량(mm)", "#1E85E6", weatherData);
     jsChart.rankingChartD3(temperatureRankD3, "temperature", "기온", "#FFF04D", weatherData);
     jsChart.heatmapD3(heatmapD3, weatherData);
+    jsChart.dailyChartD3(dailyChartD3, weatherData);
 });

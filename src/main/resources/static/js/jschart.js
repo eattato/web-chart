@@ -752,3 +752,36 @@ export const heatmapD3 = (element, weatherData) => {
     //     update(val);
     // });
 }
+
+export const dailyChartD3 = (element, weatherData) => {
+    let chart = null;
+    addOptions(element.find("select"), Object.keys(weatherData));
+
+    // 업데이트
+    function update(val) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        let dailyData = getData(weatherData, val);
+
+        let el = element.find(".chart_body");
+        let data = {
+            labels: getColumn(dailyData, "date"),
+            values: getColumn(dailyData, "temperature")
+            // values: [getColumn(dailyData, "temperature"), getColumn(dailyData, "humidity")]
+        };
+        let options = {
+            colors: ["#FFD400", "#1E85E6"]
+        };
+
+        chart = new d3ext.line(el, data, options);
+    }
+    update("all");
+
+    // 바인딩
+    element.find("select").change(function() {
+        let val = $(this).val();
+        update(val);
+    });
+}

@@ -335,15 +335,49 @@ export class line extends ChartBase {
         // 값 정의
         let x = this.data.values;
         let y = this.data.labels;
-        let [d3Element, width, height, xScale, yScale] = this.getBase(x, y);
+
+        let xAlt = x;
+        if (typeof xAlt[0] == "object") { // x의 요소가 배열이라면 - {values: [[1, 2, 3], [3, 2, 1]]} 형태
+            let max = 0;
+            for (let i in xAlt) {
+                let oldMax = d3.max(xAlt[max]);
+                let current = d3.max(xAlt[i]);
+                if (current > oldMax) {
+                    max = i;
+                }
+            }
+            xAlt = xAlt[max];
+        }
+
+        let [d3Element, width, height, xScale, yScale] = this.getBase(y, xAlt); // x랑 y 뒤바꿈(x가 세로, y가 가로)
 
         // 축 생성
         this.createAxis(d3Element, height, xScale, yScale);
 
         // 옵션 추출
         let color = (this.option && this.option.color) || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
+            // .attr("x1", xScale(0) + 1).attr("y1", yScale(y[0])) // 1번째 점(위) 그리고 좀 왼쪽에 있어서 1px 밀었음
+            // .attr("x2", xScale(0) + 1).attr("y2", yScale(y[y.length - 1]) + yScale.bandwidth()); // 2번째 점(밑)
 
         // 데이터 표시
+        xAlt = x;
+        if (typeof xAlt[0] != "object") { xAlt = [xAlt]; } // 여러 컬럼 처리를 위해 배열로 감쌈
+
+        for (let i in xAlt) {
+            let x = xAlt[i];
+            d3Element.selectAll("line")
+                .data(x)
+                .enter()
+                .append("line")
+                .attr("stroke", "#000000")
+                .attr("stroke-width", "1px")
+                .style("shape-rendering", "crispEdges")
+                .attr("y1", v => yScale(v))
+                .attr("y2", (v, i) => { let target = y[max(i + 1, y.length)]; return yScale(target); })
+                .data(y)
+                .attr("x1", v => xScale(v))
+                .attr("x2", (v, i) => { let target = x[max(i + 1, x.length)]; return xScale(target); })
+        }
     }
 
     constructor(element, data, option) {
