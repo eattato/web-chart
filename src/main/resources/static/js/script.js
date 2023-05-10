@@ -1,5 +1,7 @@
 import * as jsChart from "/js/jschart.js";
 import * as cb from "/js/chartBase.js";
+import * as eda from "/js/eda.js";
+import * as d3ext from "/js/d3ext.js";
 
 $().ready(() => {
     let weatherData = {};
@@ -153,12 +155,46 @@ $().ready(() => {
         jsChart.rankingChartD3(temperatureRankD3, "temperature", "기온", "#FFF04D", weatherData);
         jsChart.heatmapD3(heatmapD3, weatherData);
         jsChart.dailyChartD3(dailyChartD3, weatherData);
-    });
 
-    let rows = []
-    d3.csv("/data/titanic.csv", (data) => {
-        rows.push(data)
-    }).then(() => {
-        console.log(`${rows.length} rows found`);
+        // EDA 데이터
+        let rows = []
+        d3.csv("/data/titanic.csv", (data) => {
+            rows.push(data)
+        }).then(() => {
+            console.log(`${rows.length} rows found`);
+            let [columnCount, rowCount, naCount, naPercent, columnCategory, unique] = eda.getCommonDatas(rows)
+            console.log([columnCount, rowCount, naCount, naPercent, columnCategory, unique]);
+
+            let naChart = cb.getChartFrameD3("결측값 비율", d3Holder);
+            let [na, naTotal, naColumns] = eda.isNa(rows);
+
+            // 결측값 데이터
+            let naData = [];
+            for (let i in na) {
+                let row = na[i];
+                let naRow = [];
+                for (let c in row) {
+                    if (row[c]) {
+                        naRow.push(1);
+                    } else {
+                        naRow.push(0);
+                    }
+                }
+                naData.push(naRow);
+            }
+
+            let el = naChart.find(".chart_body");
+            let data = {
+                labels: {
+                    x: Object.keys(rows[0]),
+                    y: Object.keys(naData)
+                },
+                values: naData
+            }
+            let option = {
+                yAxis: false
+            };
+            let chart = new d3ext.heatmap(el, data, option);
+        });
     });
 })

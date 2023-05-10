@@ -137,10 +137,6 @@ class ChartBase {
             // data내에서 최소값, 최대값을 가진 리스트. 이 때 최소값이 양수라면 대신 0부터 시작한다.
             let domain = [Math.min(d3.min(data), 0), d3.max(data)];
             return d3.scaleLinear().domain(domain).range(range);
-        } else if (typeof data[firstKey] == "object") { // 히트맵이나 꺾은선 등에 쓰임
-            if (data.x) { // x, y가 있는 데이터
-
-            }
         } else { // scaleBand 리턴
             return d3.scaleBand().domain(data).range(range);
         }
@@ -153,7 +149,8 @@ class ChartBase {
      * @returns x축 스케일링 함수
      */
     getScaleX(data, width) {
-        let range = [this.paddingX + this.axisSize, width - this.paddingX];
+        let hasYaxis = (this.option.yAxis == null || this.option.yAxis == true)
+        let range = [this.paddingX + (hasYaxis ? this.axisSize : 0), width - this.paddingX];
         return this.getScale(data, range);
     }
 
@@ -164,7 +161,8 @@ class ChartBase {
      * @returns x축 스케일링 함수
      */
     getScaleY(data, height) {
-        let range = [this.paddingY, height - this.paddingY - this.axisSize];
+        let hasXaxis = (this.option.xAxis == null || this.option.xAxis == true)
+        let range = [this.paddingY, height - this.paddingY - (hasXaxis ? this.axisSize : 0)];
         return this.getScale(data, range);
     }
 
@@ -176,14 +174,19 @@ class ChartBase {
      * @param {yScale} yScale 기준 yScale
      */
     createAxis(d3Element, height, xScale, yScale) {
-        let xAxisFrame = d3Element.append("g")
-            .attr("transform", `translate(0, ${height - this.axisSize - this.paddingY})`); // 위에 생성되니까 y위치를 끝 - y 액시스 공간 - 패딩으로 설정
-        let yAxisFrame = d3Element.append("g")
-            .attr("transform", `translate(${this.axisSize + this.paddingX}, 0)`); // 패딩과 액시스 사이즈 적용
-        let xAxis = d3.axisBottom(xScale)
-        let yAxis = d3.axisLeft(yScale);
-        xAxis(xAxisFrame);
-        yAxis(yAxisFrame);
+        if (this.option.xAxis == undefined || this.option.xAxis) {
+            let xAxisFrame = d3Element.append("g")
+                .attr("transform", `translate(0, ${height - this.axisSize - this.paddingY})`); // 위에 생성되니까 y위치를 끝 - y 액시스 공간 - 패딩으로 설정
+            let xAxis = d3.axisBottom(xScale)
+            xAxis(xAxisFrame);
+        }
+
+        if (this.option.yAxis == undefined || this.option.yAxis) {
+            let yAxisFrame = d3Element.append("g")
+                .attr("transform", `translate(${this.axisSize + this.paddingX}, 0)`); // 패딩과 액시스 사이즈 적용
+            let yAxis = d3.axisLeft(yScale);
+            yAxis(yAxisFrame);
+        }
     }
 
     /**
