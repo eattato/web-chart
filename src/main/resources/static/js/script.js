@@ -166,7 +166,7 @@ $().ready(() => {
             // console.log(`${rows.length} rows found`);
             let edaHolder = $("#eda_holder");
             let naChart = cb.getChartFrameD3("결측값 비율", edaHolder);
-            let uniqueChart = cb.getChartFrameD3("카테고리 순위", edaHolder);
+            let uniqueChart = cb.getChartFrameD3("카테고리 상관관계", edaHolder);
             
             let uniqueChartSelect = $($.parseHTML('<div class="chart_selection"><select id="unique_first"></select> and <select id="unique_second"></select></div>'));
             uniqueChartSelect.appendTo(uniqueChart.find(".chart_header"));
@@ -178,8 +178,14 @@ $().ready(() => {
             jsChart.uniqueRankEDA(uniqueChart, rows);
 
             // Describe 표
-            let describe = cb.getEmptyOptionChartFrameD3("Describe", edaHolder);
+            let describe = cb.getEmptyOptionChartFrameD3("컬럼 정보", edaHolder);
             jsChart.describeEDA(describe, rows);
+
+            // 스캐터
+            let scatter = cb.getChartFrameD3("상관관계 스캐터 플롯", edaHolder);
+            let scatterSelect = $($.parseHTML('<div class="chart_selection"><select></select> and <select></select></div>'));
+            scatterSelect.appendTo(scatter.find(".chart_header"));
+            jsChart.scatterEDA(scatter, rows);
 
             // 이미지 분석
             let imgChart = cb.getEmptyOptionChartFrameD3("이미지 색상 분석", edaHolder);

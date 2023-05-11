@@ -1,4 +1,4 @@
-const isNull = (val) => {
+export const isNull = (val) => {
     return (val == null || val == undefined || (typeof val == "string" && val.length == 0))
 }
 
@@ -86,6 +86,36 @@ export const getColumnFromRows = (rows, column) => {
     for (let i in rows) {
         let row = rows[i];
         result.push(row[column]);
+    }
+    return result;
+}
+
+/**
+ * 해당 컬럼 데이터가 숫자만 있는지 확인
+ * @param {*} column 컬럼 데이터 리스트
+ * @returns {boolean} 숫자 여부
+ */
+export const isColumnNumber = (column) => {
+    for (let i in column) {
+        let v = column[i];
+        if (!isNull(v) && isNaN(v)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * 컬럼 데이터에서 Null 값만 삭제해줌
+ * @param {*} column 컬럼 데이터
+ * @returns Null을 없앤 컬럼 데이터
+ */
+export const removeNull = (column) => {
+    let result = [];
+    for (let i in column) {
+        if (!isNull(column[i])) {
+            result.push(column[i]);
+        }
     }
     return result;
 }

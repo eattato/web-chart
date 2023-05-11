@@ -922,42 +922,42 @@ export const uniqueRankEDA = (element, rows) => {
 export const describeEDA = (element, rows) => {
     let chart = null;
 
-    let columns = [];
-    let values = [];
-
-    let [na, naCount, naColumns] = eda.isNa(rows);
+    let columns = {};
 
     // 숫자형인 컬럼명만 수집
     let keys = Object.keys(rows[0]);
     for (let i = 1; i < keys.length; i++) {
         let c = keys[i];
-        if (naColumns[c] == 0 && !isNaN(rows[0][c])) {
-            columns.push(c);
-
-            let datas = n.toNum(getColumn(rows, c));
-            let sorted = [...datas].sort();
-
-            let sortedMin = Math.floor(sorted.length / 2);
-            let sortedMax = Math.ceil(sorted.length / 2);
-            let median = sortedMin;
-            if (sorted.length % 2 == 1) {
-                median = sortedMin;
-            } else {
-                median = (sortedMin + sortedMax) / 2;
-            }
-
-            let data = [
-                datas.length, // count
-                n.mean(datas), // mean
-                n.std(datas), // std
-                n.min(datas), // min
-                n.max(datas), // max
-                n.var(datas), // var
-                median // median
-            ];
-            values.push(data);
-            // console.log(`${c}: ${data}`);
+        let columnData = getColumn(rows, c);
+        if (eda.isColumnNumber(columnData)) {
+            columns[c] = n.toNum(eda.removeNull(columnData));
         }
+    }
+
+    // 데이터 정리
+    for (let c in columns) {
+        let datas = columns[c];
+        let sorted = [...datas].sort();
+
+        let sortedMin = Math.floor(sorted.length / 2);
+        let sortedMax = Math.ceil(sorted.length / 2);
+        let median = sortedMin;
+        if (sorted.length % 2 == 1) {
+            median = sortedMin;
+        } else {
+            median = (sortedMin + sortedMax) / 2;
+        }
+
+        let data = [
+            datas.length, // count
+            n.mean(datas), // mean
+            n.std(datas), // std
+            n.min(datas), // min
+            n.max(datas), // max
+            n.var(datas), // var
+            median // median
+        ];
+        columns[c] = data;
     }
 
     function update(val) {
@@ -968,10 +968,10 @@ export const describeEDA = (element, rows) => {
         let el = element.find(".chart_body");
         let data = {
             labels: {
-                x: columns,
+                x: Object.keys(columns),
                 y: ["count", "mean", "std", "min", "max", "var", "median"]
             },
-            values: rotateRows(values),
+            values: rotateRows(Object.values(columns)),
         };
         let options = {};
 
@@ -980,6 +980,64 @@ export const describeEDA = (element, rows) => {
 
     // 바인딩
     update();
+}
+
+export const scatterEDA = (element, rows) => {
+    let chart = null;
+    
+    let columns = {};
+
+    // 숫자형인 컬럼명만 수집
+    let keys = Object.keys(rows[0]);
+    for (let i = 1; i < keys.length; i++) {
+        let c = keys[i];
+        let columnData = getColumn(rows, c);
+        if (eda.isColumnNumber(columnData)) {
+            columns[c] = columnData;
+        }
+    }
+
+    let firstSelect = element.find("select").eq(0);
+    let secondSelect = element.find("select").eq(1);
+    addOptions(firstSelect, Object.keys(columns));
+    addOptions(secondSelect, Object.keys(columns));
+
+    function update(val1, val2) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        // 결측값 1이나 2에 하나라도 있으면 안씀
+        let values = [];
+        for (let i in rows) {
+            let row = rows[i];
+            if (!eda.isNull(row[val1]) && !eda.isNull(row[val2])) {
+                values.push([Number(row[val1]), Number(row[val2])]);
+            }
+        }
+
+        let el = element.find(".chart_body");
+        let data = {
+            labels: {},
+            values: values
+        };
+        let options = {};
+
+        chart = new d3ext.scatter(el, data, options);
+    }
+
+    // 바인딩
+    function selectionBind() {
+        let val1 = firstSelect.val();
+        let val2 = secondSelect.val();
+        update(val1, val2);
+    }
+    firstSelect.change(selectionBind);
+    secondSelect.change(selectionBind)
+
+    firstSelect.val("Age");
+    secondSelect.val("Fare");
+    update("Age", "Fare");
 }
 
 export const rgbEDA = (element, rgb) => {

@@ -558,3 +558,57 @@ export class table extends ChartBase {
         this.update();
     }
 }
+
+// 스캐터
+export class scatter extends ChartBase {
+    /**
+     * 차트를 업데이트함
+     */
+    update() {
+        // 값 정의
+        let x = this.data.values;
+        let y = this.data.labels;
+
+        let scatterX = [];
+        let scatterY = [];
+        for (let i in x) {
+            scatterX.push(x[i][0]);
+            scatterY.push(x[i][1]);
+        }
+        // console.log(scatterX);
+        // console.log(scatterY);
+
+        let [d3Element, width, height, xScale, yScale] = this.getBase(scatterX, scatterY);
+
+        // 축 생성
+        this.createAxis(d3Element, height, xScale, yScale);
+
+        // 옵션 추출
+        let color = (this.option && this.option.color) || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
+        let radius = (this.option && this.option.radius) || 3;
+
+        // 데이터 표시
+        d3Element.selectAll("circle")
+            .data(scatterX)
+            .enter()
+            .append("circle")
+            .attr("cx", v => xScale(v))
+            .data(scatterY)
+            .attr("cy", v => yScale(v))
+            .attr("r", radius)
+            .attr("fill", color)
+    }
+
+    /**
+     * 스캐터 플롯을 띄움
+     * @param {*} data [ [1, 2], [3.14, 15.92], [12, 21] ] x,y 들어간 2차원 형태로
+     */
+    constructor(element, data, option) {
+        if (!option) {option = {}}
+        super(element, data, option); // ChartBase의 생성자 실행
+
+        // 스케일링
+        this.barSize = option.barSize || 0.75;
+        this.update();
+    }
+}
