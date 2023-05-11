@@ -178,7 +178,7 @@ $().ready(() => {
             jsChart.uniqueRankEDA(uniqueChart, rows);
 
             // Describe 표
-            let describe = cb.getEmptyOptionChartFrameD3("컬럼 정보", edaHolder);
+            let describe = cb.getChartFrameD3("컬럼 정보", edaHolder);
             jsChart.describeEDA(describe, rows);
 
             // 스캐터
@@ -188,7 +188,7 @@ $().ready(() => {
             jsChart.scatterEDA(scatter, rows);
 
             // 이미지 분석
-            let imgChart = cb.getEmptyOptionChartFrameD3("이미지 색상 분석", edaHolder);
+            // let imgChart = cb.getEmptyOptionChartFrameD3("이미지 색상 분석", edaHolder);
 
             // cb.getPixelDatas(`${protocol}//${host}/data/images/1.jpg`, cb.getRGB)
             // .then((pixels) => {
