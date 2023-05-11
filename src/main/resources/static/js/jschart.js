@@ -830,7 +830,7 @@ export const naRatioEDA = (element, rows) => {
     let labels = [];
     for (let c in naColumns) {
         let percent = (naColumns[c] / rows.length * 100).toFixed(2);
-        let label = `${c}  ${percent}%)`;
+        let label = `${c}  (${percent}%)`;
         labels.push(label);
     }
 
