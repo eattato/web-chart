@@ -212,8 +212,8 @@ export const n = {
     min: arr => arr.reduce((r, v) => v < r ? v : r), // 최소값
     max: arr => arr.reduce((r, v) => v > r ? v : r), // 최대값
     dev: arr => arr.map(v => v - n.mean(arr)), // 편차
-    var: arr => n.dev(arr).reduce((r, v) => r + Math.pow(Math.abs(v), 2), 0), // 모분산
-    std: arr => Math.sqrt(n.var(arr) / arr.length) // 표준 편차
+    var: arr => n.dev(arr).reduce((r, v) => r + Math.pow(Math.abs(v), 2), 0) / arr.length, // 분산
+    std: arr => Math.sqrt(n.var(arr)) // 표준 편차
 }
 
 export const rotateRows = (arr) => {
