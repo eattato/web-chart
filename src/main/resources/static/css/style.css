@@ -186,6 +186,7 @@
 
 .chart_body td {
     text-align: right;
+    text-overflow: ellipsis;
     overflow: hidden;
     padding: 5px 5px;
 }
