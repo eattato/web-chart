@@ -1,4 +1,4 @@
-import { getAverage, getData, getColumn, addOptions, destroyChart } from "/js/chartBase.js";
+import { getData, getColumn, addOptions, destroyChart, n, rotateRows } from "/js/chartBase.js";
 const toastChart = toastui.Chart;
 import * as d3ext from "./d3ext.js";
 import * as eda from "/js/eda.js";
@@ -162,10 +162,10 @@ export const rainChart = (element, weatherData) => {
 
         // 월 별로 평균 내기
         for (let month in rainData) {
-            rainData[month] = getAverage(rainData[month]);
+            rainData[month] = n.mean(rainData[month]);
         }
         for (let month in snowData) {
-            snowData[month] = getAverage(snowData[month]);
+            snowData[month] = n.mean(snowData[month]);
         }
 
         let el = element.find(".chart_body")[0];
@@ -247,7 +247,7 @@ export const rankingChart = (element, column, name, color, weatherData) => {
         Object.assign(globalData, weatherData);
 
         for (let location in globalData) {
-            globalData[location] = getAverage(getColumn(getData(weatherData, location, val), column));
+            globalData[location] = n.mean(getColumn(getData(weatherData, location, val), column));
         }
 
         // 정렬
@@ -410,7 +410,7 @@ export const heatmap = (element, weatherData) => {
                         monthData.push(dayData);
                     }
                 }
-                yearData.push(getAverage(getColumn(monthData, "temperature")));
+                yearData.push(n.mean(getColumn(monthData, "temperature")));
             }
             heatDatas.push(yearData);
         }
@@ -563,10 +563,10 @@ export const rainChartLegacy = (element, weatherData) => {
 
         // 월 별로 평균 내기
         for (let month in rainData) {
-            rainData[month] = getAverage(rainData[month]);
+            rainData[month] = n.mean(rainData[month]);
         }
         for (let month in snowData) {
-            snowData[month] = getAverage(snowData[month]);
+            snowData[month] = n.mean(snowData[month]);
         }
 
         let el = element.find(".chart_body")[0];
@@ -622,7 +622,7 @@ export const rankingChartLegacy = (element, column, name, color, weatherData) =>
         Object.assign(globalData, weatherData);
 
         for (let location in globalData) {
-            globalData[location] = getAverage(getColumn(getData(weatherData, location, val), column));
+            globalData[location] = n.mean(getColumn(getData(weatherData, location, val), column));
         }
 
         // 정렬
@@ -682,7 +682,7 @@ export const rankingChartD3 = (element, column, name, color, weatherData) => {
         Object.assign(globalData, weatherData);
 
         for (let location in globalData) {
-            globalData[location] = getAverage(getColumn(getData(weatherData, location, val), column));
+            globalData[location] = n.mean(getColumn(getData(weatherData, location, val), column));
         }
 
         // 정렬
@@ -749,7 +749,7 @@ export const heatmapD3 = (element, weatherData) => {
                         monthData.push(dayData);
                     }
                 }
-                yearData.push(getAverage(getColumn(monthData, "temperature")));
+                yearData.push(n.mean(getColumn(monthData, "temperature")));
             }
             heatDatas.push(yearData);
         }
@@ -917,4 +917,118 @@ export const uniqueRankEDA = (element, rows) => {
     firstSelect.val("Survived");
     secondSelect.val("Pclass");
     update("Survived", "Pclass");
+}
+
+export const describeEDA = (element, rows) => {
+    let chart = null;
+
+    let columns = [];
+    let values = [];
+
+    let [na, naCount, naColumns] = eda.isNa(rows);
+
+    // 숫자형인 컬럼명만 수집
+    let keys = Object.keys(rows[0]);
+    for (let i = 1; i < keys.length; i++) {
+        let c = keys[i];
+        if (naColumns[c] == 0 && !isNaN(rows[0][c])) {
+            columns.push(c);
+
+            let datas = n.toNum(getColumn(rows, c));
+            let sorted = [...datas].sort();
+
+            let sortedMin = Math.floor(sorted.length / 2);
+            let sortedMax = Math.ceil(sorted.length / 2);
+            let median = sortedMin;
+            if (sorted.length % 2 == 1) {
+                median = sortedMin;
+            } else {
+                median = (sortedMin + sortedMax) / 2;
+            }
+
+            let data = [
+                datas.length, // count
+                n.mean(datas), // mean
+                n.std(datas), // std
+                n.min(datas), // min
+                n.max(datas), // max
+                n.var(datas), // var
+                median // median
+            ];
+            values.push(data);
+            // console.log(`${c}: ${data}`);
+        }
+    }
+
+    function update(val) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        let el = element.find(".chart_body");
+        let data = {
+            labels: {
+                x: columns,
+                y: ["count", "mean", "std", "min", "max", "var", "median"]
+            },
+            values: rotateRows(values),
+        };
+        let options = {};
+
+        chart = new d3ext.table(el, data, options);
+    }
+
+    // 바인딩
+    update();
+}
+
+export const rgbEDA = (element, rgb) => {
+    console.log(rgb);
+
+    const quartile = (arr, q) => {
+        let pos = (arr.length - 1) * q;
+        let base = Math.floor(pos);
+        let rest = pos - base;
+
+        if (arr[base + 1] !== undefined) {
+            return arr[base] + rest * (arr[base + 1] - arr[base]);
+        } else {
+            return arr[base];
+        }
+    }
+
+    console.log(quartile(rgb.r, 0.7))
+
+    let chart = null;
+
+    let selections = [
+        "RGB 사분위수", // RGB 사분위수 barchart
+    ];
+    addOptions(element.find("select"), selections);
+
+    function update(val) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        if (val == "RGB 사분위수") { // Bar chart
+            let el = element.find(".chart_body");
+            let data = {
+                labels: ["R Q1", "R Q2", "R Q3"],
+                // values: values
+            };
+            let options = {
+                color: color,
+                paddingX: 60
+            };
+
+            // chart = new d3ext.horizontalBar(el, data, options);
+        }
+    }
+
+    // 바인딩
+    element.find("select").change(() => {
+        let val = element.find("select").val();
+    });
+    update(selections[0]);
 }

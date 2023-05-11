@@ -2,6 +2,14 @@ const isNull = (val) => {
     return (val == null || val == undefined || (typeof val == "string" && val.length == 0))
 }
 
+const getColumn = (data, column) => {
+    let result = [];
+    for (let i in data) {
+        result.push(data[i][column]);
+    }
+    return result;
+}
+
 /**
  * DataFrame의 모든 값을 결측값 여부로 변환해 리턴
  * @param {*} rows DataFrame rows

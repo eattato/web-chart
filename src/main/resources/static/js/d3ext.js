@@ -494,3 +494,67 @@ export class line extends ChartBase {
         this.update();
     }
 }
+
+// 테이블
+export class table extends ChartBase {
+    /**
+     * 차트를 업데이트함
+     */
+    update() {
+        // 값 정의
+        let x = this.data.values;
+        let y = this.data.labels;
+        y.x.unshift("");
+        let [d3Element, width, height, xScale, yScale] = this.getBase(y.x, y.y);
+
+        // 데이터 표시
+        let table = d3Element.append("table");
+        let thead = table.append("thead");
+        let tbody = table.append("tbody");
+
+        thead.append("tr")
+            .selectAll("th")
+            .data(y.x)
+            .enter()
+            .append("th")
+            .text(v => v)
+
+        let tr = tbody.selectAll("tr")
+            .data(x)
+            .enter()
+            .append("tr")
+
+        let td = tr.selectAll("td")
+            .data(v => v)
+            .enter()
+            .append("td")
+            // .attr("width", v => xScale.bandwidth())
+            // .attr("height", v => yScale.bandwidth())
+            .text(v => v);
+
+        let ind = 0;
+        for (let c in y.y) {
+            let targetRow = tr.filter((v, i) => i == ind);
+            targetRow.insert("th", ":first-child").text(y.y[c]);
+            ind++;
+        }
+    }
+
+    constructor(element, data, option) {
+        if (element.prop("tagName") == "svg") {
+            let newBody = $($.parseHTML('<div class="chart_body"></div>'));
+            newBody.appendTo(element.parent());
+            element.remove();
+            element = newBody;
+        }
+
+        if (!option) {option = {}}
+        option.xAxis = false;
+        option.yAxis = false;
+        super(element, data, option); // ChartBase의 생성자 실행
+
+        // 스케일링
+        this.barSize = option.barSize || 0.75;
+        this.update();
+    }
+}

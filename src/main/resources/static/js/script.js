@@ -2,6 +2,9 @@ import * as jsChart from "/js/jschart.js";
 import * as cb from "/js/chartBase.js";
 import * as d3ext from "/js/d3ext.js";
 
+const protocol = window.location.protocol;
+const host = window.location.host;
+
 $().ready(() => {
     let weatherData = {};
 
@@ -161,8 +164,9 @@ $().ready(() => {
             rows.push(data)
         }).then(() => {
             // console.log(`${rows.length} rows found`);
-            let naChart = cb.getChartFrameD3("결측값 비율", d3Holder);
-            let uniqueChart = cb.getChartFrameD3("카테고리 순위", d3Holder);
+            let edaHolder = $("#eda_holder");
+            let naChart = cb.getChartFrameD3("결측값 비율", edaHolder);
+            let uniqueChart = cb.getChartFrameD3("카테고리 순위", edaHolder);
             
             let uniqueChartSelect = $($.parseHTML('<div class="chart_selection"><select id="unique_first"></select> and <select id="unique_second"></select></div>'));
             uniqueChartSelect.appendTo(uniqueChart.find(".chart_header"));
@@ -172,6 +176,18 @@ $().ready(() => {
 
             // Unique 값 순위
             jsChart.uniqueRankEDA(uniqueChart, rows);
+
+            // Describe 표
+            let describe = cb.getEmptyOptionChartFrameD3("Describe", edaHolder);
+            jsChart.describeEDA(describe, rows);
+
+            // 이미지 분석
+            let imgChart = cb.getEmptyOptionChartFrameD3("이미지 색상 분석", edaHolder);
+
+            // cb.getPixelDatas(`${protocol}//${host}/data/images/1.jpg`, cb.getRGB)
+            // .then((pixels) => {
+            //     jsChart.rgbEDA(imgChart, pixels);
+            // });
         });
     });
 })

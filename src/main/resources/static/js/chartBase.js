@@ -158,3 +158,78 @@ export const getEmptyOptionChartFrameD3 = (title, parent) => {
     frame.appendTo(parent);
     return frame;
 }
+
+export const getAllPixels = (data) => {
+    let result = [];
+    for (let y = 0; y < img.height; y++) {
+        let row = [];
+        for (let x = 0; x < img.width; x++) {
+            let pixel = [];
+            for (let i = 0; i < 4; i++)
+            { pixel.push(data[y * img.width + x * 4 + i]); }
+            row.push(pixel);
+        }
+        result.push(row);
+    }
+    return result;
+}
+
+export const getRGB = (data) => {
+    let result = {r: [], g: [], b: []};
+    for (let i = 0; i < data.length; i += 4) {
+        result.r.push(data[i]);
+        result.g.push(data[i + 1]);
+        result.b.push(data[i + 2]);
+    }
+
+    for (let channel in result) {
+        result[channel] = result[channel].sort((a, b) => a - b);
+    }
+
+    return result;
+}
+
+export const getPixelDatas = (url, method) => {
+    let img = document.createElement("img")
+    img.src = url;
+
+    return new Promise((resolve, reject) => {
+        img.onload = () => {
+            let canvas = document.createElement("canvas");
+            let context = canvas.getContext("2d");
+            context.drawImage(img, 0, 0);
+
+            let data = context.getImageData(0, 0, img.width, img.height).data;            
+            resolve(method(data));
+        };
+    })
+}
+
+export const n = {
+    toNum: arr => arr.map(v => Number(v)),
+    sum: arr => arr.reduce((r, v) => r + v), // 합계
+    mean: arr => n.sum(arr) / arr.length, // 평균
+    min: arr => arr.reduce((r, v) => v < r ? v : r), // 최소값
+    max: arr => arr.reduce((r, v) => v > r ? v : r), // 최대값
+    dev: arr => arr.map(v => v - n.mean(arr)), // 편차
+    var: arr => n.dev(arr).reduce((r, v) => r + Math.pow(Math.abs(v), 2), 0), // 모분산
+    std: arr => Math.sqrt(n.var(arr) / arr.length) // 표준 편차
+}
+
+export const rotateRows = (arr) => {
+    // console.log(arr);
+    let result = [];
+    for (let i = 0; i < arr[0].length; i++) {
+        result.push([]);
+    }
+    // console.log(`be ${result.length} columns`);
+
+    for (let c = 0; c < arr[0].length; c++) {
+        for (let r in arr) {
+            let row = arr[r];
+            result[c].push(row[c]);
+        }
+    }
+    // console.log(result);
+    return result;
+}
