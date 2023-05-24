@@ -130,6 +130,13 @@ export const getLocationChartFrameLegacy = (title, parent) => {
     return frame;
 }
 
+export const getEmptyOptionChartFrameLegacy = (title, parent) => {
+    let frame = $($.parseHTML('<div class="chart_frame"><div class="chart_header"><div class="chart_title"></div><select name="" id=""></select></div><canvas class="chart_body" width: "600" "height: 310"></canvas></div>'));
+    frame.find(".chart_title").text(title);
+    frame.appendTo(parent);
+    return frame;
+}
+
 // D3 차트 프레임
 export const getMonthChartFrameD3 = (title, parent) => {
     let frame = $($.parseHTML('<div class="chart_frame"><div class="chart_header"><div class="chart_title"></div><select name="" id=""><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select></div><svg class="chart_body" width: "600" "height: 310"></svg></div>'));
@@ -174,6 +181,26 @@ export const getAllPixels = (data) => {
     return result;
 }
 
+export const getAllPixelColors = (data) => {
+    let result = [];
+    for (let y = 0; y < img.height; y++) {
+        let row = [];
+        for (let x = 0; x < img.width; x++) {
+            let i = y * img.width + x * 4;
+            let pixel = {
+                r: data[i],
+                g: data[i + 1],
+                b: data[i + 2],
+                a: data[i + 3],
+                gray: Math.floor(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2])
+            };
+            row.push(pixel);
+        }
+        result.push(row);
+    }
+    return result;
+}
+
 export const getRGB = (data) => {
     let result = {r: [], g: [], b: [], gray: []};
     for (let i = 0; i < data.length; i += 4) {
@@ -190,7 +217,7 @@ export const getRGB = (data) => {
     return result;
 }
 
-export const getPixelDatas = (url, method) => {
+export const getPixelDatas = (url, scale = 1, method) => {
     let img = document.createElement("img")
     img.src = url;
 
@@ -198,13 +225,43 @@ export const getPixelDatas = (url, method) => {
         img.onload = () => {
             let canvas = document.createElement("canvas");
             let context = canvas.getContext("2d");
-            context.drawImage(img, 0, 0);
+            context.drawImage(img, 0, 0, img.width, img.height);
 
             let data = context.getImageData(0, 0, img.width, img.height).data;
             resolve(method(data));
         };
     })
 }
+
+// export const getPixelDatas = (url, scale = 1, method) => {
+//     let img = document.createElement("img")
+//     img.src = url;
+
+//     return new Promise((resolve, reject) => {
+//         img.onload = () => {
+//             let { width, height, offsetX, offsetY } = [img.width, img.height, 0, 0];
+//             if (typeof scale == "object") {
+//                 if (img.width > img.height) { // 가로가 세로보다 길다
+//                     scale = scale[0] / img.width;
+//                 } else {
+//                     scale = scale[1] / img.height;
+//                 }
+
+//                 width = parseInt(Math.floor(img.width * scale));
+//                 height = parseInt(Math.floor(img.height * scale));
+//                 offsetX = parseInt(Math.floor((scale[0] - width) / 2));
+//                 offsetY = parseInt(Math.floor((scale[1] - height) / 2));
+//             }
+
+//             let canvas = document.createElement("canvas");
+//             let context = canvas.getContext("2d");
+//             context.drawImage(img, offsetX, offsetY, width, height);
+
+//             let data = context.getImageData(offsetX, offsetY, width, height).data;
+//             resolve(method(data));
+//         };
+//     })
+// }
 
 export const n = {
     toNum: arr => arr.map(v => Number(v)),

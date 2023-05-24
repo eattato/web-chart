@@ -1103,7 +1103,7 @@ export const rgbHistogramEDA = (element, img) => {
     addOptions(element.find("select"), selections);
 
     // 이미지 탐색
-    cb.getPixelDatas(img, cb.getRGB)
+    cb.getPixelDatas(img, 1, cb.getRGB)
         .then((pixels) => {
             let pixelCounts = {};
             for (let channel in pixels) {
@@ -1142,6 +1142,33 @@ export const rgbHistogramEDA = (element, img) => {
                     reverse: true
                 };
                 chart = new d3ext.verticalBar(el, data, options);
+            }
+        
+            // 바인딩
+            element.find("select").change(() => {
+                let val = element.find("select").val();
+                update(val);
+            });
+            update(selections[0]);
+        });
+}
+
+export const rgbChannelEDA = (element, img) => {
+    let canvas = element.find(".chart_body")[0];
+    console.log(canvas);
+    let context = canvas.getContext("2d");
+
+    let selections = ["GRAY", "R", "G", "B"];
+    addOptions(element.find("select"), selections);
+
+    // 이미지 탐색
+    cb.getPixelDatas(img, [canvas.width, canvas.height], cb.getPixelDatas)
+        .then((pixels) => {
+            function update(val) {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 그리기
+                
             }
         
             // 바인딩

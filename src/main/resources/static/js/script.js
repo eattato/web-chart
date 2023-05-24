@@ -159,12 +159,12 @@ $().ready(() => {
         jsChart.dailyChartD3(dailyChartD3, weatherData);
 
         // EDA 데이터
+        let edaHolder = $("#eda_holder");
         let rows = []
         d3.csv("/data/titanic.csv", (data) => {
             rows.push(data)
         }).then(() => {
             // console.log(`${rows.length} rows found`);
-            let edaHolder = $("#eda_holder");
             let naChart = cb.getChartFrameD3("결측값 비율", edaHolder);
             let uniqueChart = cb.getChartFrameD3("카테고리 상관관계", edaHolder);
             
@@ -186,10 +186,14 @@ $().ready(() => {
             let scatterSelect = $($.parseHTML('<div class="chart_selection"><select></select> and <select></select></div>'));
             scatterSelect.appendTo(scatter.find(".chart_header"));
             jsChart.scatterEDA(scatter, rows);
-
-            // 이미지 분석
-            let imgChart = cb.getEmptyOptionChartFrameD3("이미지 히스토그램", edaHolder);
-            jsChart.rgbHistogramEDA(imgChart, `${protocol}//${host}/data/images/rainbow.png`)
         });
+
+        // 이미지 분석
+        let imgChart = cb.getEmptyOptionChartFrameD3("이미지 히스토그램", edaHolder);
+        jsChart.rgbHistogramEDA(imgChart, `${protocol}//${host}/data/images/rainbow.png`)
+
+        // 이미지 채널 (캔버스 사용)
+        let imgChannels = cb.getEmptyOptionChartFrameLegacy("이미지 채널", edaHolder);
+        jsChart.rgbChannelEDA(imgChart, `${protocol}//${host}/data/images/rainbow.png`)
     });
 })
