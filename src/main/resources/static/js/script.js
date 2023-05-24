@@ -188,12 +188,8 @@ $().ready(() => {
             jsChart.scatterEDA(scatter, rows);
 
             // 이미지 분석
-            // let imgChart = cb.getEmptyOptionChartFrameD3("이미지 색상 분석", edaHolder);
-
-            // cb.getPixelDatas(`${protocol}//${host}/data/images/1.jpg`, cb.getRGB)
-            // .then((pixels) => {
-            //     jsChart.rgbEDA(imgChart, pixels);
-            // });
+            let imgChart = cb.getEmptyOptionChartFrameD3("이미지 히스토그램", edaHolder);
+            jsChart.rgbHistogramEDA(imgChart, `${protocol}//${host}/data/images/rainbow.png`)
         });
     });
 })

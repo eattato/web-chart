@@ -138,7 +138,7 @@ class ChartBase {
             let domain = [Math.min(d3.min(data), 0), d3.max(data)];
             return d3.scaleLinear().domain(domain).range(range);
         } else { // scaleBand 리턴
-            return d3.scaleBand().domain(data).range(range);
+            return d3.scaleBand().domain(data).range(range).paddingInner(0).paddingOuter(0);
         }
     }
 
@@ -163,6 +163,7 @@ class ChartBase {
     getScaleY(data, height) {
         let hasXaxis = (this.option.xAxis == null || this.option.xAxis == true)
         let range = [this.paddingY, height - this.paddingY - (hasXaxis ? this.axisSize : 0)];
+        range = this.option.reverse ? [range[1], range[0]] : range; // 뒤집기
         return this.getScale(data, range);
     }
 
@@ -343,6 +344,58 @@ export class horizontalBar extends ChartBase {
                 }
             }
         }
+    }
+
+    constructor(element, data, option) {
+        if (!option) {option = {}}
+        super(element, data, option); // ChartBase의 생성자 실행
+
+        // 스케일링
+        this.barSize = option.barSize || 0.75;
+        this.update();
+    }
+}
+
+// 세로 bar 차트
+export class verticalBar extends ChartBase {
+    /**
+     * 차트를 업데이트함
+     */
+    update() {
+        // 값 정의
+        let x = this.data.values;
+        let y = this.data.labels;
+        let [d3Element, width, height, xScale, yScale] = this.getBase(y, x);
+
+        // 축 생성
+        this.createAxis(d3Element, height, xScale, yScale);
+
+        // 옵션 추출
+        let color = (this.option && this.option.color) || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
+
+        // 데이터 표시
+        let widthResized = xScale.bandwidth() * this.barSize;
+        let xOffset = (xScale.bandwidth() - widthResized) / 2;
+
+        // (v) => {return ~} 또는 (v) => ~를 통해 현재 사용하는 데이터를 foreach해 적용할 수 있음.
+        let xMax = d3.max(x);
+        let zeroPoint = yScale(xMax);
+        let rects = d3Element.selectAll("rect")
+            .data(x) // x 데이터를 사용
+            .enter()
+            .append("rect") // 데이터 갯수에 맞춰 사각형 생성
+            .attr("width", widthResized)
+            .attr("height", (v) => yScale(xMax - v))
+            .attr("y", (v) => yScale(v) - zeroPoint)
+            .text((v, i) => JSON.stringify({
+                label: this.data.name ? `${this.data.name}: ${y[i]}` : `${y[i]}`,
+                value: v,
+                color: color
+            }))
+            .data(y) // 이후 사용할 데이터를 y 데이터로 변경
+            .attr("x", (v) => xScale(v) + xOffset)
+            .attr("fill", color) // 색상 채움
+        this.bindHoverTooltip(rects);
     }
 
     constructor(element, data, option) {
@@ -588,7 +641,7 @@ export class scatter extends ChartBase {
         let radius = (this.option && this.option.radius) || 3;
 
         // 데이터 표시
-        d3Element.selectAll("circle")
+        let dots = d3Element.selectAll("circle")
             .data(scatterX)
             .enter()
             .append("circle")
@@ -597,6 +650,13 @@ export class scatter extends ChartBase {
             .attr("cy", v => yScale(v))
             .attr("r", radius)
             .attr("fill", color)
+            .data(x)
+            .text((v) => JSON.stringify({
+                label: `${y.x}: ${v[0]}, ${y.y}: ${v[1]}`,
+                value: "",
+                color: color
+            }));
+        this.bindHoverTooltip(dots);
     }
 
     /**

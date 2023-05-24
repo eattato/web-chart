@@ -175,16 +175,17 @@ export const getAllPixels = (data) => {
 }
 
 export const getRGB = (data) => {
-    let result = {r: [], g: [], b: []};
+    let result = {r: [], g: [], b: [], gray: []};
     for (let i = 0; i < data.length; i += 4) {
         result.r.push(data[i]);
         result.g.push(data[i + 1]);
         result.b.push(data[i + 2]);
+        result.gray.push(Math.floor(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]));
     }
 
-    for (let channel in result) {
-        result[channel] = result[channel].sort((a, b) => a - b);
-    }
+    // for (let channel in result) {
+    //     result[channel] = result[channel].sort((a, b) => a - b);
+    // }
 
     return result;
 }
@@ -199,7 +200,7 @@ export const getPixelDatas = (url, method) => {
             let context = canvas.getContext("2d");
             context.drawImage(img, 0, 0);
 
-            let data = context.getImageData(0, 0, img.width, img.height).data;            
+            let data = context.getImageData(0, 0, img.width, img.height).data;
             resolve(method(data));
         };
     })
