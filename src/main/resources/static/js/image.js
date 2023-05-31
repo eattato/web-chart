@@ -139,4 +139,23 @@ export const ImageData = class {
             }
         }
     }
+
+    /**
+     * 대상 캔버스 크기에 맞춰서 현재 이미지를 그려줌
+     * @param {Object} canvas 이미지를 그릴 캔버스
+     * @param {String} channel 원하는 채널, 예시로 RGB, GRAY 또는 원하는 채널을 순서에 따라 쓸 수 있음. default = RGB
+     */
+    drawOnCanvasFit(canvas, channel = "RGB") {
+        let scale = this.width > this.height ? canvas.width / this.width : canvas.height / this.height;
+        let offsetX = this.width <= this.height ? (canvas.width - this.width * scale) / 2 : 0;
+        let offsetY = this.width > this.height ? (canvas.height - this.height * scale) / 2 : 0;
+
+        let fakeCanvas = document.createElement("canvas");
+        this.drawOnCanvas(fakeCanvas, channel);
+
+        let context = canvas.getContext("2d");
+        context.scale(scale, scale);
+        context.drawImage(fakeCanvas, offsetX / scale, offsetY / scale);
+        context.setTransform(1, 0, 0, 1, 0, 0);
+    }
 }

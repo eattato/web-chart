@@ -1106,7 +1106,6 @@ export const rgbHistogramEDA = (element, img) => {
     // 이미지 탐색
     let imageData = new ImageData(img);
     imageData.onload.then(() => {
-        console.log(`width: ${imageData.width}, height: ${imageData.height}`);
         let pixels = imageData.getRGB(imageData.pixels);
 
         // 표시를 위해 {r: {0: r0인 픽셀 갯수, 1:.. 255:..}, g:...} 형태로 변환
@@ -1170,14 +1169,7 @@ export const rgbChannelEDA = (element, img) => {
     imageData.onload.then(() => {
         function update(val) {
             context.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 그리기
-            imageData.drawOnCanvas(canvas, val);
-            // let imgs = document.createElement("img")
-            // imgs.src = img;
-            // imgs.onload = () => {
-            //     context.drawImage(imgs, 0, 0, imgs.width, imgs.height);
-            // }
+            imageData.drawOnCanvasFit(canvas, val);
         }
         
         // 바인딩
