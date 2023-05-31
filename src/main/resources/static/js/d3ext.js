@@ -385,8 +385,8 @@ export class verticalBar extends ChartBase {
             .enter()
             .append("rect") // 데이터 갯수에 맞춰 사각형 생성
             .attr("width", widthResized)
-            .attr("height", (v) => yScale(xMax - v))
-            .attr("y", (v) => yScale(v) - zeroPoint)
+            .attr("height", (v) => yScale(xMax - v) - zeroPoint)
+            .attr("y", (v) => yScale(v))
             .text((v, i) => JSON.stringify({
                 label: this.data.name ? `${this.data.name}: ${y[i]}` : `${y[i]}`,
                 value: v,
