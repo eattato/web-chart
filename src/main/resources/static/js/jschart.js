@@ -1180,3 +1180,69 @@ export const rgbChannelEDA = (element, img) => {
         update(selections[0]);
     });
 }
+
+export const columnInfoEDA = (element, rows) => {
+    let chart = null;
+    
+    let columns = {};
+
+    // 숫자형인 컬럼명만 수집
+    let keys = Object.keys(rows[0]);
+    for (let i = 1; i < keys.length; i++) {
+        let c = keys[i];
+        let columnData = getColumn(rows, c);
+        if (eda.isColumnNumber(columnData)) {
+            columns[c] = columnData;
+        }
+    }
+
+    // 컬럼 별 데이터 갯수 합산 및 정렬
+    for (let c in columns) {
+        let stacks = {};
+        let columnData = columns[c];
+        for (let i in columnData) {
+            let value = columnData[i];
+            if (!eda.isNull(value)) {
+                if (!stacks[value]) stacks[value] = 0;
+                stacks[value]++;
+            }
+        }
+
+        // 정렬
+        let sorted = {};
+        Object.keys(stacks).sort().forEach((c) => {
+            sorted[c] = stacks[c];
+        })
+        columns[c] = sorted;
+    }
+
+    let select = element.find("select").eq(0);
+    addOptions(select, Object.keys(columns));
+
+    function update(val) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        let el = element.find(".chart_body");
+        let data = {
+            labels: Object.keys(columns[val]),
+            values: Object.values(columns[val])
+        };
+        let options = {
+            reverse: true
+        };
+
+        chart = new d3ext.verticalBar(el, data, options);
+    }
+
+    // 바인딩
+    function selectionBind() {
+        let val = select.val();
+        update(val);
+    }
+    select.change(selectionBind);
+
+    select.val("Age");
+    update("Age");
+}

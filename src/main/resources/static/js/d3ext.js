@@ -278,7 +278,7 @@ export class horizontalBar extends ChartBase {
             .append("rect") // 데이터 갯수에 맞춰 사각형 생성
             .attr("width", (v) => clamp(0, xScale(Math.abs(v)) - xZeroPoint - 1)) // 각 값의 절대값(마이너스 방지)를 xScale에 돌리고 영점에 맞춤 - 겹침 방지
             .attr("height", heightResized) // height는 미리 설정한 오프셋으로 설정
-            .attr("x", (v) => maxAlt(v, 0, xZeroPoint, xZeroPoint - (xScale(Math.abs(v)) - xZeroPoint)) + 1) // 겹침 방지하고 양수값이면 영점값만큼 오른쪽으로 밀고, 음수값이면 영점값 - 본인 width만큼 밀기
+            .attr("x", (v) => (v > 0 ? xZeroPoint : xZeroPoint - (xScale(Math.abs(v)) - xZeroPoint)) + 1) // 겹침 방지하고 양수값이면 영점값만큼 오른쪽으로 밀고, 음수값이면 영점값 - 본인 width만큼 밀기
             .text(JSON.stringify({
                 label: this.data.name ? this.data.name : "",
                 value: v => v,
@@ -385,8 +385,10 @@ export class verticalBar extends ChartBase {
             .enter()
             .append("rect") // 데이터 갯수에 맞춰 사각형 생성
             .attr("width", widthResized)
-            .attr("height", (v) => yScale(xMax - v) - zeroPoint)
-            .attr("y", (v) => yScale(v))
+            .attr("height", (v) => yScale(xMax - Math.abs(v)) - zeroPoint)
+            .attr("y", (v) => yScale(Math.abs(v)) + (v <= 0 ? yScale(xMax - Math.abs(v)) - zeroPoint : 0)) // 음수면 양수랑 같은 상태에서 자기 height만큼 내림
+            //.attr("height", (v) => yScale(xMax - v) - zeroPoint)
+            //.attr("y", (v) => yScale(v))
             .text((v, i) => JSON.stringify({
                 label: this.data.name ? `${this.data.name}: ${y[i]}` : `${y[i]}`,
                 value: v,
@@ -396,6 +398,14 @@ export class verticalBar extends ChartBase {
             .attr("x", (v) => xScale(v) + xOffset)
             .attr("fill", color) // 색상 채움
         this.bindHoverTooltip(rects);
+
+        // 영점 선 표시
+        d3Element.append("line")
+            .attr("stroke", "#000000")
+            .attr("stroke-width", "1px")
+            .style("shape-rendering", "crispEdges") // 이걸 넣어야 진짜 1px 짜리 선이 됨
+            .attr("x1", xScale(y[0])).attr("y1", yScale(0)) // 1번째 점(위) 그리고 좀 왼쪽에 있어서 1px 밀었음
+            .attr("x2", xScale(y[y.length - 1]) + xScale.bandwidth()).attr("y2", yScale(0)); // 2번째 점(밑)
     }
 
     constructor(element, data, option) {

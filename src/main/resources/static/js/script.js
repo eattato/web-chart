@@ -186,6 +186,10 @@ $().ready(() => {
             let scatterSelect = $($.parseHTML('<div class="chart_selection"><select></select> and <select></select></div>'));
             scatterSelect.appendTo(scatter.find(".chart_header"));
             jsChart.scatterEDA(scatter, rows);
+
+            // 컬럼 정보
+            let columnChart = cb.getEmptyOptionChartFrameD3("데이터 컬럼 정보", edaHolder);
+            jsChart.columnInfoEDA(columnChart, rows);
         });
 
         // 이미지 분석
