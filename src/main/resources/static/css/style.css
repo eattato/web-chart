@@ -176,6 +176,14 @@
     font-size: 14px;
 }
 
+.tooltip_hidden {
+    position: absolute;
+    width: inherit;
+    height: inherit;
+    /* opacity: 0; */
+    background-color: red;
+}
+
 /* table */
 .chart_body table {
     table-layout: fixed;

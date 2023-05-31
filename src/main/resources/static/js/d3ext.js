@@ -84,6 +84,55 @@ const colorLerp = (start, end, alpha) => {
     return result;
 }
 
+// Additional D3 Prototype Functions
+/**
+ * text를 사용하기 힘든 태그에 숨겨진 툴팁을 추가해주는 메소드
+ * https://github.com/d3/d3-selection/blob/main/src/selection/text.js 참고
+ * @param {function, string} value 실행할 함수나(매개변수 첫 칸에 현재 텍스트를 줌), 설정할 스트링을 받음
+ */
+d3.selection.prototype.addTooltip = function(value) {
+    // this = 대상 요소들을 묶은 Selection 객체(selectAll)
+    // https://github.com/d3/d3-selection/blob/main/src/selection/each.js 참고
+    return this.each(function(v) { // callback.call(node, node.__data__, i, group), Function.prototype.call() 참고
+        let tooltipText = null;
+        if (typeof value == "function") tooltipText = value(v); // (v) => {}라면 v에 각 td
+        else if (typeof value == "string") tooltipText = value;
+
+        // 각각의 요소(td)에 툴팁을 추가
+        d3.select(this)
+            .bindHoverTooltip(tooltipText);
+    }).selectAll(".tooltip_hidden"); // 주의: 예전 대상이 아닌 대상의 '툴팁 오브젝트'를 리턴함 - 이후 데이터 수정 불가!!
+}
+
+d3.selection.prototype.bindHoverTooltip = function(text) {
+    let tooltip = $(".tooltip_frame");
+    if (!tooltip || tooltip.length == 0) {
+        tooltip = $($.parseHTML('<div class="tooltip_frame"><div class="tooltip_header"><div class="tooltip_title"></div><div class="tooltip_color"></div></div><div class="tooltip_body"></div></div>'))
+        tooltip.appendTo($("body"));
+    }
+
+    // 각 요소에 이벤트 바인딩
+    this.each(function() {
+        let element = d3.select(this); // 바닐라 -> d3
+        element.on("mouseover", (event) => {
+            let target = $(event.target);
+            let data = text ? JSON.parse(text) : JSON.parse(target.text());
+            tooltip.find(".tooltip_title").text(data.label);
+            tooltip.find(".tooltip_body").text(data.value);
+            tooltip.find(".tooltip_color").css({"background-color": data.color});
+            tooltip.addClass("active");
+        }).on("mousemove", (event) => {
+            tooltip.css({
+                "top": `${event.layerY + 10}px`,
+                "left": `${event.layerX + 10}px`
+            });
+        }).on("mouseout", () => {
+            tooltip.removeClass("active")
+        })
+    });
+    return this; // 본인 다시 리턴
+}
+
 // 차트 베이스
 class ChartBase {
     /**
@@ -190,31 +239,6 @@ class ChartBase {
         }
     }
 
-    bindHoverTooltip(element) {
-        let tooltip = $(".tooltip_frame");
-        if (!tooltip || tooltip.length == 0) {
-            console.log("created tooltip");
-            tooltip = $($.parseHTML('<div class="tooltip_frame"><div class="tooltip_header"><div class="tooltip_title"></div><div class="tooltip_color"></div></div><div class="tooltip_body"></div></div>'))
-            tooltip.appendTo($("body"));
-        }
-
-        element.on("mouseover", (event) => {
-            let target = $(event.target);
-            let data = JSON.parse(target.text());
-            tooltip.find(".tooltip_title").text(data.label);
-            tooltip.find(".tooltip_body").text(data.value);
-            tooltip.find(".tooltip_color").css({"background-color": data.color});
-            tooltip.addClass("active");
-        }).on("mousemove", (event) => {
-            tooltip.css({
-                "top": `${event.layerY + 10}px`,
-                "left": `${event.layerX + 10}px`
-            });
-        }).on("mouseout", () => {
-            tooltip.removeClass("active")
-        })
-    }
-
     /**
      * 차트를 만듬
      * @param {*} element 차트가 생성될 svg jQuery 요소
@@ -271,7 +295,7 @@ export class horizontalBar extends ChartBase {
             .data(y) // 이후 사용할 데이터를 y 데이터로 변경, +1하고 width에 -1한건 액시스랑 겹치지 않기 위함임
             .attr("y", (v) => yScale(v) + yOffset) // 각 라벨(v)을 yScale에 돌리고 오프셋 적용해서 y위치를 설정
             .attr("fill", color) // 색상 채움
-        this.bindHoverTooltip(rects);
+            .bindHoverTooltip();
 
         // 영점 선 표시
         d3Element.append("line")
@@ -322,8 +346,8 @@ export class horizontalBar extends ChartBase {
                             label: labelText,
                             value: `${v} / ${x[i]} (${(v / x[i] * 100).toFixed(2)}%)`,
                             color: labelColor
-                        }));
-                    this.bindHoverTooltip(stackDisplay);
+                        }))
+                        .bindHoverTooltip();
                     xStackOffset += stackDirection * width;
                 }
             }
@@ -396,7 +420,7 @@ export class verticalBar extends ChartBase {
             .data(y) // 이후 사용할 데이터를 y 데이터로 변경
             .attr("x", (v) => xScale(v) + xOffset)
             .attr("fill", color) // 색상 채움
-        this.bindHoverTooltip(rects);
+            .bindHoverTooltip();
 
         // 영점 선 표시
         d3Element.append("line")
@@ -472,8 +496,8 @@ export class heatmap extends ChartBase {
                         label: `${yy}, ${yx}`,
                         color: color,
                         value: v
-                    }));
-                this.bindHoverTooltip(map);
+                    }))
+                    .bindHoverTooltip();
             }
         }
     }
@@ -592,7 +616,12 @@ export class table extends ChartBase {
             .append("td")
             // .attr("width", v => xScale.bandwidth())
             // .attr("height", v => yScale.bandwidth())
-            .text(v => v);
+            .text(v => v)
+            .addTooltip((v) => JSON.stringify({
+                label: ``,
+                color: "black",
+                value: v
+            }));
 
         let ind = 0;
         for (let c in y.y) {
@@ -664,8 +693,8 @@ export class scatter extends ChartBase {
                 label: `${y.x}: ${v[0]}, ${y.y}: ${v[1]}`,
                 value: "",
                 color: color
-            }));
-        this.bindHoverTooltip(dots);
+            }))
+            .bindHoverTooltip();
     }
 
     /**

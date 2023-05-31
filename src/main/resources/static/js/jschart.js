@@ -1247,6 +1247,6 @@ export const columnInfoEDA = (element, rows) => {
     }
     select.change(selectionBind);
 
-    select.val("Age");
-    update("Age");
+    select.val("Survived");
+    update("Survived");
 }
