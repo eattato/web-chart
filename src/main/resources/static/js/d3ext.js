@@ -93,9 +93,9 @@ const colorLerp = (start, end, alpha) => {
 d3.selection.prototype.addTooltip = function(value) {
     // this = 대상 요소들을 묶은 Selection 객체(selectAll)
     // https://github.com/d3/d3-selection/blob/main/src/selection/each.js 참고
-    return this.each(function(v) { // callback.call(node, node.__data__, i, group), Function.prototype.call() 참고
+    return this.each(function(v, i) { // callback.call(node, node.__data__, i, group), Function.prototype.call() 참고
         let tooltipText = null;
-        if (typeof value == "function") tooltipText = value(v); // (v) => {}라면 v에 각 td
+        if (typeof value == "function") tooltipText = value(v, i); // (v) => {}라면 v에 각 td
         else if (typeof value == "string") tooltipText = value;
 
         // 각각의 요소(td)에 툴팁을 추가
@@ -617,8 +617,8 @@ export class table extends ChartBase {
             // .attr("width", v => xScale.bandwidth())
             // .attr("height", v => yScale.bandwidth())
             .text(v => v)
-            .addTooltip((v) => JSON.stringify({
-                label: ``,
+            .addTooltip((v, i) => JSON.stringify({
+                label: `${i}`,
                 color: "black",
                 value: v
             }));
