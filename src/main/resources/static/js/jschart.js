@@ -1162,27 +1162,29 @@ export const rgbChannelEDA = (element, img) => {
     let canvas = element.find(".chart_body")[0];
     let context = canvas.getContext("2d");
 
-    let selections = ["GRAY", "R", "G", "B"];
+    let selections = ["RGB", "BGR", "GRAY", "R", " G ", "  B", "RG", "R B", " GB"];
     addOptions(element.find("select"), selections);
 
     // 이미지 탐색
+    let imageData = new ImageData(img);
+    imageData.onload.then(() => {
+        function update(val) {
+            context.clearRect(0, 0, canvas.width, canvas.height);
 
-
-
-    // cb.getPixelDatas(img, [canvas.width, canvas.height], cb.getPixelDatas)
-    //     .then((pixels) => {
-    //         function update(val) {
-    //             context.clearRect(0, 0, canvas.width, canvas.height);
-
-    //             // 그리기
-                
-    //         }
+            // 그리기
+            imageData.drawOnCanvas(canvas, val);
+            // let imgs = document.createElement("img")
+            // imgs.src = img;
+            // imgs.onload = () => {
+            //     context.drawImage(imgs, 0, 0, imgs.width, imgs.height);
+            // }
+        }
         
-    //         // 바인딩
-    //         element.find("select").change(() => {
-    //             let val = element.find("select").val();
-    //             update(val);
-    //         });
-    //         update(selections[0]);
-    //     });
+        // 바인딩
+        element.find("select").change(() => {
+            let val = element.find("select").val();
+            update(val);
+        });
+        update(selections[0]);
+    });
 }
