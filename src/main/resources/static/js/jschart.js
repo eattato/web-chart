@@ -1143,7 +1143,11 @@ export const rgbHistogramEDA = (element, img) => {
             };
             let options = {
                 color: colorOptions[val].color,
-                reverse: true
+                reverse: true,
+                mergeLabel: {
+                    whenOver: 15,
+                    to: 15
+                }
             };
             chart = new d3ext.verticalBar(el, data, options);
         }

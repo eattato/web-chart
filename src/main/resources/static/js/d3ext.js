@@ -1,19 +1,3 @@
-/**
- * Math.max인데 비교해서 큰 쪽의 Alt값을 대신 리턴함
- * @param {*} a 비교할 값 a
- * @param {*} b 비교할 값 b
- * @param {*} aAlt a가 클 경우 리턴되는 Alt 값
- * @param {*} bAlt b가 클 경우 리턴되는 Alt 값
- * @returns a와 b중 더 큰 값의 Alt값
- */
-const maxAlt = (a, b, aAlt, bAlt) => {
-    if (a >= b) {
-        return aAlt;
-    } else {
-        return bAlt;
-    }
-}
-
 const clamp = (min, val, max) => {
     if (val < min) {
         return min;
@@ -306,7 +290,7 @@ export class horizontalBar extends ChartBase {
             for (let i in y) {
                 let stackValues = this.data.stack.values[i];
                 let stackDirection = x[i] > 0;
-                let xStackOffset = maxAlt(x[i], 0, xZeroPoint, xZeroPoint - (xScale(Math.abs(x[i])) - xZeroPoint)) + 1;
+                let xStackOffset = (x[i] > 0 ? xZeroPoint : xZeroPoint - (xScale(Math.abs(x[i])) - xZeroPoint)) + 1;
 
                 for (let j in stackLabels) {
                     let label = stackLabels[j];
@@ -368,7 +352,22 @@ export class verticalBar extends ChartBase {
         let [d3Element, width, height, xScale, yScale] = this.getBase(y, x);
 
         // 축 생성
-        this.createAxis(d3Element, height, xScale, yScale);
+        let mergedGrid = null;
+        if (this.option.mergeLabel && this.option.mergeLabel.whenOver < y.length) {
+            mergedGrid = [];
+            let labelMin = Math.min(...y);
+            let labelMax = Math.max(...y);
+            for (let i = 0; i < this.option.mergeLabel.to - 1; i++) {
+                //let label = (labelMin + (labelMax - labelMin) / this.option.mergeLabel.to * i).toFixed(1);
+                let label = labelMin + (labelMax - labelMin) / this.option.mergeLabel.to * i;
+                mergedGrid.push(label);
+            }
+            mergedGrid.push(labelMax);
+
+            //mergedGrid = mergedGrid.map((v) => `${v}`);
+            mergedGrid = this.getScaleX(mergedGrid, width);
+        }
+        this.createAxis(d3Element, height, !mergedGrid ? xScale : mergedGrid, yScale, mergedGrid);
 
         // 옵션 추출
         let color = (this.option && this.option.color) || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
