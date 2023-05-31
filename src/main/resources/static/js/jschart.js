@@ -3,6 +3,7 @@ import * as cb from "/js/chartBase.js";
 const toastChart = toastui.Chart;
 import * as d3ext from "./d3ext.js";
 import * as eda from "/js/eda.js";
+import { ImageData } from "/js/image.js";
 
 // 딕셔너리 값으로 정렬
 const dictSort = (dict) => {
@@ -1103,79 +1104,85 @@ export const rgbHistogramEDA = (element, img) => {
     addOptions(element.find("select"), selections);
 
     // 이미지 탐색
-    cb.getPixelDatas(img, 1, cb.getRGB)
-        .then((pixels) => {
-            let pixelCounts = {};
-            for (let channel in pixels) {
-                let channelData = pixels[channel];
-                pixelCounts[channel] = Array(256).fill(0).reduce((arr, c, i) => { // reduce spread는 복사때문에 O(N^2)로 느려져서 reduce mutate로
-                    arr[i] = 0;
-                    return arr;
-                }, {});
+    let imageData = new ImageData(img);
+    imageData.onload.then(() => {
+        console.log(`width: ${imageData.width}, height: ${imageData.height}`);
+        let pixels = imageData.getRGB(imageData.pixels);
 
-                for (let i in channelData) {
-                    let value = channelData[i];
-                    pixelCounts[channel][value]++;
-                }
-            }
+        // 표시를 위해 {r: {0: r0인 픽셀 갯수, 1:.. 255:..}, g:...} 형태로 변환
+        let pixelCounts = {};
+        for (let channel in pixels) {
+            let channelData = pixels[channel];
+            pixelCounts[channel] = Array(256).fill(0).reduce((arr, c, i) => { // reduce spread는 복사때문에 O(N^2)로 느려져서 reduce mutate로
+                arr[i] = 0;
+                return arr;
+            }, {});
 
-            function update(val) {
-                if (chart) {
-                    chart.destroy();
-                }
-        
-                let colorOptions = {
-                    GRAY: { color: "#000000", data: pixelCounts.gray },
-                    R: { color: "#FF0000", data: pixelCounts.r },
-                    G: { color: "#00FF00", data: pixelCounts.g },
-                    B: { color: "#0000FF", data: pixelCounts.b },
-                }
-        
-                let el = element.find(".chart_body");
-                let data = {
-                    name: val,
-                    labels: Object.keys(colorOptions[val].data),
-                    values: Object.values(colorOptions[val].data)
-                };
-                let options = {
-                    color: colorOptions[val].color,
-                    reverse: true
-                };
-                chart = new d3ext.verticalBar(el, data, options);
+            for (let i in channelData) {
+                let value = channelData[i];
+                pixelCounts[channel][value]++;
             }
-        
-            // 바인딩
-            element.find("select").change(() => {
-                let val = element.find("select").val();
-                update(val);
-            });
-            update(selections[0]);
+        }
+
+        function update(val) {
+            if (chart) {
+                chart.destroy();
+            }
+    
+            let colorOptions = {
+                GRAY: { color: "#000000", data: pixelCounts.gray },
+                R: { color: "#FF0000", data: pixelCounts.r },
+                G: { color: "#00FF00", data: pixelCounts.g },
+                B: { color: "#0000FF", data: pixelCounts.b },
+            }
+    
+            let el = element.find(".chart_body");
+            let data = {
+                name: val,
+                labels: Object.keys(colorOptions[val].data),
+                values: Object.values(colorOptions[val].data)
+            };
+            let options = {
+                color: colorOptions[val].color,
+                reverse: true
+            };
+            chart = new d3ext.verticalBar(el, data, options);
+        }
+    
+        // 바인딩
+        element.find("select").change(() => {
+            let val = element.find("select").val();
+            update(val);
         });
+        update(selections[0]);
+    });
 }
 
 export const rgbChannelEDA = (element, img) => {
     let canvas = element.find(".chart_body")[0];
-    console.log(canvas);
     let context = canvas.getContext("2d");
 
     let selections = ["GRAY", "R", "G", "B"];
     addOptions(element.find("select"), selections);
 
     // 이미지 탐색
-    cb.getPixelDatas(img, [canvas.width, canvas.height], cb.getPixelDatas)
-        .then((pixels) => {
-            function update(val) {
-                context.clearRect(0, 0, canvas.width, canvas.height);
 
-                // 그리기
+
+
+    // cb.getPixelDatas(img, [canvas.width, canvas.height], cb.getPixelDatas)
+    //     .then((pixels) => {
+    //         function update(val) {
+    //             context.clearRect(0, 0, canvas.width, canvas.height);
+
+    //             // 그리기
                 
-            }
+    //         }
         
-            // 바인딩
-            element.find("select").change(() => {
-                let val = element.find("select").val();
-                update(val);
-            });
-            update(selections[0]);
-        });
+    //         // 바인딩
+    //         element.find("select").change(() => {
+    //             let val = element.find("select").val();
+    //             update(val);
+    //         });
+    //         update(selections[0]);
+    //     });
 }

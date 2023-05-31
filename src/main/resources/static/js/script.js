@@ -194,6 +194,6 @@ $().ready(() => {
 
         // 이미지 채널 (캔버스 사용)
         let imgChannels = cb.getEmptyOptionChartFrameLegacy("이미지 채널", edaHolder);
-        jsChart.rgbChannelEDA(imgChart, `${protocol}//${host}/data/images/rainbow.png`)
+        jsChart.rgbChannelEDA(imgChannels, `${protocol}//${host}/data/images/rainbow.png`)
     });
 })
