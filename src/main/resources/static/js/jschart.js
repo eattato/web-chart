@@ -1161,7 +1161,7 @@ export const rgbChannelEDA = (element, img) => {
     let canvas = element.find(".chart_body")[0];
     let context = canvas.getContext("2d");
 
-    let selections = ["RGB", "BGR", "GRAY", "R", " G ", "  B", "RG", "R B", " GB"];
+    let selections = ["RGB", "BGR", "GRAY", "R", " G ", "  B", "RG", "R B", " GB", "ALPHA"];
     addOptions(element.find("select"), selections);
 
     // 이미지 탐색

@@ -123,15 +123,18 @@ export const ImageData = class {
                 let pixel = this.pixels[c][r];
                 
                 let color = "#";
-                if (channel != "GRAY") {
+                if (channel == "GRAY") {
+                    let value = toHex(pixel.gray, 2);
+                    for (let i = 0; i < 3; i++) color += value;
+                } else if (channel == "ALPHA") {
+                    let value = toHex(pixel.a, 2);
+                    color += `000000${value}`;
+                } else {
                     for (let i = 0; i < 3; i++) {
                         let tc = channel.charAt(i); // targetChannel
                         tc = tc.length == 0 || tc == " " ? null : tc.toLowerCase();
                         color += tc ? toHex(pixel[tc], 2) : "00";
                     }
-                } else {
-                    let value = toHex(pixel.gray, 2);
-                    for (let i = 0; i < 3; i++) color += value;
                 }
 
                 context.fillStyle = color;
