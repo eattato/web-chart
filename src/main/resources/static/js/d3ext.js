@@ -609,19 +609,19 @@ export class table extends ChartBase {
             .data(x)
             .enter()
             .append("tr")
-
-        let td = tr.selectAll("td")
-            .data(v => v)
-            .enter()
-            .append("td")
-            // .attr("width", v => xScale.bandwidth())
-            // .attr("height", v => yScale.bandwidth())
-            .text(v => v)
-            .addTooltip((v, i) => JSON.stringify({
-                label: `${i}`,
-                color: "black",
-                value: v
-            }));
+            .each(function (v, ri) {
+                d3.select(this)
+                    .selectAll("td")
+                    .data(x[ri])
+                    .enter()
+                    .append("td")
+                    .text(v => v)
+                    .addTooltip((v, i) => JSON.stringify({
+                        label: `${y.x[i + 1]}, ${y.y[ri]}`,
+                        color: "black",
+                        value: v
+                    }));
+            })
 
         let ind = 0;
         for (let c in y.y) {
