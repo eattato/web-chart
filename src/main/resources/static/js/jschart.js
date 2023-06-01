@@ -3,7 +3,7 @@ import * as cb from "/js/chartBase.js";
 const toastChart = toastui.Chart;
 import * as d3ext from "./d3ext.js";
 import * as eda from "/js/eda.js";
-import { ImageData } from "/js/image.js";
+import { ImageData, toHex } from "/js/image.js";
 
 // 딕셔너리 값으로 정렬
 const dictSort = (dict) => {
@@ -1182,6 +1182,31 @@ export const rgbChannelEDA = (element, img) => {
             update(val);
         });
         update(selections[0]);
+
+        let canvasCover = element.find(".canvas_cover");
+        if (canvasCover != null && canvasCover.length != 0) {
+            const canvasMouseCallback = (act, event) => {            
+                if (act == "mousemove" || act == "mouseover") {
+                    let bounding = canvas.getBoundingClientRect();
+                    let x = Math.floor((event.clientX - bounding.left) / bounding.width * canvas.width);
+                    let y = Math.floor((event.clientY - bounding.top) / bounding.height * canvas.height);
+
+                    let pixel = context.getImageData(x, y, 1, 1).data;
+                    let color = "#";
+                    for (let i in pixel) {
+                        color += toHex(pixel[i], 2);
+                    }
+
+                    canvasCover.text(JSON.stringify({
+                        label: `canvas - x: ${x}, y: ${y}`,
+                        color: color,
+                        value: `${color}`
+                    }))
+                }
+            }
+
+            d3ext.hoverTooltipEvent(canvasCover, null, canvasMouseCallback);
+        }
     });
 }
 

@@ -104,31 +104,51 @@ d3.selection.prototype.addTooltip = function(value) {
     }).selectAll(".tooltip_hidden"); // 주의: 예전 대상이 아닌 대상의 '툴팁 오브젝트'를 리턴함 - 이후 데이터 수정 불가!!
 }
 
-d3.selection.prototype.bindHoverTooltip = function(text) {
+/**
+ * 호버 툴팁 이벤트를 처리하는 함수
+ * @param {*} element jQuery 오브젝트
+ * @param {String} text 커스텀 JSON 툴팁 정보
+ * @param {Function} callback 마우스 이벤트에 실행할 콜백, callback(act, event)로 실행됨
+ */
+export const hoverTooltipEvent = (element, text, callback) => {
     let tooltip = $(".tooltip_frame");
     if (!tooltip || tooltip.length == 0) {
         tooltip = $($.parseHTML('<div class="tooltip_frame"><div class="tooltip_header"><div class="tooltip_title"></div><div class="tooltip_color"></div></div><div class="tooltip_body"></div></div>'))
         tooltip.appendTo($("body"));
     }
 
+    const updateToolip = (event) => {
+        let target = $(event.target);
+        let data = text ? JSON.parse(text) : JSON.parse(target.text());
+        tooltip.find(".tooltip_title").text(data.label);
+        tooltip.find(".tooltip_body").text(data.value);
+        tooltip.find(".tooltip_color").css({"background-color": data.color});
+    }
+
+    element.on("mouseover", (event) => {
+        if (callback) callback("mouseover", event);
+        updateToolip(event);
+        tooltip.addClass("active");
+    }).on("mousemove", (event) => {
+        if (callback) callback("mousemove", event);
+        let x = event.pageY;
+        let y = event.pageX;
+        tooltip.css({
+            "top": `${x + 10}px`,
+            "left": `${y + 10}px`
+        });
+        updateToolip(event);
+    }).on("mouseout", (event) => {
+        if (callback) callback("mouseout", event);
+        tooltip.removeClass("active")
+    });
+}
+
+d3.selection.prototype.bindHoverTooltip = function(text) {
     // 각 요소에 이벤트 바인딩
     this.each(function() {
-        let element = d3.select(this); // 바닐라 -> d3
-        element.on("mouseover", (event) => {
-            let target = $(event.target);
-            let data = text ? JSON.parse(text) : JSON.parse(target.text());
-            tooltip.find(".tooltip_title").text(data.label);
-            tooltip.find(".tooltip_body").text(data.value);
-            tooltip.find(".tooltip_color").css({"background-color": data.color});
-            tooltip.addClass("active");
-        }).on("mousemove", (event) => {
-            tooltip.css({
-                "top": `${event.layerY + 10}px`,
-                "left": `${event.layerX + 10}px`
-            });
-        }).on("mouseout", () => {
-            tooltip.removeClass("active")
-        })
+        let element = $(this); // 바닐라 -> jQuery
+        hoverTooltipEvent(element, text);
     });
     return this; // 본인 다시 리턴
 }

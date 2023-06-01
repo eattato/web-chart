@@ -1,4 +1,4 @@
-const toHex = (x, formatLength) => {
+export const toHex = (x, formatLength) => {
     let resMult = "";
     if (x < 0) { resMult = "-" }
 
@@ -37,11 +37,11 @@ export const ImageData = class {
         this.height = 0;
 
         this.onload = this.readImage(url)
-        .then(([pixels, width, height]) => {
-            this.pixels = pixels;
-            this.width = width;
-            this.height = height;
-        });
+            .then(([pixels, width, height]) => {
+                this.pixels = pixels;
+                this.width = width;
+                this.height = height;
+            });
     }
 
     /**

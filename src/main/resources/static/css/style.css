@@ -65,6 +65,16 @@
     height: 310px;
 }
 
+.canvas_cover {
+    position: absolute;
+    opacity: 0;
+    font-size: 0;
+    user-select: none;
+    width: 600px;
+    height: 310px;
+    margin-top: 40px;
+}
+
 .chart_selection {
     display: flex;
 }
