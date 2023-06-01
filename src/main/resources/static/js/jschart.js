@@ -911,14 +911,14 @@ export const uniqueRankEDA = (element, rows) => {
     function selectionBind() {
         let val1 = firstSelect.val();
         let val2 = secondSelect.val();
-        update(val1, val2);
+        if (val1 && val2) update(val1, val2);
     }
     firstSelect.change(selectionBind);
     secondSelect.change(selectionBind)
 
-    firstSelect.val("Survived");
-    secondSelect.val("Pclass");
-    update("Survived", "Pclass");
+    firstSelect.val();
+    secondSelect.val();
+    // update();
 }
 
 export const describeEDA = (element, rows) => {
@@ -1036,14 +1036,14 @@ export const scatterEDA = (element, rows) => {
     function selectionBind() {
         let val1 = firstSelect.val();
         let val2 = secondSelect.val();
-        update(val1, val2);
+        if (val1 && val2) update(val1, val2);
     }
     firstSelect.change(selectionBind);
     secondSelect.change(selectionBind)
 
-    firstSelect.val("Age");
-    secondSelect.val("Fare");
-    update("Age", "Fare");
+    firstSelect.val();
+    secondSelect.val();
+    // update();
 }
 
 export const rgbEDA = (element, rgb) => {
@@ -1272,6 +1272,6 @@ export const columnInfoEDA = (element, rows) => {
     }
     select.change(selectionBind);
 
-    select.val("Survived");
-    update("Survived");
+    select.val(Object.keys(columns)[0]);
+    update(Object.keys(columns)[0]);
 }

@@ -158,39 +158,58 @@ $().ready(() => {
         jsChart.heatmapD3(heatmapD3, weatherData);
         jsChart.dailyChartD3(dailyChartD3, weatherData);
 
-        // EDA 데이터
-        let edaHolder = $("#eda_holder");
-        let rows = []
+        // Titanic 차트
+        let titanicHolder = $("#eda_titanic_holder");
+        let titanicRows = [];
         d3.csv("/data/titanic.csv", (data) => {
-            rows.push(data)
+            titanicRows.push(data)
         }).then(() => {
-            // console.log(`${rows.length} rows found`);
-            let naChart = cb.getChartFrameD3("결측값 비율", edaHolder);
-            let uniqueChart = cb.getChartFrameD3("카테고리 상관관계", edaHolder);
-            
-            let uniqueChartSelect = $($.parseHTML('<div class="chart_selection"><select id="unique_first"></select> and <select id="unique_second"></select></div>'));
-            uniqueChartSelect.appendTo(uniqueChart.find(".chart_header"));
-
-            // 결측값 데이터
-            jsChart.naRatioEDA(naChart, rows);
-
-            // Unique 값 순위
-            jsChart.uniqueRankEDA(uniqueChart, rows);
+            // 컬럼 정보
+            let columnChart = cb.getEmptyOptionChartFrameD3("데이터 컬럼 정보", titanicHolder);
+            jsChart.columnInfoEDA(columnChart, titanicRows);
 
             // Describe 표
-            let describe = cb.getChartFrameD3("컬럼 정보", edaHolder);
-            jsChart.describeEDA(describe, rows);
+            let describe = cb.getChartFrameD3("컬럼 정보", titanicHolder);
+            jsChart.describeEDA(describe, titanicRows);
+
+            // 결측값 데이터
+            let naChart = cb.getChartFrameD3("결측값 비율", titanicHolder);
+            jsChart.naRatioEDA(naChart, titanicRows);
+
+            // Unique 값 순위
+            let uniqueChart = cb.getChartFrameD3("카테고리 상관관계", titanicHolder);
+            let uniqueChartSelect = $($.parseHTML('<div class="chart_selection"><select id="unique_first"></select> and <select id="unique_second"></select></div>'));
+            uniqueChartSelect.appendTo(uniqueChart.find(".chart_header"));
+            jsChart.uniqueRankEDA(uniqueChart, titanicRows);
+        });
+
+        // Iris 차트
+        let irisHolder = $("#eda_iris_holder");
+        let irisRows = [];
+        d3.csv("/data/Iris.csv", (data) => {
+            irisRows.push(data);
+        }).then(() => {
+            // 컬럼 정보
+            let columnChart = cb.getEmptyOptionChartFrameD3("데이터 컬럼 정보", irisHolder);
+            jsChart.columnInfoEDA(columnChart, irisRows);
+
+            // Describe 표
+            let describe = cb.getChartFrameD3("컬럼 정보", irisHolder);
+            jsChart.describeEDA(describe, irisRows);
+
+            // 결측값 데이터
+            let naChart = cb.getChartFrameD3("결측값 비율", irisHolder);
+            jsChart.naRatioEDA(naChart, irisRows);
 
             // 스캐터
-            let scatter = cb.getChartFrameD3("상관관계 스캐터 플롯", edaHolder);
+            let scatter = cb.getChartFrameD3("상관관계 스캐터 플롯", irisHolder);
             let scatterSelect = $($.parseHTML('<div class="chart_selection"><select></select> and <select></select></div>'));
             scatterSelect.appendTo(scatter.find(".chart_header"));
-            jsChart.scatterEDA(scatter, rows);
-
-            // 컬럼 정보
-            let columnChart = cb.getEmptyOptionChartFrameD3("데이터 컬럼 정보", edaHolder);
-            jsChart.columnInfoEDA(columnChart, rows);
+            jsChart.scatterEDA(scatter, irisRows);
         });
+
+        // 기타 EDA 차트
+        let edaHolder = $("#eda_holder");
 
         // 이미지 분석
         let imgChart = cb.getEmptyOptionChartFrameD3("이미지 히스토그램", edaHolder);
