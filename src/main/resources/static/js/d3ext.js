@@ -547,47 +547,29 @@ export class line extends ChartBase {
         let x = this.data.values;
         let y = this.data.labels;
 
-        let xAlt = x;
-        if (typeof xAlt[0] == "object") { // x의 요소가 배열이라면 - {values: [[1, 2, 3], [3, 2, 1]]} 형태
-            let max = 0;
-            for (let i in xAlt) {
-                let oldMax = d3.max(xAlt[max]);
-                let current = d3.max(xAlt[i]);
-                if (current > oldMax) {
-                    max = i;
-                }
-            }
-            xAlt = xAlt[max];
-        }
+        let xAlt;
+        if (typeof x[0] != "object") x = [x]; // 1차원이라면(solo column) 그냥 2차원으로 감쌈
+        xAlt = x.reduce((arr, c) => arr.concat(c), []); // 모든 컬럼 데이터 병합
+        xAlt = [Math.min(...xAlt), Math.max(...xAlt)]; // 모든 컬럼 데이터의 최소값, 최대값
 
         let [d3Element, width, height, xScale, yScale] = this.getBase(y, xAlt); // x랑 y 뒤바꿈(x가 세로, y가 가로)
 
         // 축 생성
         this.createAxis(d3Element, height, xScale, yScale);
 
-        // 옵션 추출
-        let color = (this.option && this.option.color) || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
-            // .attr("x1", xScale(0) + 1).attr("y1", yScale(y[0])) // 1번째 점(위) 그리고 좀 왼쪽에 있어서 1px 밀었음
-            // .attr("x2", xScale(0) + 1).attr("y2", yScale(y[y.length - 1]) + yScale.bandwidth()); // 2번째 점(밑)
-
         // 데이터 표시
-        xAlt = x;
-        if (typeof xAlt[0] != "object") { xAlt = [xAlt]; } // 여러 컬럼 처리를 위해 배열로 감쌈
+        for (let i in x) {
+            let points = x[i];
 
-        for (let i in xAlt) {
-            let x = xAlt[i];
-            d3Element.selectAll("line")
-                .data(x)
-                .enter()
-                .append("line")
-                .attr("stroke", "#000000")
-                .attr("stroke-width", "1px")
-                .style("shape-rendering", "crispEdges")
-                .attr("y1", v => yScale(v))
-                .attr("y2", (v, i) => { let target = y[max(i + 1, y.length)]; return yScale(target); })
-                .data(y)
-                .attr("x1", v => xScale(v))
-                .attr("x2", (v, i) => { let target = x[max(i + 1, x.length)]; return xScale(target); })
+            let line = d3.line()
+                .x((v, i) => xScale(y[i]))
+                .y((v, i) => yScale(v))
+
+            d3Element.append("path")
+                .attr("d", line(points))
+                .attr("fill", "none")
+                .attr("stroke", this.option.colors ? this.option.colors[i] : "#47E1A8")
+                .attr("stroke-width", "1px");
         }
     }
 

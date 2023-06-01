@@ -793,11 +793,11 @@ export const dailyChartD3 = (element, weatherData) => {
         let el = element.find(".chart_body");
         let data = {
             labels: getColumn(dailyData, "date"),
-            values: getColumn(dailyData, "temperature")
-            // values: [getColumn(dailyData, "temperature"), getColumn(dailyData, "humidity")]
+            values: [getColumn(dailyData, "temperature"), getColumn(dailyData, "humidity")]
         };
         let options = {
-            colors: ["#FFD400", "#1E85E6"]
+            colors: ["#FFD400", "#1E85E6"],
+            reverse: true
         };
 
         chart = new d3ext.line(el, data, options);
