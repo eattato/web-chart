@@ -437,6 +437,150 @@ export const heatmap = (element, weatherData) => {
     // });
 }
 
+export const valueCountChart = (element, summary) => {
+    let chart = null;
+    let select = element.find("select");
+    let options = Object.keys(summary.ValueCounts);
+    addOptions(select, options);
+
+    // 업데이트
+    function update(val) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        let el = element.find(".chart_body")[0];
+        let data = {
+            categories: Object.keys(summary.ValueCounts[val]),
+            series: [{
+                name: val,
+                data: Object.values(summary.ValueCounts[val]).reduce((arr, c) => {
+                    arr.push(c);
+                    return arr;
+                }, [])
+            }]
+        };
+        let options = {};
+        chart = toastChart.columnChart({ el, data, options });
+    }
+    update(options[0]);
+
+    // 바인딩
+    select.change(function() {
+        let val = $(this).val();
+        update(val);
+    });
+}
+
+export const describeChart = (element, summary) => {
+    let chart = null;
+    let select = element.find("select");
+    let options = ["Max", "Min", "Mean", "Std", "Var", "Median"];
+    addOptions(select, options);
+
+    // 업데이트
+    function update(val) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        let el = element.find(".chart_body")[0];
+        let data = {
+            categories: Object.keys(summary.Describe),
+            series: [{
+                name: val,
+                data: Object.values(summary.Describe).reduce((arr, c) => {
+                    arr.push(c[val]);
+                    return arr;
+                }, [])
+            }]
+        };
+        let options = {};
+        chart = toastChart.columnChart({ el, data, options });
+    }
+    update(options[0]);
+
+    // 바인딩
+    select.change(function() {
+        let val = $(this).val();
+        update(val);
+    });
+}
+
+export const quartileChart = (element, describe, numbers) => {
+    let chart = null;
+    let select = element.find("select");
+    let options = ["Quartile"];
+    addOptions(select, options);
+
+    // 업데이트
+    function update(val) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        let el = element.find(".chart_body")[0];
+        let data = {
+            categories: Object.keys(describe),
+            series: [
+                {
+                    name: "Quartile",
+                    data: Object.values(numbers).reduce((arr, c) => {
+                        arr.push(c);
+                        return arr;
+                    }, [])
+                }
+            ]
+        };
+
+        let totalMin, totalMax;
+        Object.values(numbers).forEach((c) => {
+            let min = Math.min(...c);
+            let max = Math.max(...c);
+            totalMin = !totalMin || totalMin > min ? min : totalMin;
+            totalMax = !totalMax || totalMax < max ? max : totalMax;
+        })
+
+
+        // chart = new Chart(el, {
+        //     type: "boxplot",
+        //     data: {
+        //         labels: Object.keys(summary.Describe),
+        //         datasets: [{
+        //             name: "Quartile",
+        //             data: Object.values(summary.Numbers).reduce((arr, c) => {
+        //                 arr.push(c);
+        //                 return arr;
+        //             }, [])
+        //         }]
+        //     }
+        // })
+
+
+
+        let options = {
+            // series: {
+            //     stack: true
+            // }
+            yAxis: {
+                scale: {
+                    min: totalMin,
+                    max: totalMax,
+                    stepSize: 0.1
+                }
+            }
+        };
+        chart = toastChart.boxPlotChart({ el, data, options });
+    }
+    update(options[0]);
+
+    // 바인딩
+    select.change(function() {
+        let val = $(this).val();
+        update(val);
+    });
+}
+
 // Chart.js쓰는 레거시 차트
 export const dailyChartLegacy = (element, weatherData) => {
     let chart = null;
