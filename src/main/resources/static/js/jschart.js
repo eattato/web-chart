@@ -490,7 +490,9 @@ export const wordCloudChart = (element, tokens, df) => {
             chart.destroy();
         }
 
-        let data = tokens[val];
+        let data = {
+            values: tokens[val]
+        };
         let el = element.find(".chart_body")[0];
         chart = new d3ext.cloud(el, data)
     }

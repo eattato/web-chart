@@ -721,11 +721,16 @@ export class cloud extends ChartBase {
     update() {
         // 값 정의
         let values = this.data.values;
-        let texts = [];
-        for (let word in values) {
-            let useCount = values[word];
-            for (let i = 0; i < useCount; i++) texts.push({ text: word, size: 10 });
-        }
+        let texts = Object.keys(values).reduce((arr, c) => {
+            arr.push({ text: c, size: values[c] });
+            return arr;
+        }, []);
+        console.log(texts);
+        // let texts = [];
+        // for (let word in values) {
+        //     let useCount = values[word];
+        //     for (let i = 0; i < useCount; i++) texts.push({ text: word, size: 10 });
+        // }
 
         let width = this.element.width;
         let height = this.element.height;
@@ -737,8 +742,8 @@ export class cloud extends ChartBase {
             .words(texts)
             .font("Arial")
             .fontSize((v) => v.size)
-            .on("end", draw);
-        layout.start()
+            .on("end", draw)
+            .start();
 
         function draw(words) {
             console.log("draw cloud")
@@ -750,6 +755,7 @@ export class cloud extends ChartBase {
                 .append("text")
                 .style("font-size", (v) => `${v.size}px`)
                 .style("font-family", "Arial")
+                .style("fill", "#000000")
                 .attr("text-anchor", "middle")
                 .attr("transform", (v) => `translate(${v.x}, ${v.y}) rotate(${v.rotate})`)
                 .text((v) => v.text);
