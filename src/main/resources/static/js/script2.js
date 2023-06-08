@@ -7,31 +7,40 @@ const protocol = window.location.protocol;
 const host = window.location.host;
 
 $().ready(() => {
-    fetch("/summary/Iris.csv")
+    fetch("/summary/BagOfWord.csv")
     .then(summary => summary.json())
     .then((summary) => {
         let df = new CsvDF(summary.DataFrame);
+        let holder = $(".chart_holder");
 
-        let holder = $(".chart_holder")
-        let numbers = Object.keys(df.columns).reduce((arr, key) => {
-            if (summary.Numbers.includes(key)) {
-                arr[key] = df.getColumn(key);
-            }
-            return arr;
-        }, {});
+        const defaultWindows = () => {
+            let naChart = cb.getChartFrameD3("결측값 비율", holder);
+            jsChart.naRatioEDA(naChart, df);
+
+            let summaryChart = cb.getEmptyOptionChartFrame("Describe", holder);
+            jsChart.describeChart(summaryChart, summary.Describe);
+        }
+
+        const numberWindows = () => {
+            let vcChart = cb.getEmptyOptionChartFrame("Value Counts", holder);
+            jsChart.valueCountChart(vcChart, summary.ValueCounts);
+
+            let quartileChart = cb.getEmptyOptionChartFrame("Quartile", holder);
+            jsChart.quartileChart(quartileChart, summary, df);
+        }
+
+        const textWindows = () => {
+            let wordCloud = cb.getEmptyOptionChartFrameD3("Word Cloud", holder);
+            jsChart.wordCloudChart(wordCloud, summary.Tokens, df);
+        }
 
 
-        
-        let vcChart = cb.getEmptyOptionChartFrame("Value Counts", holder)
-        jsChart.valueCountChart(vcChart, summary.ValueCounts)
-
-        let summaryChart = cb.getEmptyOptionChartFrame("Describe", holder)
-        jsChart.describeChart(summaryChart, summary.Describe)
-
-        let quartileChart = cb.getEmptyOptionChartFrame("Quartile", holder)
-        jsChart.quartileChart(quartileChart, summary, df)
-
-        let naChart = cb.getChartFrameD3("결측값 비율", holder)
-        jsChart.naRatioEDA(naChart, df)
+        defaultWindows();
+        if (summary.Numbers.length > 0) {
+            numberWindows();
+        }
+        if (Object.keys(summary.Tokens).length > 0) {
+            textWindows();
+        }
     });
 })

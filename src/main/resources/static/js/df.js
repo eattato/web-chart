@@ -6,29 +6,30 @@ export class CsvDF {
             this.index = dataframe.index;
         } else { // d3js로 불러온거
             this.columns = Object.keys(dataframe[0]);
-            this.rows = dataframe.reduce((arr, row) => {
-                arr.push(Object.values(row).map((v) => typeof v == "string" && v.length == 0 ? null : v));
-                return arr;
-            }, []);
             this.index = [...new Array(this.rows.length)].map((v, i) => i);
-
-            // 숫자형인 컬럼명만 수집
-            let numberColumns = this.columns.reduce((arr, c) => {
-                if (this.getColumnType(c) == "number") arr.push(c);
-                return arr;
-            }, []);
-
-            numberColumns.forEach((c) => {
-                if (this.getColumnType(c) == "number") {
-                    let columnIndex = this.columns.indexOf(c);
-                    let column = this.getColumn(c);
-                    column = column.map((v) => v ? Number(v) : null);
-                    for (let i in this.index) {
-                        this.rows[i][columnIndex] = column[i];
-                    }
-                }
-            })
         }
+
+        // 숫자형인 컬럼명만 수집
+        let numberColumns = this.columns.reduce((arr, c) => {
+            if (this.getColumnType(c) == "number") arr.push(c);
+            return arr;
+        }, []);
+        numberColumns.forEach((c) => {
+            if (this.getColumnType(c) == "number") {
+                let columnIndex = this.columns.indexOf(c);
+                let column = this.getColumn(c);
+                column = column.map((v) => v ? Number(v) : v);
+                for (let i in this.index) {
+                    this.rows[i][columnIndex] = column[i];
+                }
+            }
+        })
+
+        // null 처리
+        this.rows = this.rows.reduce((arr, row) => {
+            arr.push(Object.values(row).map((v) => typeof v == "string" && v.length == 0 ? null : v));
+            return arr;
+        }, []);
     }
 
     getColumn(column) {
@@ -69,12 +70,15 @@ export class CsvDF {
 
     getColumnType(column) {
         column = this.getColumn(column);
-        let result = "number";
+        let result = null;
 
         column.forEach((v) => {
-            if (v != null && isNaN(v)) {
-                result = "string";
-                return false;
+            if (v) {
+                if (result == null) result = typeof(v);
+                if (typeof(v) != result) {
+                    result = null;
+                    return false;
+                }
             }
         });
         return result;

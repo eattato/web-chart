@@ -441,7 +441,11 @@ export const heatmap = (element, weatherData) => {
 export const valueCountChart = (element, valueCounts) => {
     let chart = null;
     let select = element.find("select");
-    let options = Object.keys(valueCounts);
+    let options = Object.keys(valueCounts).reduce((arr, c) => {
+        if (Object.keys(valueCounts[c]).length <= 300) arr.push(c);
+        return arr;
+    }, []); // 300개 넘어가면 짤라버림
+
     addOptions(select, options);
 
     // 업데이트
@@ -463,6 +467,32 @@ export const valueCountChart = (element, valueCounts) => {
         };
         let options = {};
         chart = toastChart.columnChart({ el, data, options });
+    }
+    update(options[0]);
+
+    // 바인딩
+    select.change(function() {
+        let val = $(this).val();
+        update(val);
+    });
+}
+
+export const wordCloudChart = (element, tokens, df) => {
+    let chart = null;
+    let select = element.find("select");
+    let options = Object.keys(tokens);
+
+    addOptions(select, options);
+
+    // 업데이트
+    function update(val) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        let data = tokens[val];
+        let el = element.find(".chart_body")[0];
+        chart = new d3ext.cloud(el, data)
     }
     update(options[0]);
 
@@ -701,7 +731,7 @@ export const rainChartLegacy = (element, weatherData) => {
             snowData[month] = n.mean(snowData[month]);
         }
 
-        let el = element.find(".chart_body")[0];
+        let el = element.find(".chart_body");
         chart = new Chart(el, {
             type: "bar",
             data: {
@@ -950,7 +980,7 @@ export const naRatioEDA = (element, df) => {
         let column = df.getColumn(df.columns[c]);
         let sum = column.reduce((a, c) => a + c, 0)
         let percent = (sum / df.rows.length * 100).toFixed(2);
-        let label = `${df.columns[c]} (${percent}%)`;
+        let label = `${df.columns[c]}  (${percent}%)`;
         labels.push(label);
     }
 

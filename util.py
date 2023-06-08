@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from functools import reduce
 import json
+from keras.preprocessing.text import text_to_word_sequence
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -29,32 +30,20 @@ def buffer(func):
     return buf.getvalue()
 
 def quartile(column, p):
-    n = len(column) + 1
-    diff = (n * p) - int(n * p)
-    return column[int(n * (p - 1))] if diff == 0 else column[int(n * p - 1)] * (1 - diff) + column[int(n * p)] * diff
+    sort = sorted(column)
+    pos = len(column) * p - 1
+    return sort[int(pos)] if pos % 1 == 0 else (sort[math.floor(pos)] + sort[math.ceil(pos)]) / 2
 
-def summary(path):
-    df = pd.read_csv(path)
-    # df.info()
-    
-    df = df.iloc[:, 1:]
+    # n = len(column) + 1
+    # diff = (n * p) - int(n * p)
+    # return column[int(n * (p - 1))] if diff == 0 else column[int(n * p - 1)] * (1 - diff) + column[int(n * p)] * diff
 
-    # categories = df.select_dtypes(include=["object", "bool"])
-    valueCounts = {}
-    valueCounts = {c: df[c].value_counts().to_dict() for c in df.columns}
-
+def getDescribe(numbers):
     describe = {}
-
-    # 유니크 4개 밑인 컬럼은 카테고리로 간주하고 삭제
-    numbers = df.select_dtypes(include=["int", "float"]).copy()
-    for c in numbers:
-        if len(pd.unique(numbers[c])) < 4:
-            numbers.drop(c, axis=1)
-
     for c in numbers.columns:
         data = {}
         describe[c] = data
-        column = numbers[c]
+        column = numbers[c].dropna()
 
         data["Max"] = max(column)
         data["Min"] = min(column)
@@ -72,11 +61,51 @@ def summary(path):
         data["IQR"] = data["Q3"] - data["Q1"]
         data["IQR_InnerRight"] = (data["Q1"] - 1.5) * data["IQR"]
         data["IQR_InnerLeft"] = (data["Q3"] + 1.5) * data["IQR"]
-        data = []
+    return describe
+
+def getTokens(df):
+    tokens = {}
+    for c in df.columns:
+        for sentence in df[c]:
+            words = text_to_word_sequence(sentence)
+            if len(words) > 2: tokens[c] = words
+
+    for c in df.columns:
+        useCount = {}
+        if c in tokens:
+            words = tokens[c]
+            if len(words) > 1: useCount = {word: words.count(word) for word in words}
+            tokens[c] = useCount
+    return tokens
+
+def summary(path):
+    df = pd.read_csv(path)
+    df.info()
+    
+    df = df.iloc[:, 1:]
+
+    # categories = df.select_dtypes(include=["object", "bool"])
+    valueCounts = {}
+    valueCounts = {c: df[c].value_counts().to_dict() for c in df.columns}
+    numbers = df.select_dtypes(include=["int", "float"]).copy()
+
+    # 유니크 4개 밑인 컬럼은 카테고리로 간주하고 삭제
+    # for c in numbers:
+    #     if len(pd.unique(numbers[c])) < 4:
+    #         numbers.drop(c, axis=1)
+
+    # Describe 구하기
+    describe = getDescribe(numbers)
+
+    # 문장인 컬럼 찾고 토큰화
+    stringDf = df.select_dtypes(include="object")
+    tokens = getTokens(stringDf)
+    # print(tokens)
 
     return {
         "ValueCounts": valueCounts,
         "Describe": describe,
-        "DataFrame": df.to_dict(orient="split"),
-        "Numbers": list(numbers.columns)
+        "DataFrame": df.replace(np.nan, "").to_dict(orient="split"),
+        "Numbers": list(numbers.columns),
+        "Tokens": tokens
     }
