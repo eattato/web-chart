@@ -4,6 +4,7 @@ const toastChart = toastui.Chart;
 import * as d3ext from "./d3ext.js";
 import * as eda from "/js/eda.js";
 import { ImageData, toHex } from "/js/image.js";
+import { CsvDF } from "/js/df.js";
 
 // 딕셔너리 값으로 정렬
 const dictSort = (dict) => {
@@ -437,10 +438,10 @@ export const heatmap = (element, weatherData) => {
     // });
 }
 
-export const valueCountChart = (element, summary) => {
+export const valueCountChart = (element, valueCounts) => {
     let chart = null;
     let select = element.find("select");
-    let options = Object.keys(summary.ValueCounts);
+    let options = Object.keys(valueCounts);
     addOptions(select, options);
 
     // 업데이트
@@ -451,10 +452,10 @@ export const valueCountChart = (element, summary) => {
 
         let el = element.find(".chart_body")[0];
         let data = {
-            categories: Object.keys(summary.ValueCounts[val]),
+            categories: Object.keys(valueCounts[val]),
             series: [{
                 name: val,
-                data: Object.values(summary.ValueCounts[val]).reduce((arr, c) => {
+                data: Object.values(valueCounts[val]).reduce((arr, c) => {
                     arr.push(c);
                     return arr;
                 }, [])
@@ -472,7 +473,7 @@ export const valueCountChart = (element, summary) => {
     });
 }
 
-export const describeChart = (element, summary) => {
+export const describeChart = (element, describe) => {
     let chart = null;
     let select = element.find("select");
     let options = ["Max", "Min", "Mean", "Std", "Var", "Median"];
@@ -486,10 +487,10 @@ export const describeChart = (element, summary) => {
 
         let el = element.find(".chart_body")[0];
         let data = {
-            categories: Object.keys(summary.Describe),
+            categories: Object.keys(describe),
             series: [{
                 name: val,
-                data: Object.values(summary.Describe).reduce((arr, c) => {
+                data: Object.values(describe).reduce((arr, c) => {
                     arr.push(c[val]);
                     return arr;
                 }, [])
@@ -507,7 +508,7 @@ export const describeChart = (element, summary) => {
     });
 }
 
-export const quartileChart = (element, describe, numbers) => {
+export const quartileChart = (element, summary, df) => {
     let chart = null;
     let select = element.find("select");
     let options = ["Quartile"];
@@ -521,26 +522,14 @@ export const quartileChart = (element, describe, numbers) => {
 
         let el = element.find(".chart_body")[0];
         let data = {
-            categories: Object.keys(describe),
+            categories: Object.keys(summary.Describe),
             series: [
                 {
                     name: "Quartile",
-                    data: Object.values(numbers).reduce((arr, c) => {
-                        arr.push(c);
-                        return arr;
-                    }, [])
+                    data: df.getColumns(summary.Numbers)
                 }
             ]
         };
-
-        let totalMin, totalMax;
-        Object.values(numbers).forEach((c) => {
-            let min = Math.min(...c);
-            let max = Math.max(...c);
-            totalMin = !totalMin || totalMin > min ? min : totalMin;
-            totalMax = !totalMax || totalMax < max ? max : totalMax;
-        })
-
 
         // chart = new Chart(el, {
         //     type: "boxplot",
@@ -559,16 +548,13 @@ export const quartileChart = (element, describe, numbers) => {
 
 
         let options = {
-            // series: {
-            //     stack: true
+            // yAxis: {
+            //     scale: {
+            //         min: totalMin,
+            //         max: totalMax,
+            //         stepSize: 0.1
+            //     }
             // }
-            yAxis: {
-                scale: {
-                    min: totalMin,
-                    max: totalMax,
-                    stepSize: 0.1
-                }
-            }
         };
         chart = toastChart.boxPlotChart({ el, data, options });
     }
@@ -956,27 +942,15 @@ export const dailyChartD3 = (element, weatherData) => {
 }
 
 // EDA 차트
-export const naRatioEDA = (element, rows) => {
-    let [na, naCount, naColumns] = eda.isNa(rows);
-
-    let naData = [];
-    for (let i in na) {
-        let row = na[i];
-        let naRow = [];
-        for (let c in row) {
-            if (row[c]) {
-                naRow.push(1);
-            } else {
-                naRow.push(0);
-            }
-        }
-        naData.push(naRow);
-    }
-
+export const naRatioEDA = (element, df) => {
     let labels = [];
-    for (let c in naColumns) {
-        let percent = (naColumns[c] / rows.length * 100).toFixed(2);
-        let label = `${c}  (${percent}%)`;
+    df = df.isNa();
+
+    for (let c in df.columns) {
+        let column = df.getColumn(df.columns[c]);
+        let sum = column.reduce((a, c) => a + c, 0)
+        let percent = (sum / df.rows.length * 100).toFixed(2);
+        let label = `${df.columns[c]} (${percent}%)`;
         labels.push(label);
     }
 
@@ -984,9 +958,9 @@ export const naRatioEDA = (element, rows) => {
     let data = {
         labels: {
             x: labels,
-            y: Object.keys(naData)
+            y: Object.keys(df.rows)
         },
-        values: naData
+        values: df.rows
     }
     let option = {
         yAxis: false,
@@ -1065,25 +1039,23 @@ export const uniqueRankEDA = (element, rows) => {
     // update();
 }
 
-export const describeEDA = (element, rows) => {
+export const describeEDA = (element, df) => {
     let chart = null;
 
-    let columns = {};
-
     // 숫자형인 컬럼명만 수집
-    let keys = Object.keys(rows[0]);
-    for (let i = 1; i < keys.length; i++) {
-        let c = keys[i];
-        let columnData = getColumn(rows, c);
-        if (eda.isColumnNumber(columnData)) {
-            columns[c] = n.toNum(eda.removeNull(columnData));
-        }
-    }
+    let numberColumns = df.columns.reduce((arr, c) => {
+        if (df.getColumnType(c) == "number") arr.push(c);
+        return arr;
+    }, []);
 
     // 데이터 정리
-    for (let c in columns) {
-        let datas = columns[c];
-        let sorted = [...datas].sort();
+    let tableDF = [[], [], [] ,[], [], [], []];
+    numberColumns.forEach((c) => {
+        let column = df.getColumn(c).reduce((arr, c) => {
+            if (c) arr.push(c);
+            return arr;
+        }, []);
+        let sorted = [...column].sort();
 
         let sortedMin = Math.floor(sorted.length / 2);
         let sortedMax = Math.ceil(sorted.length / 2);
@@ -1095,16 +1067,18 @@ export const describeEDA = (element, rows) => {
         }
 
         let data = [
-            datas.length, // count
-            n.mean(datas), // mean
-            n.std(datas), // std
-            n.min(datas), // min
-            n.max(datas), // max
-            n.var(datas), // var
+            column.length, // count
+            n.mean(column), // mean
+            n.std(column), // std
+            n.min(column), // min
+            n.max(column), // max
+            n.var(column), // var
             median // median
         ];
-        columns[c] = data;
-    }
+        data.forEach((v, i) => {
+            tableDF[i].push(v);
+        });
+    })
 
     function update(val) {
         if (chart) {
@@ -1114,10 +1088,10 @@ export const describeEDA = (element, rows) => {
         let el = element.find(".chart_body");
         let data = {
             labels: {
-                x: Object.keys(columns),
+                x: numberColumns,
                 y: ["count", "mean", "std", "min", "max", "var", "median"]
             },
-            values: rotateRows(Object.values(columns)),
+            values: tableDF,
         };
         let options = {};
 
@@ -1128,25 +1102,19 @@ export const describeEDA = (element, rows) => {
     update();
 }
 
-export const scatterEDA = (element, rows) => {
+export const scatterEDA = (element, df) => {
     let chart = null;
-    
-    let columns = {};
 
     // 숫자형인 컬럼명만 수집
-    let keys = Object.keys(rows[0]);
-    for (let i = 1; i < keys.length; i++) {
-        let c = keys[i];
-        let columnData = getColumn(rows, c);
-        if (eda.isColumnNumber(columnData)) {
-            columns[c] = columnData;
-        }
-    }
+    let numberColumns = df.columns.reduce((arr, c) => {
+        if (df.getColumnType(c) == "number") arr.push(c);
+        return arr;
+    }, []);
 
     let firstSelect = element.find("select").eq(0);
     let secondSelect = element.find("select").eq(1);
-    addOptions(firstSelect, Object.keys(columns));
-    addOptions(secondSelect, Object.keys(columns));
+    addOptions(firstSelect, numberColumns);
+    addOptions(secondSelect, numberColumns);
 
     function update(val1, val2) {
         if (chart) {
@@ -1155,10 +1123,13 @@ export const scatterEDA = (element, rows) => {
 
         // 결측값 1이나 2에 하나라도 있으면 안씀
         let values = [];
-        for (let i in rows) {
-            let row = rows[i];
-            if (!eda.isNull(row[val1]) && !eda.isNull(row[val2])) {
-                values.push([Number(row[val1]), Number(row[val2])]);
+        let column1 = df.getColumn(val1);
+        let column2 = df.getColumn(val2);
+
+        for (let i in column1) {
+            console.log(`${column1[i]} && ${column2[i]}`);
+            if (column1[i] && column2[i]) {
+                values.push([Number(column1[i]), Number(column2[i])]);
             }
         }
 
@@ -1354,40 +1325,38 @@ export const rgbChannelEDA = (element, img) => {
     });
 }
 
-export const columnInfoEDA = (element, rows) => {
+export const columnInfoEDA = (element, df) => {
     let chart = null;
-    
-    let columns = {};
 
     // 숫자형인 컬럼명만 수집
-    let keys = Object.keys(rows[0]);
-    for (let i = 1; i < keys.length; i++) {
-        let c = keys[i];
-        let columnData = getColumn(rows, c);
-        if (eda.isColumnNumber(columnData)) {
-            columns[c] = columnData;
-        }
-    }
+    let numberColumns = df.columns.reduce((arr, c) => {
+        if (df.getColumnType(c) == "number") arr.push(c);
+        return arr;
+    }, []);
 
     // 컬럼 별 데이터 갯수 합산 및 정렬
-    for (let c in columns) {
-        let stacks = {};
-        let columnData = columns[c];
-        for (let i in columnData) {
-            let value = columnData[i];
-            if (!eda.isNull(value)) {
-                if (!stacks[value]) stacks[value] = 0;
-                stacks[value]++;
-            }
+    let columns = {}
+    df.columns.forEach((c) => {
+        if (df.getColumnType(c) == "number") {
+            let column = df.getColumn(c);
+            let valueCounts = {};
+            columns[c] = valueCounts;
+            column.forEach((v) => {
+                if (v) {
+                    if (!valueCounts[v]) valueCounts[v] = 0;
+                    valueCounts[v]++;
+                }
+            })
         }
+    });
 
-        // 정렬
-        let sorted = {};
-        Object.keys(stacks).sort().forEach((c) => {
-            sorted[c] = stacks[c];
-        })
-        columns[c] = sorted;
-    }
+
+    // 정렬
+    let sorted = {};
+    Object.keys(columns).sort().forEach((c) => {
+        sorted[c] = columns[c];
+    })
+    columns = sorted;
 
     let select = element.find("select").eq(0);
     addOptions(select, Object.keys(columns));

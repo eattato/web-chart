@@ -6,6 +6,8 @@ from flask import Flask, request, render_template, jsonify, send_from_directory
 
 app = Flask(__name__, template_folder="src/main/resources/templates")
 
+summarySaves = {}
+
 @app.route("/", methods=["GET"])
 def page():
     return render_template("flask.html")
@@ -16,9 +18,9 @@ def getSummary(target):
     path = os.path.join("src/main/resources/static/data", target)
     if not os.path.exists(path): return "no u"
 
-    return jsonify(util.summary(path))
-    # csv = pd.read_csv(path)
-    # return util.buffer(csv.info)
+    if not target in summarySaves:
+        summarySaves[target] = util.summary(path)
+    return summarySaves[target]
 
 @app.route("/<path:path>")
 def public(path):

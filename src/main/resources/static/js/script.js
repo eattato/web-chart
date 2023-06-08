@@ -1,6 +1,7 @@
 import * as jsChart from "/js/jschart.js";
 import * as cb from "/js/chartBase.js";
 import * as d3ext from "/js/d3ext.js";
+import { CsvDF } from "/js/df.js";
 
 const protocol = window.location.protocol;
 const host = window.location.host;
@@ -160,21 +161,22 @@ $().ready(() => {
 
         // Titanic 차트
         let titanicHolder = $("#eda_titanic_holder");
-        let titanicRows = [];
-        d3.csv("/data/titanic.csv", (data) => {
-            titanicRows.push(data)
-        }).then(() => {
+        let titanicRows = []
+        d3.csv("/data/titanic.csv", (line) => titanicRows.push(line))
+        .then(() => {
+            let df = new CsvDF(titanicRows);
+
             // 컬럼 정보
             let columnChart = cb.getEmptyOptionChartFrameD3("데이터 컬럼 정보", titanicHolder);
-            jsChart.columnInfoEDA(columnChart, titanicRows);
+            jsChart.columnInfoEDA(columnChart, df);
 
             // Describe 표
             let describe = cb.getChartFrameD3("컬럼 정보", titanicHolder);
-            jsChart.describeEDA(describe, titanicRows);
+            jsChart.describeEDA(describe, df);
 
             // 결측값 데이터
             let naChart = cb.getChartFrameD3("결측값 비율", titanicHolder);
-            jsChart.naRatioEDA(naChart, titanicRows);
+            jsChart.naRatioEDA(naChart, df);
 
             // Unique 값 순위
             let uniqueChart = cb.getChartFrameD3("카테고리 상관관계", titanicHolder);
@@ -186,26 +188,27 @@ $().ready(() => {
         // Iris 차트
         let irisHolder = $("#eda_iris_holder");
         let irisRows = [];
-        d3.csv("/data/Iris.csv", (data) => {
-            irisRows.push(data);
-        }).then(() => {
+        d3.csv("/data/Iris.csv", (line) => irisRows.push(line))
+        .then(() => {
+            let df = new CsvDF(irisRows);
+
             // 컬럼 정보
             let columnChart = cb.getEmptyOptionChartFrameD3("데이터 컬럼 정보", irisHolder);
-            jsChart.columnInfoEDA(columnChart, irisRows);
+            jsChart.columnInfoEDA(columnChart, df);
 
             // Describe 표
             let describe = cb.getChartFrameD3("컬럼 정보", irisHolder);
-            jsChart.describeEDA(describe, irisRows);
+            jsChart.describeEDA(describe, df);
 
             // 결측값 데이터
             let naChart = cb.getChartFrameD3("결측값 비율", irisHolder);
-            jsChart.naRatioEDA(naChart, irisRows);
+            jsChart.naRatioEDA(naChart, df);
 
             // 스캐터
             let scatter = cb.getChartFrameD3("상관관계 스캐터 플롯", irisHolder);
             let scatterSelect = $($.parseHTML('<div class="chart_selection"><select></select> and <select></select></div>'));
             scatterSelect.appendTo(scatter.find(".chart_header"));
-            jsChart.scatterEDA(scatter, irisRows);
+            jsChart.scatterEDA(scatter, df);
         });
 
         // 기타 EDA 차트

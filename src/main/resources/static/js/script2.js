@@ -1,6 +1,7 @@
 import * as jsChart from "/js/jschart.js";
 import * as cb from "/js/chartBase.js";
 import * as d3ext from "/js/d3ext.js";
+import { CsvDF } from "/js/df.js";
 
 const protocol = window.location.protocol;
 const host = window.location.host;
@@ -9,10 +10,12 @@ $().ready(() => {
     fetch("/summary/Iris.csv")
     .then(summary => summary.json())
     .then((summary) => {
+        let df = new CsvDF(summary.DataFrame);
+
         let holder = $(".chart_holder")
-        let numbers = Object.keys(summary.Columns).reduce((arr, key) => {
+        let numbers = Object.keys(df.columns).reduce((arr, key) => {
             if (summary.Numbers.includes(key)) {
-                arr[key] = summary.Columns[key];
+                arr[key] = df.getColumn(key);
             }
             return arr;
         }, {});
@@ -20,25 +23,15 @@ $().ready(() => {
 
         
         let vcChart = cb.getEmptyOptionChartFrame("Value Counts", holder)
-        jsChart.valueCountChart(vcChart, summary)
+        jsChart.valueCountChart(vcChart, summary.ValueCounts)
 
         let summaryChart = cb.getEmptyOptionChartFrame("Describe", holder)
-        jsChart.describeChart(summaryChart, summary)
+        jsChart.describeChart(summaryChart, summary.Describe)
 
-        let quartileChart = cb.getEmptyOptionChartFrameLegacy("Quartile", holder)
-        jsChart.quartileChart(quartileChart, summary.Describe, numbers)
-
-        let noKeys = [];
-        let columns = Object.keys(summary.Columns);
-        for (let r = 0; r < summary.Columns[columns[0]].length; r++) {
-            let row = [];
-            for (let c in summary.Columns) {
-                row.push(summary.Columns[c][r])
-            }
-            noKeys.push(row);
-        }
+        let quartileChart = cb.getEmptyOptionChartFrame("Quartile", holder)
+        jsChart.quartileChart(quartileChart, summary, df)
 
         let naChart = cb.getChartFrameD3("결측값 비율", holder)
-        jsChart.naRatioEDA(naChart, noKeys)
+        jsChart.naRatioEDA(naChart, df)
     });
 })

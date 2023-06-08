@@ -3,6 +3,25 @@ import math
 import pandas as pd
 import numpy as np
 from functools import reduce
+import json
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (np.int_, np.intc, np.intp, np.int8,
+                            np.int16, np.int32, np.int64, np.uint8,
+                            np.uint16, np.uint32, np.uint64)):
+            return int(obj)
+        elif isinstance(obj, (np.float_, np.float16, np.float32, np.float64)):
+            return float(obj)
+        elif isinstance(obj, (np.complex_, np.complex64, np.complex128)):
+            return {'real': obj.real, 'imag': obj.imag}
+        elif isinstance(obj, (np.ndarray,)):
+            return obj.tolist()
+        elif isinstance(obj, (np.bool_)):
+            return bool(obj)
+        elif isinstance(obj, (np.void)): 
+            return None
+        return json.JSONEncoder.default(self, obj)
 
 def buffer(func):
     buf = io.StringIO()
@@ -16,7 +35,7 @@ def quartile(column, p):
 
 def summary(path):
     df = pd.read_csv(path)
-    df.info()
+    # df.info()
     
     df = df.iloc[:, 1:]
 
@@ -37,9 +56,9 @@ def summary(path):
         describe[c] = data
         column = numbers[c]
 
-        data["Max"] = np.max(column)
-        data["Min"] = np.min(column)
-        data["Mean"] = np.mean(column)
+        data["Max"] = max(column)
+        data["Min"] = min(column)
+        data["Mean"] = sum(column) / len(column)
         data["Var"] = reduce((lambda a, c: a + (data["Mean"] - c) ** 2), column, 0) / len(column.index)
         data["Std"] = math.sqrt(data["Var"])
 
@@ -53,20 +72,11 @@ def summary(path):
         data["IQR"] = data["Q3"] - data["Q1"]
         data["IQR_InnerRight"] = (data["Q1"] - 1.5) * data["IQR"]
         data["IQR_InnerLeft"] = (data["Q3"] + 1.5) * data["IQR"]
-
-    sendingNumbers = {}
-    for c in numbers.columns:
-        sendingNumbers[c] = list(numbers[c])
-    # sendingNumbers = reduce((lambda a, c: a[c] = list(numbers[c])), numbers.columns, {})
-
-    columns = {}
-    for c in df.columns:
-        columns[c] = list(df[c])
+        data = []
 
     return {
         "ValueCounts": valueCounts,
         "Describe": describe,
-        # "Numbers": sendingNumbers,
-        "Columns": columns,
+        "DataFrame": df.to_dict(orient="split"),
         "Numbers": list(numbers.columns)
     }
