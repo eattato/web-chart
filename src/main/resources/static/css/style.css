@@ -208,3 +208,15 @@
     overflow: hidden;
     padding: 5px 5px;
 }
+
+/* dataset */
+.dataset_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    height: 40px;
+    padding: 5px 5px;
+    border-top: 1px solid lightgray;
+    border-bottom: 1px solid lightgray;
+}

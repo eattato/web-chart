@@ -26,6 +26,14 @@ def getSummary(target):
 def public(path):
     return send_from_directory("src/main/resources/static", path)
 
+@app.route("/datalist", methods=["GET"])
+def getDatalist():
+    result = []
+    for file in os.listdir("src/main/resources/static/data"):
+        if os.path.splitext(file)[1] == ".csv":
+            result.append(file)
+    return { "list": result }
+
 # 메인
 if __name__ == "__main__":
     print("서버 열림")
