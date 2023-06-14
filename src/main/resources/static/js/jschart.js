@@ -1284,14 +1284,14 @@ export const describeEDA = (element, df) => {
     update();
 }
 
-export const scatterEDA = (element, df) => {
+export const scatterEDA = (element, df, numberColumns) => {
     let chart = null;
 
     // 숫자형인 컬럼명만 수집
-    let numberColumns = df.columns.reduce((arr, c) => {
-        if (df.getColumnType(c) == "number") arr.push(c);
-        return arr;
-    }, []);
+    // let numberColumns = df.columns.reduce((arr, c) => {
+    //     if (df.getColumnType(c) == "number") arr.push(c);
+    //     return arr;
+    // }, []);
 
     let firstSelect = element.find("select").eq(0);
     let secondSelect = element.find("select").eq(1);
@@ -1309,7 +1309,7 @@ export const scatterEDA = (element, df) => {
         let column2 = df.getColumn(val2);
 
         for (let i in column1) {
-            console.log(`${column1[i]} && ${column2[i]}`);
+            // console.log(`${column1[i]} && ${column2[i]}`);
             if (column1[i] && column2[i]) {
                 values.push([Number(column1[i]), Number(column2[i])]);
             }
@@ -1338,9 +1338,89 @@ export const scatterEDA = (element, df) => {
     firstSelect.change(selectionBind);
     secondSelect.change(selectionBind)
 
-    firstSelect.val();
-    secondSelect.val();
-    // update();
+    firstSelect.val(numberColumns[0]);
+    secondSelect.val(numberColumns[1]);
+    update(numberColumns[0], numberColumns[1]);
+}
+
+export const pairEDA = (element, df, numberColumns) => {
+    let el = element.find(".chart_body");
+    el.addClass("multiplot");
+
+    let axisSize = 25;
+    let plotMargin = 3;
+    let plotScale = 1 / numberColumns.length * 100;
+
+    let multiplot = $($.parseHTML("<div class='chart_multiplot'></div>"))
+    multiplot.width(el.width() - axisSize)
+    multiplot.height(el.height() - axisSize)
+    multiplot.appendTo(el)
+
+    let gridHorizontal = $($.parseHTML("<div class='chart_plotgrid horizontal'></div>"));
+    let gridVertical = $($.parseHTML("<div class='chart_plotgrid vertical'></div>"));
+    gridHorizontal.width(el.width() - axisSize);
+    gridVertical.height(el.height() - axisSize);
+    gridHorizontal.height(axisSize);
+    gridVertical.width(axisSize);
+    gridHorizontal.appendTo(el);
+    gridVertical.appendTo(el);
+
+    for (let c in numberColumns) {
+        let text = $($.parseHTML(`<div>${numberColumns[c]}</div>`));
+        text.appendTo(gridVertical);
+    }
+    for (let r in numberColumns.reverse()) {
+        let text = $($.parseHTML(`<div>${numberColumns[r]}</div>`));
+        text.appendTo(gridHorizontal);
+    }
+
+    function update() {
+        multiplot.empty();
+        for (let c in numberColumns) {
+            for (let r in numberColumns.reverse()) {
+                let plot = $($.parseHTML("<svg class='chart_subplot'></svg>"))
+                plot.width(`calc(${plotScale}% - ${plotMargin * 2}px)`);
+                plot.height(`calc(${plotScale}% - ${plotMargin * 2}px)`);
+                plot.css({margin: `${plotMargin}px`})
+                plot.appendTo(multiplot);
+
+                let values = [];
+                let x = df.getColumn(numberColumns[r]);
+                let y = df.getColumn(numberColumns[c]);
+
+
+                if (c != r) { // 스캐터
+                    // 결측값 1이나 2에 하나라도 있으면 안씀
+                    for (let i in x) {
+                        if (x[i] && y[i]) {
+                            values.push([Number(x[i]), Number(y[i])]);
+                        }
+                    }
+
+                    let data = {
+                        labels: {
+                            x: r, y: c
+                        },
+                        values: values
+                    };
+                    let options = {
+                        reverse: true,
+                        paddingX: 3,//20,
+                        paddingY: 3,//20,
+                        xAxis: false,
+                        yAxis: false,
+                        // axisSize: 20 / numberColumns.length,//20,
+                        radius: 3 / numberColumns.length * 1.5 //1.25
+                    };
+
+                    new d3ext.scatter(plot, data, options);
+                } else { // 히스토그램
+
+                }
+            }
+        }
+    }
+    update();
 }
 
 export const rgbEDA = (element, rgb) => {

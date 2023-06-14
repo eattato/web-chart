@@ -7,6 +7,13 @@ const protocol = window.location.protocol;
 const host = window.location.host;
 
 $().ready(() => {
+    let bodyFrame = $(".body_frame");
+    const createCategory = (title) => {
+        let category = $($.parseHTML(`<div class="chart_category"><div class="chart_drawer">${title}</div><div class="chart_holder"></div></div>`));
+        category.appendTo(bodyFrame);
+        return category;
+    }
+
     fetch("/datalist")
         .then(res => res.json())
         .then((dataList) => {
@@ -18,9 +25,8 @@ $().ready(() => {
                 option.appendTo(dataSelect);
             });
 
-            let holder = $(".chart_holder");
             dataSelect.change(() => {
-                holder.empty();
+                bodyFrame.empty();
                 let selectedData = dataSelect.val();
                 fetch(`/summary/${selectedData}`)
                     .then((res) => res.json())
@@ -28,22 +34,49 @@ $().ready(() => {
                         let df = new CsvDF(summary.DataFrame);
                 
                         const defaultWindows = () => {
-                            let naChart = cb.getChartFrameD3("결측값 비율", holder);
+                            let category = createCategory("Common Datas");
+                            let holder = category.find(".chart_holder");
+
+                            let naChart = cb.getChartFrameD3("NaN Rate", holder);
                             jsChart.naRatioEDA(naChart, df);
                 
-                            let summaryChart = cb.getEmptyOptionChartFrame("Describe", holder);
-                            jsChart.describeChart(summaryChart, summary.Describe);
+                            let vcChart = cb.getEmptyOptionChartFrame("Value Counts", holder);
+                            jsChart.valueCountChart(vcChart, summary.ValueCounts);
                         }
                 
                         const numberWindows = () => {
-                            let vcChart = cb.getEmptyOptionChartFrame("Value Counts", holder);
-                            jsChart.valueCountChart(vcChart, summary.ValueCounts);
-                
+                            let category = createCategory("Number Datas");
+                            let holder = category.find(".chart_holder");
+
+                            let summaryChart = cb.getEmptyOptionChartFrame("Describe", holder);
+                            jsChart.describeChart(summaryChart, summary.Describe);
+
                             let quartileChart = cb.getEmptyOptionChartFrame("Quartile", holder);
                             jsChart.quartileChart(quartileChart, summary, df);
+
+                            if (summary.Numbers.length > 2) {
+                                let scatter = cb.getChartFrameD3("Scatter", holder);
+                                let scatterSelect = $($.parseHTML('<div class="chart_selection"><select></select> and <select></select></div>'));
+                                scatterSelect.appendTo(scatter.find(".chart_header"));
+                                jsChart.scatterEDA(scatter, df, summary.Numbers);
+
+                                let pair = cb.getChartFrame("Pairplot", holder);
+                                jsChart.pairEDA(pair, df, summary.Numbers);
+                            }
                         }
                 
+                        const categoryWindows = () => {
+                            let category = createCategory("Category Datas");
+                            let holder = category.find(".chart_holder");
+
+                            let cvcChart = cb.getEmptyOptionChartFrame("Category Value Counts", holder);
+                            jsChart.valueCountChart(cvcChart, summary.CategoryData);
+                        }
+
                         const textWindows = () => {
+                            let category = createCategory("Text Datas");
+                            let holder = category.find(".chart_holder");
+                            
                             let wordCloud = cb.getChartFrame("Word Cloud", holder);
                             let wordCloudSelect = $($.parseHTML('<div class="chart_selection"><select name="" id=""></select> over <input type="number" value="1" /> usages</div>'));
                             wordCloudSelect.appendTo(wordCloud.find(".chart_header"));
@@ -63,6 +96,9 @@ $().ready(() => {
                         }
                         if (Object.keys(summary.StrData).length > 0) {
                             textWindows();
+                        }
+                        if (Object.keys(summary.CategoryData).length > 0) {
+                            // categoryWindows();
                         }
                     })
             })

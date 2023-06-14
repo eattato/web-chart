@@ -9,6 +9,13 @@
     display: none !important;
 }
 
+.body_frame {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+}
+
 /* chart */
 .chart_category {
     display: flex;
@@ -63,6 +70,47 @@
 .chart_body {
     width: 600px;
     height: 310px;
+}
+.chart_body.multiplot {
+    position: relative;
+}
+
+.chart_multiplot {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.chart_plotgrid {
+    position: absolute;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.chart_plotgrid.horizontal {
+    bottom: 0;
+    right: 0;
+}
+.chart_plotgrid.vertical {
+    flex-direction: column;
+    top: 0;
+    left: 0;
+}
+
+.chart_plotgrid div {
+    flex-grow: 1;
+    text-align: center;
+    font-size: 8px;
+}
+.chart_plotgrid.vertical div {
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+}
+
+.chart_subplot {
+    border: 1px solid lightgray;
 }
 
 .canvas_cover {

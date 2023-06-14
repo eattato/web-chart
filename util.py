@@ -102,17 +102,22 @@ def summary(path):
     df = df.iloc[:, 1:]
 
     # categories = df.select_dtypes(include=["object", "bool"])
-    valueCounts = {}
     valueCounts = {c: df[c].value_counts().to_dict() for c in df.columns}
-    numbers = df.select_dtypes(include=["int", "float"]).copy()
+    numbers = df.select_dtypes(include=["int", "float"])
 
     # Describe 구하기
     describe = getDescribe(numbers)
 
-    # 자연어인 컬럼 찾고 토큰화 (스트링 컬럼 중에서도 Unique가 절반 이상이면 자연어로 침)
+    # 자연어인 컬럼 찾고 토큰화 (스트링 컬럼 중에서도 Unique가 절반 이상이면 자연어로 침, 아니면 카테고리)
     strColumns = df.select_dtypes(include="object").columns
     natural = [column for column in strColumns if df[column].nunique() >= len(df[column]) / 2]
     naturalData = {}
+
+    categories = [column for column in strColumns if df[column].nunique() < len(df[column]) / 2]
+    categoryData = {
+        column: df[column].value_counts().to_dict()
+        for column in categories
+    }
 
     for column in natural:
         tokens, wordCount = getTokens(df[column])
@@ -127,5 +132,6 @@ def summary(path):
         "Describe": describe,
         "DataFrame": df.replace(np.nan, "").to_dict(orient="split"),
         "Numbers": list(numbers.columns),
-        "StrData": naturalData
+        "StrData": naturalData,
+        "CategoryData": categoryData
     }

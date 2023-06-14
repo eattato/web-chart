@@ -210,7 +210,8 @@ class ChartBase {
         let firstKey = Object.keys(data)[0];
         if (typeof data[firstKey] == "number") { // scaleLinear 리턴
             // data내에서 최소값, 최대값을 가진 리스트. 이 때 최소값이 양수라면 대신 0부터 시작한다.
-            let domain = [Math.min(d3.min(data), 0), d3.max(data)];
+            //let domain = [Math.min(d3.min(data), 0), d3.max(data)];
+            let domain = [d3.min(data), d3.max(data)];
             return d3.scaleLinear().domain(domain).range(range);
         } else { // scaleBand 리턴
             return d3.scaleBand().domain(data).range(range).paddingInner(0).paddingOuter(0);
@@ -450,8 +451,8 @@ export class verticalBar extends ChartBase {
             .enter()
             .append("rect") // 데이터 갯수에 맞춰 사각형 생성
             .attr("width", widthResized)
-            .attr("height", (v) => yScale(xMax - Math.abs(v)) - zeroPoint)
-            .attr("y", (v) => yScale(Math.abs(v)) + (v <= 0 ? yScale(xMax - Math.abs(v)) - zeroPoint : 0)) // 음수면 양수랑 같은 상태에서 자기 height만큼 내림
+            .attr("height", (v) => yScale(d3.min(x)) - yScale(v))
+            .attr("y", (v) => yScale(v)) // 음수면 양수랑 같은 상태에서 자기 height만큼 내림
             //.attr("height", (v) => yScale(xMax - v) - zeroPoint)
             //.attr("y", (v) => yScale(v))
             .text((v, i) => JSON.stringify({
@@ -465,12 +466,12 @@ export class verticalBar extends ChartBase {
             .bindHoverTooltip();
 
         // 영점 선 표시
-        d3Element.append("line")
-            .attr("stroke", "#000000")
-            .attr("stroke-width", "1px")
-            .style("shape-rendering", "crispEdges") // 이걸 넣어야 진짜 1px 짜리 선이 됨
-            .attr("x1", xScale(y[0])).attr("y1", yScale(0)) // 1번째 점(위) 그리고 좀 왼쪽에 있어서 1px 밀었음
-            .attr("x2", xScale(y[y.length - 1]) + xScale.bandwidth()).attr("y2", yScale(0)); // 2번째 점(밑)
+        // d3Element.append("line")
+        //     .attr("stroke", "#000000")
+        //     .attr("stroke-width", "1px")
+        //     .style("shape-rendering", "crispEdges") // 이걸 넣어야 진짜 1px 짜리 선이 됨
+        //     .attr("x1", xScale(y[0])).attr("y1", yScale(0)) // 1번째 점(위) 그리고 좀 왼쪽에 있어서 1px 밀었음
+        //     .attr("x2", xScale(y[y.length - 1]) + xScale.bandwidth()).attr("y2", yScale(0)); // 2번째 점(밑)
     }
 
     constructor(element, data, option) {
