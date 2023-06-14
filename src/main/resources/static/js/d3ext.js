@@ -133,11 +133,21 @@ export const hoverTooltipEvent = (element, text, callback) => {
 
     function mousemove(event) {
         if (callback) callback("mousemove", event);
+        let padding = 10;
         let x = event.pageY;
         let y = event.pageX;
+
+        let tooltipWidth = y + padding + tooltip.width() + 30;
+        let tooltipHeight = x + padding + tooltip.height() + 30;
+        let bodyWidth = document.body.scrollWidth;
+        let bodyHeight = document.body.scrollHeight;
+        if (tooltipWidth > bodyWidth) y -= tooltipWidth - bodyWidth;
+        if (tooltipHeight > bodyHeight) x -= tooltipHeight - bodyHeight;
+        //console.log(`${x + padding}+${tooltip.height()}=${tooltipPos} ${height}`);
+
         tooltip.css({
-            "top": `${x + 10}px`,
-            "left": `${y + 10}px`
+            "top": `${x + padding}px`,
+            "left": `${y + padding}px`
         });
         updateToolip(event);
     }

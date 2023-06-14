@@ -32,6 +32,12 @@ $().ready(() => {
         const textWindows = () => {
             let wordCloud = cb.getEmptyOptionChartFrame("Word Cloud", holder);
             jsChart.wordCloudChart(wordCloud, summary.StrData, df);
+
+            let sentenceLength = cb.getEmptyOptionChartFrameD3("Sentence Length", holder);
+            jsChart.sentenceLengthChart(sentenceLength, summary.StrData, df);
+
+            let wordCount = cb.getEmptyOptionChartFrameD3("Word Count", holder);
+            jsChart.wordCountChart(wordCount, summary.StrData, df);
         }
 
 

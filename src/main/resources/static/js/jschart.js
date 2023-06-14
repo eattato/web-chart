@@ -26,6 +26,34 @@ const dictSort = (dict) => {
     return [keys, vals];
 }
 
+const getPointDatas = (list, splitCount) => {
+    if (list.length == 0) return [];
+
+    let result = [list[0]];
+    let space = (list.length - 1) / (splitCount - 1);
+    for (let i = 1; i < splitCount; i++) {
+        let index = Math.floor(space * i);
+        result.push(list[index]);
+    }
+    return result;
+}
+
+const getPointRanges = (list, splitCount) => {
+    if (list.length == 0) return [];
+
+    let result = [];
+    let space = list.length / splitCount;
+    for(let i = 0; i < 10; i++) {
+        let firstIndex = Math.floor(space * i);
+        let lastIndex = Math.floor(space * (i + 1) - 1);
+
+        let range = []
+        for (let i = firstIndex; i <= lastIndex; i++) range.push(list[i]);
+        result.push(range);
+    }
+    return result;
+}
+
 // 일일 기온/습도 차트
 export const dailyChart = (element, weatherData) => {
     let chart = null;
@@ -985,6 +1013,92 @@ export const dailyChartD3 = (element, weatherData) => {
 
     // 바인딩
     element.find("select").change(function() {
+        let val = $(this).val();
+        update(val);
+    });
+}
+
+export const sentenceLengthChart = (element, strData) => {
+    let chart = null;
+    let select = element.find("select");
+    let options = Object.keys(strData);
+
+    addOptions(select, options);
+
+    // 업데이트
+    function update(val) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        let lengthData = strData[val].Length;
+        lengthData = lengthData.reduce((arr, c) => {
+            if (arr[c] == null) arr[c] = 0;
+            arr[c] += 1;
+            return arr;
+        }, {});
+        
+        let labels = getPointRanges(Object.keys(lengthData), 10).reduce((arr, c) => [...arr, `${c[0]}  ~${c[c.length - 1]}`], []);
+        let values = getPointRanges(Object.values(lengthData), 10).reduce((arr, c) => [...arr, cb.n.sum(c)], []);
+
+        let el = element.find(".chart_body");
+        let data = {
+            labels: labels,
+            values: values
+        };
+        let options = {
+            reverse: true
+        };
+
+        chart = new d3ext.verticalBar(el, data, options);
+    }
+    update(options[0]);
+
+    // 바인딩
+    select.change(function() {
+        let val = $(this).val();
+        update(val);
+    });
+}
+
+export const wordCountChart = (element, strData) => {
+    let chart = null;
+    let select = element.find("select");
+    let options = Object.keys(strData);
+
+    addOptions(select, options);
+
+    // 업데이트
+    function update(val) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        let lengthData = strData[val].WordCount;
+        lengthData = lengthData.reduce((arr, c) => {
+            if (arr[c] == null) arr[c] = 0;
+            arr[c] += 1;
+            return arr;
+        }, {});
+
+        let labels = getPointRanges(Object.keys(lengthData), 10).reduce((arr, c) => [...arr, `${c[0]}  ~${c[c.length - 1]}`], []);
+        let values = getPointRanges(Object.values(lengthData), 10).reduce((arr, c) => [...arr, cb.n.sum(c)], []);
+
+        let el = element.find(".chart_body");
+        let data = {
+            labels: labels,
+            values: values
+        };
+        let options = {
+            reverse: true
+        };
+
+        chart = new d3ext.verticalBar(el, data, options);
+    }
+    update(options[0]);
+
+    // 바인딩
+    select.change(function() {
         let val = $(this).val();
         update(val);
     });
