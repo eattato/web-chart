@@ -508,18 +508,21 @@ export const valueCountChart = (element, valueCounts) => {
 export const wordCloudChart = (element, strData, df) => {
     let chart = null;
     let select = element.find("select");
+    let countInput = element.find("input");
     let options = Object.keys(strData);
 
     addOptions(select, options);
 
     // 업데이트
-    function update(val) {
+    function update(val, count) {
         if (chart) {
-            chart.destroy();
+            chart.remove();
         }
 
         let valTokens = strData[val].Tokens;
         let data = Object.keys(valTokens).reduce((arr, key) => {
+            if (valTokens[key] <= count) return arr;
+
             let [mouseover, mousemove, mouseout] = d3ext.hoverTooltipEvent(null, JSON.stringify({
                 label: key,
                 value: valTokens[key],
@@ -539,14 +542,24 @@ export const wordCloudChart = (element, strData, df) => {
         }, [])
 
         let el = element.find(".chart_body");
-        chart = el.jQCloud(data);
+        chart = $($.parseHTML("<div class='chart_cloud'></div>"));
+        chart.appendTo(el);
+        chart.jQCloud(data);
     }
     update(options[0]);
 
     // 바인딩
     select.change(function() {
         let val = $(this).val();
-        update(val);
+        let count = Number(countInput.val());
+        update(val, count);
+    });
+
+    countInput.change(function() {
+        $(this).width(30 + (this.value.length - 1) * 12);
+        let val = select.val();
+        let count = Number(countInput.val());
+        update(val, count);
     });
 }
 
@@ -1031,15 +1044,18 @@ export const sentenceLengthChart = (element, strData) => {
             chart.destroy();
         }
 
-        let lengthData = strData[val].Length;
-        lengthData = lengthData.reduce((arr, c) => {
+        let sd = strData[val].Length.reduce((arr, c) => {
             if (arr[c] == null) arr[c] = 0;
             arr[c] += 1;
             return arr;
         }, {});
-        
-        let labels = getPointRanges(Object.keys(lengthData), 10).reduce((arr, c) => [...arr, `${c[0]}  ~${c[c.length - 1]}`], []);
-        let values = getPointRanges(Object.values(lengthData), 10).reduce((arr, c) => [...arr, cb.n.sum(c)], []);
+
+        let labels = Object.keys(sd);
+        let values = Object.values(sd);
+        if (Object.keys(sd).length > 30) {
+            labels = getPointRanges(labels, 10).reduce((arr, c) => [...arr, `${c[0]}  ~${c[c.length - 1]}`], []);
+            values = getPointRanges(values, 10).reduce((arr, c) => [...arr, cb.n.sum(c)], []);
+        }
 
         let el = element.find(".chart_body");
         let data = {
@@ -1074,15 +1090,18 @@ export const wordCountChart = (element, strData) => {
             chart.destroy();
         }
 
-        let lengthData = strData[val].WordCount;
-        lengthData = lengthData.reduce((arr, c) => {
+        let sd = strData[val].WordCount.reduce((arr, c) => {
             if (arr[c] == null) arr[c] = 0;
             arr[c] += 1;
             return arr;
         }, {});
 
-        let labels = getPointRanges(Object.keys(lengthData), 10).reduce((arr, c) => [...arr, `${c[0]}  ~${c[c.length - 1]}`], []);
-        let values = getPointRanges(Object.values(lengthData), 10).reduce((arr, c) => [...arr, cb.n.sum(c)], []);
+        let labels = Object.keys(sd);
+        let values = Object.values(sd);
+        if (Object.keys(sd).length > 30) {
+            labels = getPointRanges(labels, 10).reduce((arr, c) => [...arr, `${c[0]}  ~${c[c.length - 1]}`], []);
+            values = getPointRanges(values, 10).reduce((arr, c) => [...arr, cb.n.sum(c)], []);
+        }
 
         let el = element.find(".chart_body");
         let data = {

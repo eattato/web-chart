@@ -44,7 +44,9 @@ $().ready(() => {
                         }
                 
                         const textWindows = () => {
-                            let wordCloud = cb.getEmptyOptionChartFrame("Word Cloud", holder);
+                            let wordCloud = cb.getChartFrame("Word Cloud", holder);
+                            let wordCloudSelect = $($.parseHTML('<div class="chart_selection"><select name="" id=""></select> over <input type="number" value="1" /> usages</div>'));
+                            wordCloudSelect.appendTo(wordCloud.find(".chart_header"));
                             jsChart.wordCloudChart(wordCloud, summary.StrData, df);
                 
                             let sentenceLength = cb.getEmptyOptionChartFrameD3("Sentence Length", holder);

@@ -65,13 +65,15 @@ def getDescribe(numbers):
 
 def getTokens(column):
     useCount = {}
+    wordCount = []
     for line in column:
         words = text_to_word_sequence(line)
-        if len(words) <= 2: continue
+        # if len(words) <= 2: continue
         for word in words:
             if not word in useCount: useCount[word] = 0
             useCount[word] += 1
-    return useCount
+        wordCount.append(len(words))
+    return useCount, wordCount
 
     # tokens = {}
     # for c in df.columns:
@@ -107,14 +109,17 @@ def summary(path):
     # Describe 구하기
     describe = getDescribe(numbers)
 
-    # 문장인 컬럼 찾고 토큰화
-    strData = {}
-    stringDf = df.select_dtypes(include="object")
-    for column in stringDf:
-        strData[column] = {
-            "Tokens": getTokens(stringDf[column]),
-            "Length": getLength(stringDf[column]),
-            "WordCount": getWordCount(stringDf[column])
+    # 자연어인 컬럼 찾고 토큰화 (스트링 컬럼 중에서도 Unique가 절반 이상이면 자연어로 침)
+    strColumns = df.select_dtypes(include="object").columns
+    natural = [column for column in strColumns if df[column].nunique() >= len(df[column]) / 2]
+    naturalData = {}
+
+    for column in natural:
+        tokens, wordCount = getTokens(df[column])
+        naturalData[column] = {
+            "Tokens": tokens,
+            "Length": getLength(df[column]),
+            "WordCount": wordCount
         }
 
     return {
@@ -122,5 +127,5 @@ def summary(path):
         "Describe": describe,
         "DataFrame": df.replace(np.nan, "").to_dict(orient="split"),
         "Numbers": list(numbers.columns),
-        "StrData": strData
+        "StrData": naturalData
     }
