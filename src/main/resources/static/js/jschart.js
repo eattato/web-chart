@@ -1369,7 +1369,7 @@ export const pairEDA = (element, df, numberColumns) => {
         let text = $($.parseHTML(`<div>${numberColumns[c]}</div>`));
         text.appendTo(gridVertical);
     }
-    for (let r in numberColumns.reverse()) {
+    for (let r in numberColumns) {
         let text = $($.parseHTML(`<div>${numberColumns[r]}</div>`));
         text.appendTo(gridHorizontal);
     }
@@ -1377,7 +1377,7 @@ export const pairEDA = (element, df, numberColumns) => {
     function update() {
         multiplot.empty();
         for (let c in numberColumns) {
-            for (let r in numberColumns.reverse()) {
+            for (let r in numberColumns) {
                 let plot = $($.parseHTML("<svg class='chart_subplot'></svg>"))
                 plot.width(`calc(${plotScale}% - ${plotMargin * 2}px)`);
                 plot.height(`calc(${plotScale}% - ${plotMargin * 2}px)`);
@@ -1399,7 +1399,7 @@ export const pairEDA = (element, df, numberColumns) => {
 
                     let data = {
                         labels: {
-                            x: r, y: c
+                            x: numberColumns[r], y: numberColumns[c]
                         },
                         values: values
                     };
@@ -1415,7 +1415,31 @@ export const pairEDA = (element, df, numberColumns) => {
 
                     new d3ext.scatter(plot, data, options);
                 } else { // 히스토그램
+                    let useCount = df.getColumn(numberColumns[c]).reduce((arr, c) => {
+                        if (arr[c] == null) arr[c] = 0;
+                        arr[c] += 1;
+                        return arr;
+                    }, {});
 
+                    let labels = Object.keys(useCount).sort();
+                    let values = [];
+                    labels.forEach((c) => {
+                        values.push(useCount[c]);
+                    })
+
+                    let data = {
+                        labels: labels,
+                        values: values
+                    };
+                    let options = {
+                        reverse: true,
+                        paddingX: 3,//20,
+                        paddingY: 3,//20,
+                        xAxis: false,
+                        yAxis: false,
+                    };
+            
+                    new d3ext.verticalBar(plot, data, options);
                 }
             }
         }
