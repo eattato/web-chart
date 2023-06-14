@@ -125,11 +125,13 @@ export const hoverTooltipEvent = (element, text, callback) => {
         tooltip.find(".tooltip_color").css({"background-color": data.color});
     }
 
-    element.on("mouseover", (event) => {
+    function mouseover(event) {
         if (callback) callback("mouseover", event);
         updateToolip(event);
         tooltip.addClass("active");
-    }).on("mousemove", (event) => {
+    }
+
+    function mousemove(event) {
         if (callback) callback("mousemove", event);
         let x = event.pageY;
         let y = event.pageX;
@@ -138,10 +140,20 @@ export const hoverTooltipEvent = (element, text, callback) => {
             "left": `${y + 10}px`
         });
         updateToolip(event);
-    }).on("mouseout", (event) => {
+    }
+
+    function mouseout(event) {
         if (callback) callback("mouseout", event);
         tooltip.removeClass("active")
-    });
+    }
+
+    if (element) {
+        element.on("mouseover", mouseover)
+            .on("mousemove", mousemove)
+            .on("mouseout", mouseout);
+    } else {
+        return [mouseover, mousemove, mouseout];
+    }
 }
 
 d3.selection.prototype.bindHoverTooltip = function(text) {
@@ -703,65 +715,6 @@ export class scatter extends ChartBase {
      * 스캐터 플롯을 띄움
      * @param {*} data [ [1, 2], [3.14, 15.92], [12, 21] ] x,y 들어간 2차원 형태로
      */
-    constructor(element, data, option) {
-        if (!option) {option = {}}
-        super(element, data, option); // ChartBase의 생성자 실행
-
-        // 스케일링
-        this.barSize = option.barSize || 0.75;
-        this.update();
-    }
-}
-
-// 워드 클라우드
-export class cloud extends ChartBase {
-    /**
-     * 차트를 업데이트함
-     */
-    update() {
-        // 값 정의
-        let values = this.data.values;
-        let texts = Object.keys(values).reduce((arr, c) => {
-            arr.push({ text: c, size: values[c] });
-            return arr;
-        }, []);
-        console.log(texts);
-        // let texts = [];
-        // for (let word in values) {
-        //     let useCount = values[word];
-        //     for (let i = 0; i < useCount; i++) texts.push({ text: word, size: 10 });
-        // }
-
-        let width = this.element.width;
-        let height = this.element.height;
-
-        // 데이터 표시
-        let layout = d3.layout.cloud()
-            .size([width, height])
-            .padding(this.paddingX)
-            .words(texts)
-            .font("Arial")
-            .fontSize((v) => v.size)
-            .on("end", draw)
-            .start();
-
-        function draw(words) {
-            console.log("draw cloud")
-            let d3Element = d3.select(this.element);
-
-            d3Element.selectAll("text")
-                .data(words)
-                .enter()
-                .append("text")
-                .style("font-size", (v) => `${v.size}px`)
-                .style("font-family", "Arial")
-                .style("fill", "#000000")
-                .attr("text-anchor", "middle")
-                .attr("transform", (v) => `translate(${v.x}, ${v.y}) rotate(${v.rotate})`)
-                .text((v) => v.text);
-        }
-    }
-
     constructor(element, data, option) {
         if (!option) {option = {}}
         super(element, data, option); // ChartBase의 생성자 실행

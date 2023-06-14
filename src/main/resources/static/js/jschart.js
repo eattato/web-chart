@@ -490,11 +490,28 @@ export const wordCloudChart = (element, tokens, df) => {
             chart.destroy();
         }
 
-        let data = {
-            values: tokens[val]
-        };
-        let el = element.find(".chart_body")[0];
-        chart = new d3ext.cloud(el, data)
+        let valTokens = tokens[val];
+        let data = Object.keys(valTokens).reduce((arr, key) => {
+            let [mouseover, mousemove, mouseout] = d3ext.hoverTooltipEvent(null, JSON.stringify({
+                label: key,
+                value: valTokens[key],
+                color: "#000000"
+            }));
+
+            arr.push({
+                text: key,
+                weight: valTokens[key],
+                handlers: {
+                    mouseover: mouseover,
+                    mousemove: mousemove,
+                    mouseout: mouseout
+                }
+            });
+            return arr;
+        }, [])
+
+        let el = element.find(".chart_body");
+        chart = el.jQCloud(data);
     }
     update(options[0]);
 

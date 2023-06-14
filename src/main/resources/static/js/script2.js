@@ -30,7 +30,7 @@ $().ready(() => {
         }
 
         const textWindows = () => {
-            let wordCloud = cb.getEmptyOptionChartFrameD3("Word Cloud", holder);
+            let wordCloud = cb.getEmptyOptionChartFrame("Word Cloud", holder);
             jsChart.wordCloudChart(wordCloud, summary.Tokens, df);
         }
 
