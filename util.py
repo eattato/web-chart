@@ -63,20 +63,35 @@ def getDescribe(numbers):
         data["IQR_InnerLeft"] = (data["Q3"] + 1.5) * data["IQR"]
     return describe
 
-def getTokens(df):
-    tokens = {}
-    for c in df.columns:
-        for sentence in df[c]:
-            words = text_to_word_sequence(sentence)
-            if len(words) > 2: tokens[c] = words
+def getTokens(column):
+    useCount = {}
+    for line in column:
+        words = text_to_word_sequence(line)
+        if len(words) <= 2: continue
+        for word in words:
+            if not word in useCount: useCount[word] = 0
+            useCount[word] += 1
+    return useCount
 
-    for c in df.columns:
-        useCount = {}
-        if c in tokens:
-            words = tokens[c]
-            if len(words) > 1: useCount = {word: words.count(word) for word in words}
-            tokens[c] = useCount
-    return tokens
+    # tokens = {}
+    # for c in df.columns:
+    #     for sentence in df[c]:
+    #         words = text_to_word_sequence(sentence)
+    #         if len(words) > 2: tokens[c] = words
+
+    # for c in df.columns:
+    #     useCount = {}
+    #     if c in tokens:
+    #         words = tokens[c]
+    #         if len(words) > 1: useCount = {word: words.count(word) for word in words}
+    #         tokens[c] = useCount
+    # return tokens
+
+def getLength(column):
+    return [len(line) for line in column]
+
+def getWordCount(column):
+    return [len(line.split(" ")) for line in column]
 
 def summary(path):
     df = pd.read_csv(path)
@@ -89,23 +104,23 @@ def summary(path):
     valueCounts = {c: df[c].value_counts().to_dict() for c in df.columns}
     numbers = df.select_dtypes(include=["int", "float"]).copy()
 
-    # 유니크 4개 밑인 컬럼은 카테고리로 간주하고 삭제
-    # for c in numbers:
-    #     if len(pd.unique(numbers[c])) < 4:
-    #         numbers.drop(c, axis=1)
-
     # Describe 구하기
     describe = getDescribe(numbers)
 
     # 문장인 컬럼 찾고 토큰화
+    strData = {}
     stringDf = df.select_dtypes(include="object")
-    tokens = getTokens(stringDf)
-    # print(tokens)
+    for column in stringDf:
+        strData[column] = {
+            "Tokens": getTokens(stringDf[column]),
+            "Length": getLength(stringDf[column]),
+            "WordCount": getWordCount(stringDf[column])
+        }
 
     return {
         "ValueCounts": valueCounts,
         "Describe": describe,
         "DataFrame": df.replace(np.nan, "").to_dict(orient="split"),
         "Numbers": list(numbers.columns),
-        "Tokens": tokens
+        "StrData": strData
     }

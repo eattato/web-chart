@@ -477,10 +477,10 @@ export const valueCountChart = (element, valueCounts) => {
     });
 }
 
-export const wordCloudChart = (element, tokens, df) => {
+export const wordCloudChart = (element, strData, df) => {
     let chart = null;
     let select = element.find("select");
-    let options = Object.keys(tokens);
+    let options = Object.keys(strData);
 
     addOptions(select, options);
 
@@ -490,7 +490,7 @@ export const wordCloudChart = (element, tokens, df) => {
             chart.destroy();
         }
 
-        let valTokens = tokens[val];
+        let valTokens = strData[val].Tokens;
         let data = Object.keys(valTokens).reduce((arr, key) => {
             let [mouseover, mousemove, mouseout] = d3ext.hoverTooltipEvent(null, JSON.stringify({
                 label: key,

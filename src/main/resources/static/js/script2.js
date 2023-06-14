@@ -31,7 +31,7 @@ $().ready(() => {
 
         const textWindows = () => {
             let wordCloud = cb.getEmptyOptionChartFrame("Word Cloud", holder);
-            jsChart.wordCloudChart(wordCloud, summary.Tokens, df);
+            jsChart.wordCloudChart(wordCloud, summary.StrData, df);
         }
 
 
@@ -39,7 +39,7 @@ $().ready(() => {
         if (summary.Numbers.length > 0) {
             numberWindows();
         }
-        if (Object.keys(summary.Tokens).length > 0) {
+        if (Object.keys(summary.StrData).length > 0) {
             textWindows();
         }
     });
