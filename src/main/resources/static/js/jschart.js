@@ -985,13 +985,14 @@ export const heatmapD3 = (element, df, categories, numbers) => {
                 }
                 heatDatas.push(row);
             }
-            console.log(heatDatas);
 
             let el = element.find(".chart_body");
             let data = {
                 labels: {
                     x: labelX,
-                    y: labelY
+                    y: labelY,
+                    xLabel: x,
+                    yLabel: y
                 },
                 values: heatDatas
             }
@@ -1008,7 +1009,6 @@ export const heatmapD3 = (element, df, categories, numbers) => {
         let x = xSelect.val();
         let y = ySelect.val();
         let v = valueSelect.val();
-        console.log(`${x} ${y} ${v}`)
         update(x, y, v);
     }
 

@@ -78,7 +78,7 @@ const colorLerp = (start, end, alpha) => {
 
     let result = "#";
     for (let i in startRGB) {
-        let lerped = Math.round(lerp(startRGB[i], endRGB[i], alpha));
+        let lerped = Math.round(lerp(startRGB[i], endRGB[i], 1 - alpha));
         result += toHex(lerped, 2);
     }
     return result;
@@ -536,7 +536,7 @@ export class heatmap extends ChartBase {
                     .attr("y", yScale(yy) - 1)
                     .attr("fill", color)
                     .text(JSON.stringify({
-                        label: `${yy}, ${yx}`,
+                        label: y.xLabel && y.yLabel ? `${y.yLabel}: ${yy}, ${y.xLabel}: ${yx}` : `${yy}, ${yx}`,
                         color: color,
                         value: v
                     }))
