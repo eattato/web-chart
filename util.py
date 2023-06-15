@@ -103,10 +103,6 @@ def summary(path):
 
     # categories = df.select_dtypes(include=["object", "bool"])
     valueCounts = {c: df[c].value_counts().to_dict() for c in df.columns}
-    numbers = df.select_dtypes(include=["int", "float"])
-
-    # Describe 구하기
-    describe = getDescribe(numbers)
 
     # 자연어인 컬럼 찾고 토큰화 (스트링 컬럼 중에서도 Unique가 절반 이상이면 자연어로 침, 아니면 카테고리)
     strColumns = df.select_dtypes(include="object").columns
@@ -132,19 +128,21 @@ def summary(path):
             if column in natural: continue # 자연어 거름
         else: continue # 기타 타입 거름
         categories.append(column)
+    # categoryData = {
+    #     column: df[column].value_counts().to_dict()
+    #     for column in categories
+    # }
 
-    categoryData = {
-        column: df[column].value_counts().to_dict()
-        for column in categories
-    }
-
-    print(categories)
+    # Describe 구하기
+    numbers = df.select_dtypes(include=["int", "float"]).columns
+    numbers = [column for column in numbers if not column in categories]
+    describe = getDescribe(df[numbers])
 
     return {
         "ValueCounts": valueCounts,
         "Describe": describe,
         "DataFrame": df.replace(np.nan, "").to_dict(orient="split"),
-        "Numbers": list(numbers.columns),
+        "Numbers": numbers,
         "StrData": naturalData,
         "Categories": categories
     }

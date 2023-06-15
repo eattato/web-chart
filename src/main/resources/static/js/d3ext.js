@@ -533,7 +533,7 @@ export class heatmap extends ChartBase {
                     .text(JSON.stringify({
                         label: y.xLabel && y.yLabel ? `${y.yLabel}: ${yy}, ${y.xLabel}: ${yx}` : `${yy}, ${yx}`,
                         color: color,
-                        value: y.valueLabel ? `${y.valueLabel}: ${v}` : v
+                        value: y.valueLabel ? `${y.valueLabel}: ${v.toFixed(3)}` : v.toFixed(3)
                     }))
                     .bindHoverTooltip();
             }
