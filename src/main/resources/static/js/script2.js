@@ -84,6 +84,11 @@ $().ready(() => {
                             jsChart.valueCountChart(cvcChart, vc);
 
                             if (summary.Categories.length >= 2) {
+                                let stackedChart = cb.getChartFrameD3("Stacked Category", holder);
+                                let stackedChartSelect = $($.parseHTML('<div class="chart_selection"><select></select> and <select></select></div>'));
+                                stackedChartSelect.appendTo(stackedChart.find(".chart_header"));
+                                jsChart.categoryStackChart(stackedChart, df, summary.Categories);
+
                                 if (summary.Numbers.length > 0) {
                                     let heatmap = cb.getChartFrameD3("Category heatmap", holder);
                                     let heatmapSelect = $($.parseHTML('<div class="chart_selection"><select></select> and <select></select>, value <select></select></div>'));

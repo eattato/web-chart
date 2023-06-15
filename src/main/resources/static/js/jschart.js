@@ -967,8 +967,8 @@ export const heatmapD3 = (element, df, categories, numbers) => {
             let xi = df.columns.indexOf(x);
             let yi = df.columns.indexOf(y);
             let vi = df.columns.indexOf(val);
-            let labelX = df.getColumnUnique(x);
-            let labelY = df.getColumnUnique(y);
+            let labelX = Object.keys(df.getColumnValueCount(x));
+            let labelY = Object.keys(df.getColumnValueCount(y));
 
             // 데이터 정리
             let heatDatas = [];
@@ -992,7 +992,8 @@ export const heatmapD3 = (element, df, categories, numbers) => {
                     x: labelX,
                     y: labelY,
                     xLabel: x,
-                    yLabel: y
+                    yLabel: y,
+                    valueLabel: val
                 },
                 values: heatDatas
             }
@@ -1147,6 +1148,72 @@ export const wordCountChart = (element, strData) => {
     });
 }
 
+export const categoryStackChart = (element, df, categories) => {
+    let chart = null;
+
+    let firstSelect = element.find("select").eq(0);
+    let secondSelect = element.find("select").eq(1);
+    addOptions(firstSelect, categories);
+    addOptions(secondSelect, categories);
+
+    function update(val, condition) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        // 추가 조건 (첫번째 라벨과 같은 행의 다른 컬럼 카테고리 값 추출)
+        let [c1, c2] = df.getColumns([val, condition]);
+        let valueCount = df.getColumnValueCount(val);
+        let labels = Object.keys(valueCount);
+        let values = Object.values(valueCount);
+
+        let stacked = labels.reduce((arr, label) => {
+            let filteredValueCount = c1.reduce((arr, c, i) => {
+                if (c == label) {
+                    let value = c2[i];
+                    if (arr[value] == null) arr[value] = 0;
+                    arr[value] += 1;
+                }
+                return arr;
+            }, {});
+            arr.push(Object.values(filteredValueCount));
+            return arr;
+        }, []);
+
+        let el = element.find(".chart_body");
+        let data = {
+            name: val,
+            labels: labels,
+            values: values,
+            stack: {
+                name: condition,
+                labels: df.getColumnUnique(condition), // Survived, Pclass 설정일 경우, Pclass 라벨 넣으면 됨 - [1, 2, 3]
+                values: stacked // Survived, Pclass 설정일 경우, 각 경우의 수만큼 요소 만듬(Survived 2개, Pclass 3개 = 총 6개 요소) - [ [100, 150, 20], [10, 200, 400] ]
+            }
+        };
+        let options = {
+            paddingX: 60,
+            stackStartColor: "#47E1A8",
+            stackEndColor: "#297458"
+        };
+
+        chart = new d3ext.horizontalBar(el, data, options);
+    }
+
+    // 바인딩
+    function selectionBind() {
+        let val1 = firstSelect.val();
+        let val2 = secondSelect.val();
+        if (val1 && val2) update(val1, val2);
+    }
+    firstSelect.change(selectionBind);
+    secondSelect.change(selectionBind)
+
+    firstSelect.val(categories[0]);
+    secondSelect.val(categories[1]);
+    update(categories[0], categories[1]);
+}
+
 // EDA 차트
 export const naRatioEDA = (element, df) => {
     let labels = [];
@@ -1170,8 +1237,8 @@ export const naRatioEDA = (element, df) => {
     }
     let option = {
         yAxis: false,
-        startColor: "#FFFFFF",
-        endColor: "#000000"
+        startColor: "#000000",
+        endColor: "#FFFFFF",
     };
     let chart = new d3ext.heatmap(el, data, option);
 }

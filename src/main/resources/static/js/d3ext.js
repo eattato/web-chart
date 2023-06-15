@@ -211,7 +211,7 @@ class ChartBase {
         if (typeof data[firstKey] == "number") { // scaleLinear 리턴
             // data내에서 최소값, 최대값을 가진 리스트. 이 때 최소값이 양수라면 대신 0부터 시작한다.
             //let domain = [Math.min(d3.min(data), 0), d3.max(data)];
-            let domain = [d3.min(data), d3.max(data)];
+            let domain = [this.option.zeroPoint ? d3.min(data) : Math.min(0, d3.min(data)), d3.max(data)];
             return d3.scaleLinear().domain(domain).range(range);
         } else { // scaleBand 리턴
             return d3.scaleBand().domain(data).range(range).paddingInner(0).paddingOuter(0);
@@ -318,25 +318,24 @@ export class horizontalBar extends ChartBase {
         let color = (this.option && this.option.color) || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
 
         // 데이터 표시
-        let xZeroPoint = xScale(0); // x축 영점 크기, xScale를 거쳤다와서 패딩이 적용되어 있음
-        let heightResized = yScale.bandwidth() * this.barSize; // height는 y 스케일의 한 칸 사이즈 * bar 사이즈 배율로
-        let yOffset = (yScale.bandwidth() - heightResized) / 2; // 조정된 height의 작아진 크기의 반절을 빼서 오프셋 만듬
+        let zeroPoint = xScale(Math.min(0, d3.min(x)));
+        let heightResized = yScale.bandwidth() * this.barSize;
+        let yOffset = (yScale.bandwidth() - heightResized) / 2;
 
-        // (v) => {return ~} 또는 (v) => ~를 통해 현재 사용하는 데이터를 foreach해 적용할 수 있음.
         let rects = d3Element.selectAll("rect")
-            .data(x) // x 데이터를 사용
+            .data(x)
             .enter()
-            .append("rect") // 데이터 갯수에 맞춰 사각형 생성
-            .attr("width", (v) => clamp(0, xScale(Math.abs(v)) - xZeroPoint - 1)) // 각 값의 절대값(마이너스 방지)를 xScale에 돌리고 영점에 맞춤 - 겹침 방지
+            .append("rect")
+            .attr("width", (v) => xScale(v) - zeroPoint)
             .attr("height", heightResized) // height는 미리 설정한 오프셋으로 설정
-            .attr("x", (v) => (v > 0 ? xZeroPoint : xZeroPoint - (xScale(Math.abs(v)) - xZeroPoint)) + 1) // 겹침 방지하고 양수값이면 영점값만큼 오른쪽으로 밀고, 음수값이면 영점값 - 본인 width만큼 밀기
-            .text(JSON.stringify({
+            .attr("x", (v) => zeroPoint)
+            .text((v) => JSON.stringify({
                 label: this.data.name ? this.data.name : "",
-                value: v => v,
+                value: v,
                 color: color
             }))
-            .data(y) // 이후 사용할 데이터를 y 데이터로 변경, +1하고 width에 -1한건 액시스랑 겹치지 않기 위함임
-            .attr("y", (v) => yScale(v) + yOffset) // 각 라벨(v)을 yScale에 돌리고 오프셋 적용해서 y위치를 설정
+            .data(y)
+            .attr("y", (v) => yScale(v) + yOffset)
             .attr("fill", color) // 색상 채움
             .bindHoverTooltip();
 
@@ -357,7 +356,8 @@ export class horizontalBar extends ChartBase {
             for (let i in y) {
                 let stackValues = this.data.stack.values[i];
                 let stackDirection = x[i] > 0;
-                let xStackOffset = (x[i] > 0 ? xZeroPoint : xZeroPoint - (xScale(Math.abs(x[i])) - xZeroPoint)) + 1;
+                let xStackOffset = 0;
+                // let xStackOffset = (x[i] > 0 ? xZeroPoint : xZeroPoint - (xScale(Math.abs(x[i])) - xZeroPoint)) + 1;
 
                 for (let j in stackLabels) {
                     let label = stackLabels[j];
@@ -367,22 +367,17 @@ export class horizontalBar extends ChartBase {
                     // console.log(`${y[i]} and ${label} - ${v}, color: ${labelColor}`);
 
                     // 추가 스택 데이터 표시
-                    let labelText = "";
-                    if (this.data.name) {
-                        if (this.data.stack.name) {
-                            labelText = `${this.data.name}: ${y[i]}, ${this.data.stack.name}: ${label}`;
-                        } else {
-                            labelText = `${this.data.name}: ${y[i]}, ${label}`;
-                        }
-                    } else {
-                        labelText = `${y[i]}, ${label}`;
-                    }
+                    let labelText = this.data.name?
+                        this.data.stack.name?
+                            `${this.data.name}: ${y[i]}, ${this.data.stack.name}: ${label}`:
+                            `${this.data.name}: ${y[i]}, ${label}`:
+                        `${y[i]}, ${label}`;
 
-                    let width = clamp(0, xScale(Math.abs(v)) - xZeroPoint);
+                    let width = xScale(v) - zeroPoint;
                     let stackDisplay = d3Element.append("rect")
                         .attr("width", width) // 각 값의 절대값(마이너스 방지)를 xScale에 돌리고 영점에 맞춤 - 겹침 방지
                         .attr("height", heightResized) // height는 미리 설정한 오프셋으로 설정
-                        .attr("x", xStackOffset) // 겹침 방지하고 양수값이면 영점값만큼 오른쪽으로 밀고, 음수값이면 영점값 - 본인 width만큼 밀기
+                        .attr("x", zeroPoint + xStackOffset) // 겹침 방지하고 양수값이면 영점값만큼 오른쪽으로 밀고, 음수값이면 영점값 - 본인 width만큼 밀기
                         .attr("y", yScale(y[i]) + yOffset) // 각 라벨(v)을 yScale에 돌리고 오프셋 적용해서 y위치를 설정
                         .attr("fill", labelColor) // 색상 채움
                         .text(JSON.stringify({
@@ -445,13 +440,13 @@ export class verticalBar extends ChartBase {
 
         // (v) => {return ~} 또는 (v) => ~를 통해 현재 사용하는 데이터를 foreach해 적용할 수 있음.
         let xMax = d3.max(x);
-        let zeroPoint = yScale(xMax);
+        let zeroPoint = yScale(Math.min(0, d3.min(x)));
         let rects = d3Element.selectAll("rect")
             .data(x) // x 데이터를 사용
             .enter()
             .append("rect") // 데이터 갯수에 맞춰 사각형 생성
             .attr("width", widthResized)
-            .attr("height", (v) => yScale(d3.min(x)) - yScale(v))
+            .attr("height", (v) => zeroPoint - yScale(v))
             .attr("y", (v) => yScale(v)) // 음수면 양수랑 같은 상태에서 자기 height만큼 내림
             //.attr("height", (v) => yScale(xMax - v) - zeroPoint)
             //.attr("y", (v) => yScale(v))
@@ -538,7 +533,7 @@ export class heatmap extends ChartBase {
                     .text(JSON.stringify({
                         label: y.xLabel && y.yLabel ? `${y.yLabel}: ${yy}, ${y.xLabel}: ${yx}` : `${yy}, ${yx}`,
                         color: color,
-                        value: v
+                        value: y.valueLabel ? `${y.valueLabel}: ${v}` : v
                     }))
                     .bindHoverTooltip();
             }
@@ -694,6 +689,7 @@ export class scatter extends ChartBase {
         // console.log(scatterX);
         // console.log(scatterY);
 
+        this.option.zeroPoint = true;
         let [d3Element, width, height, xScale, yScale] = this.getBase(scatterX, scatterY);
 
         // 축 생성

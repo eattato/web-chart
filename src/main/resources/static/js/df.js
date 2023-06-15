@@ -95,7 +95,12 @@ export class CsvDF {
         }, {});
     }
 
-    getColumnUnique(column) {
-        return Object.keys(this.getColumnValueCount(column));
+    getColumnUnique(column) { // "원본으로" 가져옴, 즉 숫자로 나오니까 band쓰려면 Object.keys(valueCount) 쓰셈
+        column = this.getColumn(column);
+        return column.reduce((arr, c) => {
+            if (!arr.includes(c)) arr.push(c);
+            return arr;
+        }, []);
+        // return Object.keys(this.getColumnValueCount(column));
     }
 }
