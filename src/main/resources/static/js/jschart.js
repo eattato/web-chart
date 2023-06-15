@@ -1375,7 +1375,7 @@ export const describeEDA = (element, df) => {
     update();
 }
 
-export const scatterEDA = (element, df, numberColumns) => {
+export const scatterEDA = (element, df, numberColumns, categories) => {
     let chart = null;
 
     // 숫자형인 컬럼명만 수집
@@ -1389,7 +1389,10 @@ export const scatterEDA = (element, df, numberColumns) => {
     addOptions(firstSelect, numberColumns);
     addOptions(secondSelect, numberColumns);
 
-    function update(val1, val2) {
+    let valueSelect = categories ? element.find("select").eq(2) : null;
+    if (valueSelect) addOptions(valueSelect, categories);
+
+    function update(val1, val2, val3) {
         if (chart) {
             chart.destroy();
         }
@@ -1398,18 +1401,21 @@ export const scatterEDA = (element, df, numberColumns) => {
         let values = [];
         let column1 = df.getColumn(val1);
         let column2 = df.getColumn(val2);
+        let column3 = val3 ? df.getColumn(val3) : null;
 
         for (let i in column1) {
             // console.log(`${column1[i]} && ${column2[i]}`);
-            if (column1[i] && column2[i]) {
-                values.push([Number(column1[i]), Number(column2[i])]);
+            if (!val3) {
+                if (column1[i] && column2[i]) values.push([Number(column1[i]), Number(column2[i])]);
+            } else {
+                if (column1[i] && column2[i]) values.push([Number(column1[i]), Number(column2[i]), column3[i]]);
             }
         }
 
         let el = element.find(".chart_body");
         let data = {
             labels: {
-                x: val1, y: val2
+                x: val1, y: val2, value: val3 ? val3 : null
             },
             values: values
         };
@@ -1424,14 +1430,20 @@ export const scatterEDA = (element, df, numberColumns) => {
     function selectionBind() {
         let val1 = firstSelect.val();
         let val2 = secondSelect.val();
-        if (val1 && val2) update(val1, val2);
+        let val3 = categories ? valueSelect.val() : null;
+        if (val1 && val2) update(val1, val2, val3);
     }
     firstSelect.change(selectionBind);
     secondSelect.change(selectionBind)
+    if (valueSelect) valueSelect.change(selectionBind);
 
     firstSelect.val(numberColumns[0]);
     secondSelect.val(numberColumns[1]);
-    update(numberColumns[0], numberColumns[1]);
+
+    if (valueSelect) {
+        valueSelect.val(categories[0]);
+        update(numberColumns[0], numberColumns[1], categories[0]);
+    } else update(numberColumns[0], numberColumns[1]);
 }
 
 export const pairEDA = (element, df, numberColumns) => {

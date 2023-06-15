@@ -712,7 +712,7 @@ export class scatter extends ChartBase {
             .data(x)
             .text((v) => JSON.stringify({
                 label: `${y.x}: ${v[0]}, ${y.y}: ${v[1]}`,
-                value: "",
+                value: v.length == 3 ? `${y.value}: ${v[2]}` : "",
                 color: color
             }))
             .bindHoverTooltip();

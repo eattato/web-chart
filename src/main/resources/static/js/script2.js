@@ -56,12 +56,21 @@ $().ready(() => {
 
                             if (summary.Numbers.length >= 2) {
                                 let scatter = cb.getChartFrameD3("Scatter", holder);
-                                let scatterSelect = $($.parseHTML('<div class="chart_selection"><select></select> and <select></select></div>'));
+                                let scatterSelect;
+                                if (summary.Categories.length > 0) scatterSelect = $($.parseHTML('<div class="chart_selection"><select></select> and <select></select>, value <select></select></div>'));
+                                else scatterSelect = $($.parseHTML('<div class="chart_selection"><select></select> and <select></select></div>'))
                                 scatterSelect.appendTo(scatter.find(".chart_header"));
-                                jsChart.scatterEDA(scatter, df, summary.Numbers);
-
+                                if (summary.Categories.length > 0) jsChart.scatterEDA(scatter, df, summary.Numbers, summary.Categories);
+                                else jsChart.scatterEDA(scatter, df, summary.Numbers);
+                                
                                 let pair = cb.getChartFrame("Pairplot", holder);
-                                jsChart.pairEDA(pair, df, summary.Numbers);
+                                if (summary.Categories.length > 0) {
+                                    let pairSelect = $($.parseHTML('<div class="chart_selection">value <select></select></div>'));
+                                    pairSelect.appendTo(pair.find(".chart_header"));
+                                    jsChart.pairEDA(pair, df, summary.Numbers, summary.Categories);
+                                } else {
+                                    jsChart.pairEDA(pair, df, summary.Numbers);
+                                }
                             }
                         }
                 
