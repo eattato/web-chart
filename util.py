@@ -67,6 +67,7 @@ def getTokens(column):
     useCount = {}
     wordCount = []
     for line in column:
+        if type(line) != str: continue
         words = text_to_word_sequence(line)
         # if len(words) <= 2: continue
         for word in words:
@@ -90,16 +91,15 @@ def getTokens(column):
     # return tokens
 
 def getLength(column):
-    return [len(line) for line in column]
+    return [len(line) for line in column if type(line) == str]
 
 def getWordCount(column):
-    return [len(line.split(" ")) for line in column]
+    return [len(line.split(" ")) for line in column if type(line) == str]
 
 def summary(path):
     df = pd.read_csv(path)
     df.info()
-    
-    df = df.iloc[:, 1:]
+    df = df.iloc[:, 1:] # Id 제거
 
     # categories = df.select_dtypes(include=["object", "bool"])
     valueCounts = {c: df[c].value_counts().to_dict() for c in df.columns}
@@ -110,22 +110,35 @@ def summary(path):
 
     # 자연어인 컬럼 찾고 토큰화 (스트링 컬럼 중에서도 Unique가 절반 이상이면 자연어로 침, 아니면 카테고리)
     strColumns = df.select_dtypes(include="object").columns
-    natural = [column for column in strColumns if df[column].nunique() >= len(df[column]) / 2]
+    natural = [column for column in strColumns if len(df[column].unique()) >= (len(df[column]) - df[column].isna().sum()) / 2]
     naturalData = {}
+    for column in natural:
+        validColumn = df[column].dropna()
+        tokens, wordCount = getTokens(validColumn)
+        naturalData[column] = {
+            "Tokens": tokens,
+            "Length": getLength(validColumn),
+            "WordCount": wordCount
+        }
 
-    categories = [column for column in strColumns if df[column].nunique() < len(df[column]) / 2]
+    # 카테고리인 컬럼 찾기 (실수가 아니여야함. 0 또는 1로만 구성되거나 스트링 중에서도 자연어가 아닌 경우)
+    catColumns = df.select_dtypes(include=["object", "int"]).columns
+    categories = []
+    for column in catColumns:
+        if df[column].dtype == np.dtype("int64"):
+            unique = df[column].unique()
+            if not (np.array_equal(unique, [0, 1]) or np.array_equal(unique, [1, 0])): continue # 이진 아닌 정수 거름
+        elif df[column].dtype == object:
+            if column in natural: continue # 자연어 거름
+        else: continue # 기타 타입 거름
+        categories.append(column)
+
     categoryData = {
         column: df[column].value_counts().to_dict()
         for column in categories
     }
 
-    for column in natural:
-        tokens, wordCount = getTokens(df[column])
-        naturalData[column] = {
-            "Tokens": tokens,
-            "Length": getLength(df[column]),
-            "WordCount": wordCount
-        }
+    print(categories)
 
     return {
         "ValueCounts": valueCounts,
@@ -133,5 +146,5 @@ def summary(path):
         "DataFrame": df.replace(np.nan, "").to_dict(orient="split"),
         "Numbers": list(numbers.columns),
         "StrData": naturalData,
-        "CategoryData": categoryData
+        "Categories": categories
     }

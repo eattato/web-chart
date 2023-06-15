@@ -83,4 +83,19 @@ export class CsvDF {
         });
         return result;
     }
+
+    getColumnValueCount(column) {
+        column = this.getColumn(column);
+        return column.reduce((arr, c) => {
+            if (c != null) {
+                if (arr[c] == null) arr[c] = 0;
+                arr[c] += 1;
+            }
+            return arr;
+        }, {});
+    }
+
+    getColumnUnique(column) {
+        return Object.keys(this.getColumnValueCount(column));
+    }
 }

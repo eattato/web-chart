@@ -469,6 +469,7 @@ export const heatmap = (element, weatherData) => {
 export const valueCountChart = (element, valueCounts) => {
     let chart = null;
     let select = element.find("select");
+
     let options = Object.keys(valueCounts).reduce((arr, c) => {
         if (Object.keys(valueCounts[c]).length <= 300) arr.push(c);
         return arr;
@@ -505,7 +506,7 @@ export const valueCountChart = (element, valueCounts) => {
     });
 }
 
-export const wordCloudChart = (element, strData, df) => {
+export const wordCloudChart = (element, strData) => {
     let chart = null;
     let select = element.find("select");
     let countInput = element.find("input");
@@ -945,57 +946,80 @@ export const rankingChartD3 = (element, column, name, color, weatherData) => {
     });
 }
 
-export const heatmapD3 = (element, weatherData) => {
+export const heatmapD3 = (element, df, categories, numbers) => {
     let chart = null;
-    addOptions(element.find("select"), Object.keys(weatherData));
+
+    let xSelect = element.find("select").eq(0);
+    let ySelect = element.find("select").eq(1);
+    let valueSelect = element.find("select").eq(2);
+
+    addOptions(xSelect, categories);
+    addOptions(ySelect, categories);
+    addOptions(valueSelect, numbers);
 
     // 업데이트
-    function update() {
-        if (chart) {
-            chart.destroy();
-        }
-
-        let labels = []
-        let heatDatas = []
-        
-        for (let location in weatherData) {
-            labels.push(location);
-            let locationData = getData(weatherData, location);
-            let yearData = [];
-
-            for (let month = 1; month <= 12; month++) {
-                let monthData = [];
-                for (let i in locationData) {
-                    let dayData = locationData[i];
-                    if (Number(dayData.date.split("-")[1]) == month) {
-                        monthData.push(dayData);
-                    }
-                }
-                yearData.push(n.mean(getColumn(monthData, "temperature")));
+    function update(x, y, val) {
+        if (x != y) {
+            if (chart) {
+                chart.destroy();
             }
-            heatDatas.push(yearData);
-        }
+    
+            let xi = df.columns.indexOf(x);
+            let yi = df.columns.indexOf(y);
+            let vi = df.columns.indexOf(val);
+            let labelX = df.getColumnUnique(x);
+            let labelY = df.getColumnUnique(y);
 
-        let el = element.find(".chart_body");
-        let data = {
-            labels: {
-                x: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
-                y: labels
-            },
-            values: heatDatas
+            // 데이터 정리
+            let heatDatas = [];
+            for (let c in labelY) {
+                let row = [];
+                for (let r in labelX) {
+                    let xv = labelX[r];
+                    let yv = labelY[c];
+                    let values = df.rows.reduce((arr, c) => {
+                        if (c[xi] == xv && c[yi] == yv) arr.push(c[vi]);
+                        return arr;
+                    }, []);
+                    row.push(values.length > 0 ? values.reduce((a, c) => a + c, 0) / values.length : 0);
+                }
+                heatDatas.push(row);
+            }
+            console.log(heatDatas);
+
+            let el = element.find(".chart_body");
+            let data = {
+                labels: {
+                    x: labelX,
+                    y: labelY
+                },
+                values: heatDatas
+            }
+            let options = {
+                paddingX: 60
+            }
+            chart = new d3ext.heatmap(el, data, options);
         }
-        let options = {
-            paddingX: 60
-        }
-        chart = new d3ext.heatmap(el, data, options);
     }
     update();
 
     // 바인딩
-    // element.find("select").change(function() {
-    //     let val = $(this).val();
-    //     update(val);
-    // });
+    function bind() {
+        let x = xSelect.val();
+        let y = ySelect.val();
+        let v = valueSelect.val();
+        console.log(`${x} ${y} ${v}`)
+        update(x, y, v);
+    }
+
+    xSelect.change(bind);
+    ySelect.change(bind);
+    valueSelect.change(bind);
+
+    xSelect.val(categories[0]);
+    ySelect.val(categories[1]);
+    valueSelect.val(numbers[0]);
+    update(categories[0], categories[1], numbers[0])
 }
 
 export const dailyChartD3 = (element, weatherData) => {

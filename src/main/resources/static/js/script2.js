@@ -54,7 +54,7 @@ $().ready(() => {
                             let quartileChart = cb.getEmptyOptionChartFrame("Quartile", holder);
                             jsChart.quartileChart(quartileChart, summary, df);
 
-                            if (summary.Numbers.length > 2) {
+                            if (summary.Numbers.length >= 2) {
                                 let scatter = cb.getChartFrameD3("Scatter", holder);
                                 let scatterSelect = $($.parseHTML('<div class="chart_selection"><select></select> and <select></select></div>'));
                                 scatterSelect.appendTo(scatter.find(".chart_header"));
@@ -69,8 +69,28 @@ $().ready(() => {
                             let category = createCategory("Category Datas");
                             let holder = category.find(".chart_holder");
 
+                            let vc = summary.Categories.reduce((arr, c) => {
+                                arr[c] = df.getColumn(c).reduce((arr, c) => {
+                                    if (c != null) {
+                                        if (arr[c] == null) arr[c] = 0;
+                                        arr[c] += 1;
+                                    }
+                                    return arr;
+                                }, {});
+                                return arr;
+                            }, {});
+
                             let cvcChart = cb.getEmptyOptionChartFrame("Category Value Counts", holder);
-                            jsChart.valueCountChart(cvcChart, summary.CategoryData);
+                            jsChart.valueCountChart(cvcChart, vc);
+
+                            if (summary.Categories.length >= 2) {
+                                if (summary.Numbers.length > 0) {
+                                    let heatmap = cb.getChartFrameD3("Category heatmap", holder);
+                                    let heatmapSelect = $($.parseHTML('<div class="chart_selection"><select></select> and <select></select>, value <select></select></div>'));
+                                    heatmapSelect.appendTo(heatmap.find(".chart_header"));
+                                    jsChart.heatmapD3(heatmap, df, summary.Categories, summary.Numbers);
+                                }
+                            }
                         }
 
                         const textWindows = () => {
@@ -80,7 +100,7 @@ $().ready(() => {
                             let wordCloud = cb.getChartFrame("Word Cloud", holder);
                             let wordCloudSelect = $($.parseHTML('<div class="chart_selection"><select name="" id=""></select> over <input type="number" value="1" /> usages</div>'));
                             wordCloudSelect.appendTo(wordCloud.find(".chart_header"));
-                            jsChart.wordCloudChart(wordCloud, summary.StrData, df);
+                            jsChart.wordCloudChart(wordCloud, summary.StrData);
                 
                             let sentenceLength = cb.getEmptyOptionChartFrameD3("Sentence Length", holder);
                             jsChart.sentenceLengthChart(sentenceLength, summary.StrData, df);
@@ -89,7 +109,6 @@ $().ready(() => {
                             jsChart.wordCountChart(wordCount, summary.StrData, df);
                         }
                 
-                
                         defaultWindows();
                         if (summary.Numbers.length > 0) {
                             numberWindows();
@@ -97,8 +116,8 @@ $().ready(() => {
                         if (Object.keys(summary.StrData).length > 0) {
                             textWindows();
                         }
-                        if (Object.keys(summary.CategoryData).length > 0) {
-                            // categoryWindows();
+                        if (Object.keys(summary.Categories).length > 0) {
+                            categoryWindows();
                         }
                     })
             })
