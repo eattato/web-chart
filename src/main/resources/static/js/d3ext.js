@@ -696,8 +696,39 @@ export class scatter extends ChartBase {
         this.createAxis(d3Element, height, xScale, yScale);
 
         // 옵션 추출
+        let colors = (this.option && this.option.colors) || ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
         let color = (this.option && this.option.color) || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
         let radius = (this.option && this.option.radius) || 3;
+
+        // 가장 많이 쓴 것부터 색상 할당
+        let sorted = [];
+        if (x[0].length == 3) {
+            sorted = x.reduce((arr, c) => {
+                let value = c[2];
+                if (arr[value] == null) arr[value] = 0;
+                arr[value] += 1;
+                return arr;
+            }, {});
+
+            sorted = Object.keys(sorted).reduce((arr, c) => {
+                arr.push([c, sorted[c]]);
+                return arr;
+            }, []).sort((a, b) => a[1] - b[1]);
+
+            sorted = sorted.reduce((arr, c) => {
+                arr.push(c[0]);
+                return arr;
+            }, []);
+        }
+
+        const getColor = (value) => {
+            if (value.length == 3) {
+                let colorIndex = sorted.indexOf(value[2]);
+                return colorIndex < colors.length ? colors[colorIndex] : color;
+            } else {
+                return color;
+            }
+        }
 
         // 데이터 표시
         let dots = d3Element.selectAll("circle")
@@ -708,12 +739,12 @@ export class scatter extends ChartBase {
             .data(scatterY)
             .attr("cy", v => yScale(v))
             .attr("r", radius)
-            .attr("fill", color)
             .data(x)
+            .attr("fill", (v) => getColor(v))
             .text((v) => JSON.stringify({
                 label: `${y.x}: ${v[0]}, ${y.y}: ${v[1]}`,
                 value: v.length == 3 ? `${y.value}: ${v[2]}` : "",
-                color: color
+                color: getColor(v)
             }))
             .bindHoverTooltip();
     }

@@ -96,8 +96,10 @@ def getLength(column):
 def getWordCount(column):
     return [len(line.split(" ")) for line in column if type(line) == str]
 
-def summary(path):
-    df = pd.read_csv(path)
+def summary(data):
+    data = io.StringIO(data.decode("utf-8"))
+    df = pd.read_csv(data)
+
     df.info()
     df = df.iloc[:, 1:] # Id 제거
 

@@ -12,15 +12,20 @@ summarySaves = {}
 def page():
     return render_template("flask.html")
 
-@app.route("/summary/<target>", methods=["GET"])
-def getSummary(target):
-    if type(target) != str: return "no u"
-    path = os.path.join("src/main/resources/static/data", target)
-    if not os.path.exists(path): return "no u"
+@app.route("/summary", methods=["POST"])
+def getSummary():
+    if not request.data: return "no u"
+    return util.summary(request.data)
 
-    if not target in summarySaves:
-        summarySaves[target] = util.summary(path)
-    return summarySaves[target]
+# @app.route("/summary/<target>", methods=["GET"])
+# def getSummary(target):
+#     if type(target) != str: return "no u"
+#     path = os.path.join("src/main/resources/static/data", target)
+#     if not os.path.exists(path): return "no u"
+
+#     if not target in summarySaves:
+#         summarySaves[target] = util.summary(path)
+#     return summarySaves[target]
 
 @app.route("/<path:path>")
 def public(path):
