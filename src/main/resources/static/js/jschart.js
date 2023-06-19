@@ -54,418 +54,50 @@ const getPointRanges = (list, splitCount) => {
     return result;
 }
 
-// 일일 기온/습도 차트
-export const dailyChart = (element, weatherData) => {
-    let chart = null;
-    addOptions(element.find("select"), Object.keys(weatherData));
+const scatter = (df, val1, val2, val3) => {
+    // 결측값 1이나 2에 하나라도 있으면 안씀
+    let values = [];
+    let x = df.getColumn(val1);
+    let y = df.getColumn(val2);
+    let v = val3 ? df.getColumn(val3) : null;
 
-    // 업데이트
-    function update(val) {
-        if (chart) {
-            chart.destroy();
+    for (let i in x) {
+        // console.log(`${column1[i]} && ${column2[i]}`);
+        if (!val3) {
+            if (x[i] && y[i]) values.push([Number(x[i]), Number(y[i])]);
+        } else {
+            if (x[i] && y[i]) values.push([Number(x[i]), Number(y[i]), v[i]]);
         }
-
-        let dailyData = getData(weatherData, val);
-
-        let el = element.find(".chart_body")[0];
-        let data = {
-            categories: getColumn(dailyData, "date"),
-            series: [
-                {
-                    name: "기온",
-                    data: getColumn(dailyData, "temperature"),
-                },
-                {
-                    name: "습도",
-                    data: getColumn(dailyData, "humidity")
-                }
-            ]
-        };
-        let options = {
-            theme: {
-                series: {
-                    lineWidth: 0.75,
-                    colors: ["#FFD400", "#1E85E6"]
-                }
-            },
-            series: {
-                zoomable: true
-            }
-        };
-
-        chart = toastChart.lineChart({ el, data, options });
     }
-    update("all");
 
-    // 바인딩
-    element.find("select").change(function() {
-        let val = $(this).val();
-        update(val);
-    });
+    return {
+        labels: {
+            x: val1, y: val2, value: val3 ? val3 : null
+        },
+        values: values
+    };
 }
 
-export const weatherRatio = (element, weatherData) => {
-    let chart = null;
-    addOptions(element.find("select"), Object.keys(weatherData));
+const histogram = (column) => {
+    let useCount = column.reduce((arr, c) => {
+        if (arr[c] == null) arr[c] = 0;
+        arr[c] += 1;
+        return arr;
+    }, {});
 
-    // 업데이트
-    function update(val) {
-        if (chart) {
-            chart.destroy();
-        }
+    let labels = Object.keys(useCount).sort();
+    let values = [];
+    labels.forEach((c) => {
+        values.push(useCount[c]);
+    })
 
-        let locationData = getData(weatherData, val);
-        let rainCount = 0;
-        let snowCount = 0;
-        let sunnyCount = 0;
-        for (let date in locationData) {
-            let dayData = locationData[date];
-            if (dayData.snow > 0) {
-                snowCount += 1;
-            } else if (dayData.rain >= 0.5) {
-                rainCount += 1;
-            } else {
-                sunnyCount += 1;
-            }
-        }
-
-        let el = element.find(".chart_body")[0];
-        let data = {
-            categories: ["날씨 비율"],
-            series: [
-                {
-                    name: "맑음",
-                    data: sunnyCount
-                },
-                {
-                    name: "비",
-                    data: rainCount
-                },
-                {
-                    name: "눈",
-                    data: snowCount
-                }
-            ]
-        };
-        let options = {
-            theme: {
-                series: {
-                    colors: ["#FFF04D", "#1E85E6", "#EEEEEE"]
-                }
-            }
-        };
-
-        chart = toastChart.pieChart({ el, data, options });
-    }
-    update();
-
-    // 바인딩
-    element.find("select").change(function() {
-        let val = $(this).val();
-        update(val);
-    });
+    return {
+        labels: labels,
+        values: values
+    };
 }
 
-export const rainChart = (element, weatherData) => {
-    let chart = null;
-    addOptions(element.find("select"), Object.keys(weatherData));
-
-    // 업데이트
-    function update(val) {
-        if (chart) {
-            chart.destroy();
-        }
-
-        let locationData = getData(weatherData, val);
-        let rainData = {};
-        let snowData = {};
-
-        for (let i in locationData) {
-            let dayData = locationData[i];
-            let month = Number(dayData.date.split("-")[1]);
-            if (rainData[month] == null) {
-                rainData[month] = [];
-                snowData[month] = [];
-            }
-            rainData[month].push(dayData.rain);
-            snowData[month].push(dayData.snow);
-        }
-
-        // 월 별로 평균 내기
-        for (let month in rainData) {
-            rainData[month] = n.mean(rainData[month]);
-        }
-        for (let month in snowData) {
-            snowData[month] = n.mean(snowData[month]);
-        }
-
-        let el = element.find(".chart_body")[0];
-        let data = {
-            categories: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
-            series: [
-                {
-                    name: "강우량(mm)",
-                    data: Object.values(rainData),
-                },
-                {
-                    name: "적설량(cm)",
-                    data: Object.values(snowData),
-                }
-            ]
-        };
-        let options = {
-            series: {
-                stack: {
-                    type: "normal",
-                },
-            },
-            theme: {
-                series: {
-                    colors: ["#1E85E6", "#EEEEEE"]
-                }
-            }
-        };
-
-        chart = toastChart.columnChart({ el, data, options });
-        //     type: "bar",
-        //     data: {
-        //         labels: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
-        //         datasets: [
-        //             {
-        //                 label: "강우량(mm)",
-        //                 data: Object.values(rainData),
-        //                 backgroundColor: "#1E85E6"
-        //             },
-        //             {
-        //                 label: "적설량(cm)",
-        //                 data: Object.values(snowData),
-        //                 backgroundColor: "#EEEEEE"
-        //             }
-        //         ]
-        //     },
-        //     options: {
-        //         scales: {
-        //             x: {
-        //               stacked: true,
-        //             },
-        //             y: {
-        //               stacked: true
-        //             }
-        //           }
-        //     }
-        // });
-    }
-    update("all");
-
-    // 바인딩
-    element.find("select").change(function() {
-        let val = $(this).val();
-        update(val);
-    });
-}
-
-export const rankingChart = (element, column, name, color, weatherData) => {
-    let chart = null;
-
-    // 업데이트
-    function update(val) {
-        if (chart) {
-            chart.destroy();
-        }
-
-        val = Number(val);
-        let globalData = {};
-        Object.assign(globalData, weatherData);
-
-        for (let location in globalData) {
-            globalData[location] = n.mean(getColumn(getData(weatherData, location, val), column));
-        }
-
-        // 정렬
-        globalData = Object.keys(globalData).map(function(key) {
-            return [key, globalData[key]];
-        });
-
-        globalData.sort(function(first, second) {
-            return second[1] - first[1];
-        });
-
-        let newGlobalData = {}
-        for (let i in globalData) {
-            let locationData = globalData[i];
-            newGlobalData[locationData[0]] = locationData[1];
-        }
-
-        let el = element.find(".chart_body")[0];
-        let data = {
-            categories: Object.keys(newGlobalData),
-            series: [
-                {
-                    name: name,
-                    data: Object.values(newGlobalData)
-                }
-            ]
-        };
-        let options = {
-            theme: {
-                series: {
-                    colors: [color]
-                }
-            }
-        };
-
-        chart = toastChart.barChart({ el, data, options });
-    }
-    update("1");
-
-    // 바인딩
-    element.find("select").change(function() {
-        let val = $(this).val();
-        update(val);
-    });
-}
-
-export const boxplot = (element, weatherData) => {
-    let chart = null;
-    addOptions(element.find("select"), Object.keys(weatherData));
-
-    // 업데이트
-    function update(val) {
-        if (chart) {
-            chart.destroy();
-        }
-
-        let locationData = getData(weatherData, val);
-        let tempData = [];
-        let rainData = [];
-
-        for (let i in locationData) {
-            let dayData = locationData[i];
-            let month = Number(dayData.date.split("-")[1]);
-            if (rainData[month] == null) {
-                tempData[month] = [];
-                rainData[month] = [];
-            }
-            tempData[month].push(dayData.temperature);
-            rainData[month].push(dayData.rain);
-        }
-
-        let el = element.find(".chart_body")[0];
-        let data = {
-            categories: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
-            series: [
-                {
-                    name: "기온",
-                    data: Object.values(tempData),
-                },
-                {
-                    name: "습도",
-                    data: Object.values(rainData),
-                }
-            ]
-        };
-        let options = {
-            series: {
-                stack: {
-                    type: "normal",
-                }
-            },
-            theme: {
-                series: {
-                    colors: ["#FFD400", "#1E85E6"]
-                }
-            }
-        };
-
-        chart = toastChart.boxPlotChart({ el, data, options });
-        //     type: "bar",
-        //     data: {
-        //         labels: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
-        //         datasets: [
-        //             {
-        //                 label: "강우량(mm)",
-        //                 data: Object.values(rainData),
-        //                 backgroundColor: "#1E85E6"
-        //             },
-        //             {
-        //                 label: "적설량(cm)",
-        //                 data: Object.values(snowData),
-        //                 backgroundColor: "#EEEEEE"
-        //             }
-        //         ]
-        //     },
-        //     options: {
-        //         scales: {
-        //             x: {
-        //               stacked: true,
-        //             },
-        //             y: {
-        //               stacked: true
-        //             }
-        //           }
-        //     }
-        // });
-    }
-    update("all");
-
-    // 바인딩
-    element.find("select").change(function() {
-        let val = $(this).val();
-        update(val);
-    });
-}
-
-export const heatmap = (element, weatherData) => {
-    let chart = null;
-    addOptions(element.find("select"), Object.keys(weatherData));
-
-    // 업데이트
-    function update() {
-        if (chart) {
-            chart.destroy();
-        }
-
-        let labels = []
-        let heatDatas = []
-        
-        for (let location in weatherData) {
-            labels.push(location);
-            let locationData = getData(weatherData, location);
-            let yearData = [];
-
-            for (let month = 1; month <= 12; month++) {
-                let monthData = [];
-                for (let i in locationData) {
-                    let dayData = locationData[i];
-                    if (Number(dayData.date.split("-")[1]) == month) {
-                        monthData.push(dayData);
-                    }
-                }
-                yearData.push(n.mean(getColumn(monthData, "temperature")));
-            }
-            heatDatas.push(yearData);
-        }
-
-        let el = element.find(".chart_body")[0];
-        let data = {
-            categories: {
-                x: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
-                y: labels,
-            },
-            series: heatDatas
-        }
-        let options = {}
-        chart = toastChart.heatmapChart({ el, data, options });
-    }
-    update();
-
-    // 바인딩
-    // element.find("select").change(function() {
-    //     let val = $(this).val();
-    //     update(val);
-    // });
-}
-
+// common data
 export const valueCountChart = (element, valueCounts) => {
     let chart = null;
     let select = element.find("select");
@@ -506,64 +138,35 @@ export const valueCountChart = (element, valueCounts) => {
     });
 }
 
-export const wordCloudChart = (element, strData) => {
-    let chart = null;
-    let select = element.find("select");
-    let countInput = element.find("input");
-    let options = Object.keys(strData);
+export const naRatioEDA = (element, df) => {
+    let labels = [];
+    df = df.isNa();
 
-    addOptions(select, options);
-
-    // 업데이트
-    function update(val, count) {
-        if (chart) {
-            chart.remove();
-        }
-
-        let valTokens = strData[val].Tokens;
-        let data = Object.keys(valTokens).reduce((arr, key) => {
-            if (valTokens[key] <= count) return arr;
-
-            let [mouseover, mousemove, mouseout] = d3ext.hoverTooltipEvent(null, JSON.stringify({
-                label: key,
-                value: valTokens[key],
-                color: "#000000"
-            }));
-
-            arr.push({
-                text: key,
-                weight: valTokens[key],
-                handlers: {
-                    mouseover: mouseover,
-                    mousemove: mousemove,
-                    mouseout: mouseout
-                }
-            });
-            return arr;
-        }, [])
-
-        let el = element.find(".chart_body");
-        chart = $($.parseHTML("<div class='chart_cloud'></div>"));
-        chart.appendTo(el);
-        chart.jQCloud(data);
+    for (let c in df.columns) {
+        let column = df.getColumn(df.columns[c]);
+        let sum = column.reduce((a, c) => a + c, 0)
+        let percent = (sum / df.rows.length * 100).toFixed(2);
+        let label = `${df.columns[c]}  (${percent}%)`;
+        labels.push(label);
     }
-    update(options[0]);
 
-    // 바인딩
-    select.change(function() {
-        let val = $(this).val();
-        let count = Number(countInput.val());
-        update(val, count);
-    });
-
-    countInput.change(function() {
-        $(this).width(30 + (this.value.length - 1) * 12);
-        let val = select.val();
-        let count = Number(countInput.val());
-        update(val, count);
-    });
+    let el = element.find(".chart_body");
+    let data = {
+        labels: {
+            x: labels,
+            y: Object.keys(df.rows)
+        },
+        values: df.rows
+    }
+    let option = {
+        yAxis: false,
+        startColor: "#000000",
+        endColor: "#FFFFFF",
+    };
+    let chart = new d3ext.heatmap(el, data, option);
 }
 
+// 넘버 데이터
 export const describeChart = (element, describe) => {
     let chart = null;
     let select = element.find("select");
@@ -658,292 +261,194 @@ export const quartileChart = (element, summary, df) => {
     });
 }
 
-// Chart.js쓰는 레거시 차트
-export const dailyChartLegacy = (element, weatherData) => {
+export const scatterEDA = (element, df, numberColumns, categories) => {
     let chart = null;
-    addOptions(element.find("select"), Object.keys(weatherData));
 
-    // 업데이트
-    function update(val) {
+    // 숫자형인 컬럼명만 수집
+    // let numberColumns = df.columns.reduce((arr, c) => {
+    //     if (df.getColumnType(c) == "number") arr.push(c);
+    //     return arr;
+    // }, []);
+
+    let firstSelect = element.find("select").eq(0);
+    let secondSelect = element.find("select").eq(1);
+    addOptions(firstSelect, numberColumns);
+    addOptions(secondSelect, numberColumns);
+
+    let valueSelect = categories ? element.find("select").eq(2) : null;
+    if (valueSelect) addOptions(valueSelect, categories);
+
+    function update(val1, val2, val3) {
         if (chart) {
             chart.destroy();
-        }
-
-        let dailyData = getData(weatherData, val);
-
-        let el = element.find(".chart_body")[0];
-        chart = new Chart(el, {
-            type: "line",
-            data: {
-                labels: getColumn(dailyData, "date"),
-                datasets: [
-                    {
-                        label: "기온",
-                        data: getColumn(dailyData, "temperature"),
-                        borderColor: "rgb(150, 150, 0)",
-                        showLine: true,
-                        spanGaps: true,
-                        pointRadius: 0,
-                        borderWidth: 0.75
-                    },
-                    {
-                        label: "습도",
-                        data: getColumn(dailyData, "humidity"),
-                        borderColor: "rgb(70, 70, 255)",
-                        showLine: true,
-                        spanGaps: true,
-                        pointRadius: 0,
-                        borderWidth: 0.75
-                    }
-                ]
-            }
-        })
-    }
-    update("all");
-
-    // 바인딩
-    element.find("select").change(function() {
-        let val = $(this).val();
-        update(val);
-    });
-}
-
-export const weatherRatioLegacy = (element, weatherData) => {
-    let chart = null;
-    addOptions(element.find("select"), Object.keys(weatherData));
-
-    // 업데이트
-    function update(val) {
-        if (chart) {
-            chart.destroy();
-        }
-
-        let locationData = getData(weatherData, val);
-        let rainCount = 0;
-        let snowCount = 0;
-        let sunnyCount = 0;
-        for (let date in locationData) {
-            let dayData = locationData[date];
-            if (dayData.snow > 0) {
-                snowCount += 1;
-            } else if (dayData.rain >= 0.5) {
-                rainCount += 1;
-            } else {
-                sunnyCount += 1;
-            }
-        }
-
-        let el = element.find(".chart_body")[0];
-        chart = new Chart(el, {
-            type: "pie",
-            data: {
-                labels: ["맑음", "비", "눈"],
-                datasets: [{
-                    label: "날씨 비율",
-                    data: [sunnyCount, rainCount, snowCount],
-                    backgroundColor: [
-                        "#FFF04D",
-                        "#1E85E6",
-                        "#EEEEEE"
-                    ]
-                }]
-            }
-        });
-    }
-    update();
-
-    // 바인딩
-    element.find("select").change(function() {
-        let val = $(this).val();
-        update(val);
-    });
-}
-
-export const rainChartLegacy = (element, weatherData) => {
-    let chart = null;
-    addOptions(element.find("select"), Object.keys(weatherData));
-
-    // 업데이트
-    function update(val) {
-        if (chart) {
-            chart.destroy();
-        }
-
-        let locationData = getData(weatherData, val);
-        let rainData = {};
-        let snowData = {};
-
-        for (let i in locationData) {
-            let dayData = locationData[i];
-            let month = Number(dayData.date.split("-")[1]);
-            if (rainData[month] == null) {
-                rainData[month] = [];
-                snowData[month] = [];
-            }
-            rainData[month].push(dayData.rain);
-            snowData[month].push(dayData.snow);
-        }
-
-        // 월 별로 평균 내기
-        for (let month in rainData) {
-            rainData[month] = n.mean(rainData[month]);
-        }
-        for (let month in snowData) {
-            snowData[month] = n.mean(snowData[month]);
         }
 
         let el = element.find(".chart_body");
-        chart = new Chart(el, {
-            type: "bar",
-            data: {
-                labels: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
-                datasets: [
-                    {
-                        label: "강우량(mm)",
-                        data: Object.values(rainData),
-                        backgroundColor: "#1E85E6"
-                    },
-                    {
-                        label: "적설량(cm)",
-                        data: Object.values(snowData),
-                        backgroundColor: "#EEEEEE"
-                    }
-                ]
-            },
-            options: {
-                scales: {
-                    x: {
-                      stacked: true,
-                    },
-                    y: {
-                      stacked: true
-                    }
-                  }
-            }
-        });
+        let data = scatter(df, val1, val2, val3);
+        let options = {
+            reverse: true
+        };
+
+        chart = new d3ext.scatter(el, data, options);
     }
-    update("all");
 
     // 바인딩
-    element.find("select").change(function() {
-        let val = $(this).val();
-        update(val);
-    });
+    function selectionBind() {
+        let val1 = firstSelect.val();
+        let val2 = secondSelect.val();
+        let val3 = categories ? valueSelect.val() : null;
+        if (val1 && val2) update(val1, val2, val3);
+    }
+    firstSelect.change(selectionBind);
+    secondSelect.change(selectionBind)
+    if (valueSelect) valueSelect.change(selectionBind);
+
+    firstSelect.val(numberColumns[0]);
+    secondSelect.val(numberColumns[1]);
+
+    if (valueSelect) {
+        valueSelect.val(categories[0]);
+        update(numberColumns[0], numberColumns[1], categories[0]);
+    } else update(numberColumns[0], numberColumns[1]);
 }
 
-export const rankingChartLegacy = (element, column, name, color, weatherData) => {
+export const pairEDA = (element, df, numberColumns) => {
+    let el = element.find(".chart_body");
+    el.addClass("multiplot");
+
+    let axisSize = 25;
+    let plotMargin = 3;
+    let plotScale = 1 / numberColumns.length * 100;
+
+    let multiplot = $($.parseHTML("<div class='chart_multiplot'></div>"))
+    multiplot.width(el.width() - axisSize)
+    multiplot.height(el.height() - axisSize)
+    multiplot.appendTo(el)
+
+    let gridHorizontal = $($.parseHTML("<div class='chart_plotgrid horizontal'></div>"));
+    let gridVertical = $($.parseHTML("<div class='chart_plotgrid vertical'></div>"));
+    gridHorizontal.width(el.width() - axisSize);
+    gridVertical.height(el.height() - axisSize);
+    gridHorizontal.height(axisSize);
+    gridVertical.width(axisSize);
+    gridHorizontal.appendTo(el);
+    gridVertical.appendTo(el);
+
+    for (let c in numberColumns) {
+        let text = $($.parseHTML(`<div>${numberColumns[c]}</div>`));
+        text.appendTo(gridVertical);
+    }
+    for (let r in numberColumns) {
+        let text = $($.parseHTML(`<div>${numberColumns[r]}</div>`));
+        text.appendTo(gridHorizontal);
+    }
+
+    function update() {
+        multiplot.empty();
+        for (let c in numberColumns) {
+            for (let r in numberColumns) {
+                let plot = $($.parseHTML("<svg class='chart_subplot'></svg>"))
+                plot.width(`calc(${plotScale}% - ${plotMargin * 2}px)`);
+                plot.height(`calc(${plotScale}% - ${plotMargin * 2}px)`);
+                plot.css({margin: `${plotMargin}px`})
+                plot.appendTo(multiplot);
+
+                if (c != r) { // 스캐터
+                    let data = scatter(df, numberColumns[r], numberColumns[c]);
+                    let options = {
+                        reverse: true,
+                        paddingX: 3,//20,
+                        paddingY: 3,//20,
+                        xAxis: false,
+                        yAxis: false,
+                        // axisSize: 20 / numberColumns.length,//20,
+                        radius: 3 / numberColumns.length * 1.5 //1.25
+                    };
+
+                    new d3ext.scatter(plot, data, options);
+                } else { // 히스토그램
+                    let data = histogram(df.getColumn(numberColumns[c]));
+                    let options = {
+                        reverse: true,
+                        paddingX: 3,//20,
+                        paddingY: 3,//20,
+                        xAxis: false,
+                        yAxis: false,
+                    };
+            
+                    new d3ext.verticalBar(plot, data, options);
+                }
+            }
+        }
+    }
+    update();
+}
+
+// 카테고리 데이터
+export const categoryStackChart = (element, df, categories) => {
     let chart = null;
 
-    // 업데이트
-    function update(val) {
+    let firstSelect = element.find("select").eq(0);
+    let secondSelect = element.find("select").eq(1);
+    addOptions(firstSelect, categories);
+    addOptions(secondSelect, categories);
+
+    function update(val, condition) {
         if (chart) {
             chart.destroy();
         }
 
-        val = Number(val);
-        let globalData = {};
-        Object.assign(globalData, weatherData);
+        // 추가 조건 (첫번째 라벨과 같은 행의 다른 컬럼 카테고리 값 추출)
+        let [c1, c2] = df.getColumns([val, condition]);
+        let valueCount = df.getColumnValueCount(val);
+        let labels = Object.keys(valueCount);
+        let values = Object.values(valueCount);
 
-        for (let location in globalData) {
-            globalData[location] = n.mean(getColumn(getData(weatherData, location, val), column));
-        }
-
-        // 정렬
-        globalData = Object.keys(globalData).map(function(key) {
-            return [key, globalData[key]];
-        });
-
-        globalData.sort(function(first, second) {
-            return second[1] - first[1];
-        });
-
-        let newGlobalData = {}
-        for (let i in globalData) {
-            let locationData = globalData[i];
-            newGlobalData[locationData[0]] = locationData[1];
-        }
-
-        let el = element.find(".chart_body")[0];
-        chart = new Chart(el, {
-            type: "bar",
-            data: {
-                labels: Object.keys(newGlobalData),
-                datasets: [
-                    {
-                        label: name,
-                        data: Object.values(newGlobalData),
-                        backgroundColor: color
-                    }
-                ]
-            },
-            options: {
-                indexAxis: "y"
-            }
-        });
-    }
-    update("1");
-
-    // 바인딩
-    element.find("select").change(function() {
-        let val = $(this).val();
-        update(val);
-    });
-}
-
-// D3 쓰는 차트
-export const rankingChartD3 = (element, column, name, color, weatherData) => {
-    let chart = null;
-
-    // 업데이트
-    function update(val) {
-        if (chart) {
-            chart.destroy();
-        }
-
-        val = Number(val);
-        let globalData = {};
-        Object.assign(globalData, weatherData);
-
-        for (let location in globalData) {
-            globalData[location] = n.mean(getColumn(getData(weatherData, location, val), column));
-        }
-
-        // 정렬
-        let [labels, values] = dictSort(globalData)
-        // let newGlobalData = dictSort(globalData);
-        // globalData = Object.keys(globalData).map(function(key) {
-        //     return [key, globalData[key]];
-        // });
-
-        // globalData.sort(function(first, second) {
-        //     return second[1] - first[1];
-        // });
-
-        // let newGlobalData = {}
-        // for (let i in globalData) {
-        //     let locationData = globalData[i];
-        //     newGlobalData[locationData[0]] = locationData[1];
-        // }
+        let stacked = labels.reduce((arr, label) => {
+            let filteredValueCount = c1.reduce((arr, c, i) => {
+                if (c == label) {
+                    let value = c2[i];
+                    if (arr[value] == null) arr[value] = 0;
+                    arr[value] += 1;
+                }
+                return arr;
+            }, {});
+            arr.push(Object.values(filteredValueCount));
+            return arr;
+        }, []);
 
         let el = element.find(".chart_body");
         let data = {
+            name: val,
             labels: labels,
-            values: values
+            values: values,
+            stack: {
+                name: condition,
+                labels: df.getColumnUnique(condition), // Survived, Pclass 설정일 경우, Pclass 라벨 넣으면 됨 - [1, 2, 3]
+                values: stacked // Survived, Pclass 설정일 경우, 각 경우의 수만큼 요소 만듬(Survived 2개, Pclass 3개 = 총 6개 요소) - [ [100, 150, 20], [10, 200, 400] ]
+            }
         };
         let options = {
-            color: color,
-            paddingX: 60
+            paddingX: 60,
+            stackStartColor: "#47E1A8",
+            stackEndColor: "#297458"
         };
 
         chart = new d3ext.horizontalBar(el, data, options);
     }
-    update("1");
 
     // 바인딩
-    element.find("select").change(function() {
-        let val = $(this).val();
-        update(val);
-    });
+    function selectionBind() {
+        let val1 = firstSelect.val();
+        let val2 = secondSelect.val();
+        if (val1 && val2) update(val1, val2);
+    }
+    firstSelect.change(selectionBind);
+    secondSelect.change(selectionBind)
+
+    firstSelect.val(categories[0]);
+    secondSelect.val(categories[1]);
+    update(categories[0], categories[1]);
 }
 
 export const heatmapD3 = (element, df, categories, numbers) => {
@@ -1023,36 +528,62 @@ export const heatmapD3 = (element, df, categories, numbers) => {
     update(categories[0], categories[1], numbers[0])
 }
 
-export const dailyChartD3 = (element, weatherData) => {
+// 텍스트 데이터
+export const wordCloudChart = (element, strData) => {
     let chart = null;
-    addOptions(element.find("select"), Object.keys(weatherData));
+    let select = element.find("select");
+    let countInput = element.find("input");
+    let options = Object.keys(strData);
+
+    addOptions(select, options);
 
     // 업데이트
-    function update(val) {
+    function update(val, count) {
         if (chart) {
-            chart.destroy();
+            chart.remove();
         }
 
-        let dailyData = getData(weatherData, val);
+        let valTokens = strData[val].Tokens;
+        let data = Object.keys(valTokens).reduce((arr, key) => {
+            if (valTokens[key] <= count) return arr;
+
+            let [mouseover, mousemove, mouseout] = d3ext.hoverTooltipEvent(null, JSON.stringify({
+                label: key,
+                value: valTokens[key],
+                color: "#000000"
+            }));
+
+            arr.push({
+                text: key,
+                weight: valTokens[key],
+                handlers: {
+                    mouseover: mouseover,
+                    mousemove: mousemove,
+                    mouseout: mouseout
+                }
+            });
+            return arr;
+        }, [])
 
         let el = element.find(".chart_body");
-        let data = {
-            labels: getColumn(dailyData, "date"),
-            values: [getColumn(dailyData, "temperature"), getColumn(dailyData, "humidity")]
-        };
-        let options = {
-            colors: ["#FFD400", "#1E85E6"],
-            reverse: true
-        };
-
-        chart = new d3ext.line(el, data, options);
+        chart = $($.parseHTML("<div class='chart_cloud'></div>"));
+        chart.appendTo(el);
+        chart.jQCloud(data);
     }
-    update("all");
+    update(options[0]);
 
     // 바인딩
-    element.find("select").change(function() {
+    select.change(function() {
         let val = $(this).val();
-        update(val);
+        let count = Number(countInput.val());
+        update(val, count);
+    });
+
+    countInput.change(function() {
+        $(this).width(30 + (this.value.length - 1) * 12);
+        let val = select.val();
+        let count = Number(countInput.val());
+        update(val, count);
     });
 }
 
@@ -1148,100 +679,97 @@ export const wordCountChart = (element, strData) => {
     });
 }
 
-export const categoryStackChart = (element, df, categories) => {
+// D3 쓰는 차트
+export const rankingChartD3 = (element, column, name, color, weatherData) => {
     let chart = null;
 
-    let firstSelect = element.find("select").eq(0);
-    let secondSelect = element.find("select").eq(1);
-    addOptions(firstSelect, categories);
-    addOptions(secondSelect, categories);
-
-    function update(val, condition) {
+    // 업데이트
+    function update(val) {
         if (chart) {
             chart.destroy();
         }
 
-        // 추가 조건 (첫번째 라벨과 같은 행의 다른 컬럼 카테고리 값 추출)
-        let [c1, c2] = df.getColumns([val, condition]);
-        let valueCount = df.getColumnValueCount(val);
-        let labels = Object.keys(valueCount);
-        let values = Object.values(valueCount);
+        val = Number(val);
+        let globalData = {};
+        Object.assign(globalData, weatherData);
 
-        let stacked = labels.reduce((arr, label) => {
-            let filteredValueCount = c1.reduce((arr, c, i) => {
-                if (c == label) {
-                    let value = c2[i];
-                    if (arr[value] == null) arr[value] = 0;
-                    arr[value] += 1;
-                }
-                return arr;
-            }, {});
-            arr.push(Object.values(filteredValueCount));
-            return arr;
-        }, []);
+        for (let location in globalData) {
+            globalData[location] = n.mean(getColumn(getData(weatherData, location, val), column));
+        }
+
+        // 정렬
+        let [labels, values] = dictSort(globalData)
+        // let newGlobalData = dictSort(globalData);
+        // globalData = Object.keys(globalData).map(function(key) {
+        //     return [key, globalData[key]];
+        // });
+
+        // globalData.sort(function(first, second) {
+        //     return second[1] - first[1];
+        // });
+
+        // let newGlobalData = {}
+        // for (let i in globalData) {
+        //     let locationData = globalData[i];
+        //     newGlobalData[locationData[0]] = locationData[1];
+        // }
 
         let el = element.find(".chart_body");
         let data = {
-            name: val,
             labels: labels,
-            values: values,
-            stack: {
-                name: condition,
-                labels: df.getColumnUnique(condition), // Survived, Pclass 설정일 경우, Pclass 라벨 넣으면 됨 - [1, 2, 3]
-                values: stacked // Survived, Pclass 설정일 경우, 각 경우의 수만큼 요소 만듬(Survived 2개, Pclass 3개 = 총 6개 요소) - [ [100, 150, 20], [10, 200, 400] ]
-            }
+            values: values
         };
         let options = {
-            paddingX: 60,
-            stackStartColor: "#47E1A8",
-            stackEndColor: "#297458"
+            color: color,
+            paddingX: 60
         };
 
         chart = new d3ext.horizontalBar(el, data, options);
     }
+    update("1");
 
     // 바인딩
-    function selectionBind() {
-        let val1 = firstSelect.val();
-        let val2 = secondSelect.val();
-        if (val1 && val2) update(val1, val2);
-    }
-    firstSelect.change(selectionBind);
-    secondSelect.change(selectionBind)
+    element.find("select").change(function() {
+        let val = $(this).val();
+        update(val);
+    });
+}
 
-    firstSelect.val(categories[0]);
-    secondSelect.val(categories[1]);
-    update(categories[0], categories[1]);
+export const dailyChartD3 = (element, weatherData) => {
+    let chart = null;
+    addOptions(element.find("select"), Object.keys(weatherData));
+
+    // 업데이트
+    function update(val) {
+        if (chart) {
+            chart.destroy();
+        }
+
+        let dailyData = getData(weatherData, val);
+
+        let el = element.find(".chart_body");
+        let data = {
+            labels: getColumn(dailyData, "date"),
+            values: [getColumn(dailyData, "temperature"), getColumn(dailyData, "humidity")]
+        };
+        let options = {
+            colors: ["#FFD400", "#1E85E6"],
+            reverse: true
+        };
+
+        chart = new d3ext.line(el, data, options);
+    }
+    update("all");
+
+    // 바인딩
+    element.find("select").change(function() {
+        let val = $(this).val();
+        update(val);
+    });
 }
 
 // EDA 차트
-export const naRatioEDA = (element, df) => {
-    let labels = [];
-    df = df.isNa();
 
-    for (let c in df.columns) {
-        let column = df.getColumn(df.columns[c]);
-        let sum = column.reduce((a, c) => a + c, 0)
-        let percent = (sum / df.rows.length * 100).toFixed(2);
-        let label = `${df.columns[c]}  (${percent}%)`;
-        labels.push(label);
-    }
-
-    let el = element.find(".chart_body");
-    let data = {
-        labels: {
-            x: labels,
-            y: Object.keys(df.rows)
-        },
-        values: df.rows
-    }
-    let option = {
-        yAxis: false,
-        startColor: "#000000",
-        endColor: "#FFFFFF",
-    };
-    let chart = new d3ext.heatmap(el, data, option);
-}
 
 export const uniqueRankEDA = (element, rows) => {
     let chart = null;
@@ -1375,180 +903,7 @@ export const describeEDA = (element, df) => {
     update();
 }
 
-export const scatterEDA = (element, df, numberColumns, categories) => {
-    let chart = null;
 
-    // 숫자형인 컬럼명만 수집
-    // let numberColumns = df.columns.reduce((arr, c) => {
-    //     if (df.getColumnType(c) == "number") arr.push(c);
-    //     return arr;
-    // }, []);
-
-    let firstSelect = element.find("select").eq(0);
-    let secondSelect = element.find("select").eq(1);
-    addOptions(firstSelect, numberColumns);
-    addOptions(secondSelect, numberColumns);
-
-    let valueSelect = categories ? element.find("select").eq(2) : null;
-    if (valueSelect) addOptions(valueSelect, categories);
-
-    function update(val1, val2, val3) {
-        if (chart) {
-            chart.destroy();
-        }
-
-        // 결측값 1이나 2에 하나라도 있으면 안씀
-        let values = [];
-        let column1 = df.getColumn(val1);
-        let column2 = df.getColumn(val2);
-        let column3 = val3 ? df.getColumn(val3) : null;
-
-        for (let i in column1) {
-            // console.log(`${column1[i]} && ${column2[i]}`);
-            if (!val3) {
-                if (column1[i] && column2[i]) values.push([Number(column1[i]), Number(column2[i])]);
-            } else {
-                if (column1[i] && column2[i]) values.push([Number(column1[i]), Number(column2[i]), column3[i]]);
-            }
-        }
-
-        let el = element.find(".chart_body");
-        let data = {
-            labels: {
-                x: val1, y: val2, value: val3 ? val3 : null
-            },
-            values: values
-        };
-        let options = {
-            reverse: true
-        };
-
-        chart = new d3ext.scatter(el, data, options);
-    }
-
-    // 바인딩
-    function selectionBind() {
-        let val1 = firstSelect.val();
-        let val2 = secondSelect.val();
-        let val3 = categories ? valueSelect.val() : null;
-        if (val1 && val2) update(val1, val2, val3);
-    }
-    firstSelect.change(selectionBind);
-    secondSelect.change(selectionBind)
-    if (valueSelect) valueSelect.change(selectionBind);
-
-    firstSelect.val(numberColumns[0]);
-    secondSelect.val(numberColumns[1]);
-
-    if (valueSelect) {
-        valueSelect.val(categories[0]);
-        update(numberColumns[0], numberColumns[1], categories[0]);
-    } else update(numberColumns[0], numberColumns[1]);
-}
-
-export const pairEDA = (element, df, numberColumns) => {
-    let el = element.find(".chart_body");
-    el.addClass("multiplot");
-
-    let axisSize = 25;
-    let plotMargin = 3;
-    let plotScale = 1 / numberColumns.length * 100;
-
-    let multiplot = $($.parseHTML("<div class='chart_multiplot'></div>"))
-    multiplot.width(el.width() - axisSize)
-    multiplot.height(el.height() - axisSize)
-    multiplot.appendTo(el)
-
-    let gridHorizontal = $($.parseHTML("<div class='chart_plotgrid horizontal'></div>"));
-    let gridVertical = $($.parseHTML("<div class='chart_plotgrid vertical'></div>"));
-    gridHorizontal.width(el.width() - axisSize);
-    gridVertical.height(el.height() - axisSize);
-    gridHorizontal.height(axisSize);
-    gridVertical.width(axisSize);
-    gridHorizontal.appendTo(el);
-    gridVertical.appendTo(el);
-
-    for (let c in numberColumns) {
-        let text = $($.parseHTML(`<div>${numberColumns[c]}</div>`));
-        text.appendTo(gridVertical);
-    }
-    for (let r in numberColumns) {
-        let text = $($.parseHTML(`<div>${numberColumns[r]}</div>`));
-        text.appendTo(gridHorizontal);
-    }
-
-    function update() {
-        multiplot.empty();
-        for (let c in numberColumns) {
-            for (let r in numberColumns) {
-                let plot = $($.parseHTML("<svg class='chart_subplot'></svg>"))
-                plot.width(`calc(${plotScale}% - ${plotMargin * 2}px)`);
-                plot.height(`calc(${plotScale}% - ${plotMargin * 2}px)`);
-                plot.css({margin: `${plotMargin}px`})
-                plot.appendTo(multiplot);
-
-                let values = [];
-                let x = df.getColumn(numberColumns[r]);
-                let y = df.getColumn(numberColumns[c]);
-
-
-                if (c != r) { // 스캐터
-                    // 결측값 1이나 2에 하나라도 있으면 안씀
-                    for (let i in x) {
-                        if (x[i] && y[i]) {
-                            values.push([Number(x[i]), Number(y[i])]);
-                        }
-                    }
-
-                    let data = {
-                        labels: {
-                            x: numberColumns[r], y: numberColumns[c]
-                        },
-                        values: values
-                    };
-                    let options = {
-                        reverse: true,
-                        paddingX: 3,//20,
-                        paddingY: 3,//20,
-                        xAxis: false,
-                        yAxis: false,
-                        // axisSize: 20 / numberColumns.length,//20,
-                        radius: 3 / numberColumns.length * 1.5 //1.25
-                    };
-
-                    new d3ext.scatter(plot, data, options);
-                } else { // 히스토그램
-                    let useCount = df.getColumn(numberColumns[c]).reduce((arr, c) => {
-                        if (arr[c] == null) arr[c] = 0;
-                        arr[c] += 1;
-                        return arr;
-                    }, {});
-
-                    let labels = Object.keys(useCount).sort();
-                    let values = [];
-                    labels.forEach((c) => {
-                        values.push(useCount[c]);
-                    })
-
-                    let data = {
-                        labels: labels,
-                        values: values
-                    };
-                    let options = {
-                        reverse: true,
-                        paddingX: 3,//20,
-                        paddingY: 3,//20,
-                        xAxis: false,
-                        yAxis: false,
-                    };
-            
-                    new d3ext.verticalBar(plot, data, options);
-                }
-            }
-        }
-    }
-    update();
-}
 
 export const rgbEDA = (element, rgb) => {
     console.log(rgb);
