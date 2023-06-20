@@ -131,8 +131,19 @@ $().ready(() => {
     }
 
     let datasetInput = $(".dataset_input");
-    datasetInput.change(async () => {
+    datasetInput.change(() => {
         let files = datasetInput.prop("files");
-        if (files.length > 0) reader.readAsText(files[0]);
+        if (files.length == 0) return;
+
+        let file = files[0];
+        let fileType = file.type.split("/")[0]
+        let fileExt = file.type.split("/")[1]
+
+        if (fileType == "text") {
+            if (fileExt == "csv") reader.readAsText(file);
+        }
+        else if (fileType == "image") {
+            
+        }
     })
 })

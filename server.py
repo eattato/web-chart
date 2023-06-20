@@ -14,8 +14,11 @@ def page():
 
 @app.route("/summary", methods=["POST"])
 def getSummary():
-    if not request.data: return "no u"
-    return util.summary(request.data)
+    if type(request.data) != str: return "no u"
+    try:
+        return util.summary(request.data)
+    except:
+        return "error"
 
 # @app.route("/summary/<target>", methods=["GET"])
 # def getSummary(target):
