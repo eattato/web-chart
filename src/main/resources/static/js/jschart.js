@@ -55,6 +55,18 @@ const getPointRanges = (list, splitCount) => {
     return result;
 }
 
+const getColorMapper = (df, column) => {
+    let colorMap = null;
+    let colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
+    colorMap = df.getColumnValueCount(column, true);
+    colorMap = Object.keys(util.sortByValue(colorMap));
+
+    return (value) => {
+        let colorIndex = colorMap.indexOf(value);
+        return colorIndex != -1 && colorIndex < colors.length ? colors[colorIndex] : "#AAAAAA";
+    }
+}
+
 const scatter = (df, val1, val2, val3) => {
     // 결측값 1이나 2에 하나라도 있으면 안씀
     let values = [];
@@ -64,21 +76,14 @@ const scatter = (df, val1, val2, val3) => {
     let x = df.getColumn(val1);
     let y = df.getColumn(val2);
     let v = val3 ? df.getColumn(val3) : null;
-
-    let colorMap = null;
-    let dotColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
-    if (val3) {
-        colorMap = df.getColumnValueCount(val3);
-        colorMap = Object.keys(util.sortByValue(colorMap));
-    }
+    let colorMapper = getColorMapper(df, val3)
 
     for (let i in x) {
         // console.log(`${column1[i]} && ${column2[i]}`);
         if (x[i] && y[i]) values.push([Number(x[i]), Number(y[i])]);
         if (val3) {
-            let colorIndex = colorMap.indexOf(v[i]);
             desc.push(`${val3}: ${v[i] != null ? `${v[i]}` : "NaN"}`);
-            colors.push(v[i] != null && colorIndex < dotColors.length ? dotColors[colorIndex] : null)
+            colors.push(colorMapper(v[i]));
         }
     }
 
@@ -98,46 +103,44 @@ const scatter = (df, val1, val2, val3) => {
 }
 
 const histogram = (df, num, val) => {
-    let colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
-    let defaultColor = ""
-    let nanColor = "#AAAAAA";
+    let numColumn = df.getColumn(num);
+    let valColumn = df.getColumn(val);
+    let valueCount = numColumn.reduce((arr, c, i) => {
+        let v = valColumn[i];
+        if (v == null) v = "NaN";
+        if (arr[c] == null) arr[c] = {};
+        if (arr[c][v] == null) arr[c][v] = 0;
+        arr[c][v] += 1;
+        return arr;
+    }, {});
 
-    let valueCount = df.getColumnValueCount(num);
-    // let valueColors = null;
-    // if (val) {
-    //     let colorMap = Object.keys(util.sortByValue(valueCount));
-    //     let vals = df.getColumn(val);
+    let colorMapper = getColorMapper(df, val);
+    let colors = Object.keys(valueCount).map((value) => {
+        let valueList = valueCount[value];
+        let sum = Object.values(valueList).reduce((a, c) => a + c);
 
-    //     // {1.2: {a: 12, b: 21}, 3.5: {a: 23, b: 2}, ...}
-    //     valueColors = df.getColumn(num).reduce((arr, c, i) => {
-    //         let v = vals[i];
-    //         if (v == null) v = "NaN";
+        let valueColor = Object.keys(valueList).reduce((arr, v) => {
+            let weight = valueList[v];
+            let color = colorMapper(v);
+            color = util.hexColorToDec(color);
+            arr = arr.map((v, i) => v + color[i] * weight);
+            return arr;
+        }, [0, 0, 0]);
+        return util.decColorToHex(valueColor.map((v) => v / sum));
+    });
 
-    //         if (arr[c] == null) arr[c] = {};
-    //         if (arr[c][v] == null) arr[c][v] = 0;
-    //         arr[c][v] += 1;
-    //         return arr;
-    //     }, {})
-
-    //     valueColors = Object.keys(valueColors).map((key) => {
-    //         let valueCount = valueColors[key];
-    //         let color = valueCount.reduce((arr, c) => {
-    //             let color = c == "NaN" ? nanColor : colorMap.indexOf(c) < colors.length ? colors[colorMap.indexOf(c)] : defaultColor;
-    //             color = util.hexColorToDec(color)
-    //             arr = arr.map((v, i) => v + color[i]); // 0, 1, 2 각각 채널에 합산
-    //             return arr;
-    //         }, [0, 0, 0]); // RGB 합계
-    //         color = color.map((v) => v / Object.keys(valueColors).length); // RGB 평균
-    //         color = util.decColorToHex(color);
-    //     });
-    // }
-
-    valueCount = util.sortByKey(valueCount);
-    return {
-        labels: Object.keys(valueCount),
-        values: Object.values(valueCount),
-        // colors: valueColors
-    };
+    let labels = Object.keys(valueCount);
+    let values = Object.values(valueCount).map((v) => Object.values(v).reduce((a, c) => a + c, 0));
+    valueCount = util.sortByKey(util.zipDict(labels, values));
+    return [
+        {
+            labels: Object.keys(valueCount),
+            values: Object.values(valueCount),
+        },
+        {
+            colors: colors
+        }
+    ]
 }
 
 // common data
@@ -409,8 +412,9 @@ export const pairEDA = (element, df, numberColumns, categories) => {
 
                     new d3ext.scatter(plot, data, options);
                 } else { // 히스토그램
-                    let data = histogram(df, columnNameC, val);
-                    let options = {
+                    let [data, options] = histogram(df, columnNameC, val);
+                    options = {
+                        ...options,
                         reverse: true,
                         paddingX: 3,//20,
                         paddingY: 3,//20,

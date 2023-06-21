@@ -350,6 +350,7 @@ export class verticalBar extends ChartBase {
 
         // 옵션 추출
         let color = (this.option && this.option.color) || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
+        let colors = this.option && this.option.colors ? this.option.colors : null;
 
         // 데이터 표시
         let widthResized = xScale.bandwidth() * this.barSize;
@@ -369,12 +370,12 @@ export class verticalBar extends ChartBase {
             //.attr("y", (v) => yScale(v))
             .text((v, i) => JSON.stringify({
                 label: this.data.name ? `${this.data.name}: ${y[i]}` : `${y[i]}`,
-                value: v,
-                color: color
+                value: this.data.desc ? this.data.desc[i] : v,
+                color: colors ? colors[i] : color
             }))
             .data(y) // 이후 사용할 데이터를 y 데이터로 변경
             .attr("x", (v) => xScale(v) + xOffset)
-            .attr("fill", color) // 색상 채움
+            .attr("fill", (v, i) => colors ? colors[i] : color) // 색상 채움
             .bindHoverTooltip();
 
         // 영점 선 표시
