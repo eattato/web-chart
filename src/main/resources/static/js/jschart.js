@@ -66,7 +66,7 @@ const scatter = (df, val1, val2, val3) => {
         if (!val3) {
             if (x[i] && y[i]) values.push([Number(x[i]), Number(y[i])]);
         } else {
-            if (x[i] && y[i]) values.push([Number(x[i]), Number(y[i]), v[i]]);
+            if (x[i] && y[i]) values.push([Number(x[i]), Number(y[i]), v[i] != null ? `${v[i]}` : "NaN"]);
         }
     }
 
@@ -78,12 +78,27 @@ const scatter = (df, val1, val2, val3) => {
     };
 }
 
-const histogram = (column) => {
-    let useCount = column.reduce((arr, c) => {
-        if (arr[c] == null) arr[c] = 0;
-        arr[c] += 1;
-        return arr;
-    }, {});
+const histogram = (column, val) => {
+    let colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
+
+    let useCount;
+    if (val == null) {
+        useCount = column.reduce((arr, c) => {
+            if (arr[c] == null) arr[c] = 0;
+            arr[c] += 1;
+            return arr;
+        }, {});
+    } else {
+        
+
+        useCount = column.reduce((arr, c, i) => {
+            let v = val[i];
+            if (arr[c] == null) arr[c] = {};
+            if (arr[c][v] == null) arr[c][v] = 0;
+            arr[c][v] += 1;
+        
+        }, {});
+    }
 
     let labels = Object.keys(useCount).sort();
     let values = [];
@@ -264,12 +279,6 @@ export const quartileChart = (element, summary, df) => {
 export const scatterEDA = (element, df, numberColumns, categories) => {
     let chart = null;
 
-    // 숫자형인 컬럼명만 수집
-    // let numberColumns = df.columns.reduce((arr, c) => {
-    //     if (df.getColumnType(c) == "number") arr.push(c);
-    //     return arr;
-    // }, []);
-
     let firstSelect = element.find("select").eq(0);
     let secondSelect = element.find("select").eq(1);
     addOptions(firstSelect, numberColumns);
@@ -312,9 +321,12 @@ export const scatterEDA = (element, df, numberColumns, categories) => {
     } else update(numberColumns[0], numberColumns[1]);
 }
 
-export const pairEDA = (element, df, numberColumns) => {
+export const pairEDA = (element, df, numberColumns, categories) => {
     let el = element.find(".chart_body");
     el.addClass("multiplot");
+
+    let select = categories ? element.find("select") : null;
+    if (select) addOptions(select, categories);
 
     let axisSize = 25;
     let plotMargin = 3;
@@ -343,10 +355,13 @@ export const pairEDA = (element, df, numberColumns) => {
         text.appendTo(gridHorizontal);
     }
 
-    function update() {
+    function update(val) {
         multiplot.empty();
         for (let c in numberColumns) {
             for (let r in numberColumns) {
+                let columnNameC = numberColumns[c];
+                let columnNameR = numberColumns[r];
+
                 let plot = $($.parseHTML("<svg class='chart_subplot'></svg>"))
                 plot.width(`calc(${plotScale}% - ${plotMargin * 2}px)`);
                 plot.height(`calc(${plotScale}% - ${plotMargin * 2}px)`);
@@ -354,7 +369,7 @@ export const pairEDA = (element, df, numberColumns) => {
                 plot.appendTo(multiplot);
 
                 if (c != r) { // 스캐터
-                    let data = scatter(df, numberColumns[r], numberColumns[c]);
+                    let data = scatter(df, columnNameR, columnNameC, val ? val : null);
                     let options = {
                         reverse: true,
                         paddingX: 3,//20,
@@ -367,7 +382,7 @@ export const pairEDA = (element, df, numberColumns) => {
 
                     new d3ext.scatter(plot, data, options);
                 } else { // 히스토그램
-                    let data = histogram(df.getColumn(numberColumns[c]));
+                    let data = histogram(df.getColumn(columnNameC));
                     let options = {
                         reverse: true,
                         paddingX: 3,//20,
@@ -376,12 +391,19 @@ export const pairEDA = (element, df, numberColumns) => {
                         yAxis: false,
                     };
             
-                    new d3ext.verticalBar(plot, data, options);
+                    new d3ext.verticalBar(plot, {...data, name: columnNameC}, options);
                 }
             }
         }
     }
-    update();
+    categories ? update(categories[0]) : update();
+
+    if (select) {
+        select.change(() => {
+            let val = select.val();
+            update(val);
+        })
+    }
 }
 
 // 카테고리 데이터
@@ -843,15 +865,9 @@ export const uniqueRankEDA = (element, rows) => {
 export const describeEDA = (element, df) => {
     let chart = null;
 
-    // 숫자형인 컬럼명만 수집
-    let numberColumns = df.columns.reduce((arr, c) => {
-        if (df.getColumnType(c) == "number") arr.push(c);
-        return arr;
-    }, []);
-
     // 데이터 정리
     let tableDF = [[], [], [] ,[], [], [], []];
-    numberColumns.forEach((c) => {
+    df.columns.forEach((c) => {
         let column = df.getColumn(c).reduce((arr, c) => {
             if (c) arr.push(c);
             return arr;
@@ -889,7 +905,7 @@ export const describeEDA = (element, df) => {
         let el = element.find(".chart_body");
         let data = {
             labels: {
-                x: numberColumns,
+                x: df.columns,
                 y: ["count", "mean", "std", "min", "max", "var", "median"]
             },
             values: tableDF,

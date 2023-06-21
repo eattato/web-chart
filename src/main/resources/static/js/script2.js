@@ -30,8 +30,13 @@ $().ready(() => {
         }
 
         const numberWindows = () => {
+            let hasCategory = summary.Categories.length > 0
+
             let category = createCategory("Number Datas");
             let holder = category.find(".chart_holder");
+
+            let describeTable = cb.getChartFrameD3("Describe Table", holder);
+            jsChart.describeEDA(describeTable, df.getColumnsDF(summary.Numbers));
 
             let summaryChart = cb.getEmptyOptionChartFrame("Describe", holder);
             jsChart.describeChart(summaryChart, summary.Describe);
@@ -41,21 +46,16 @@ $().ready(() => {
 
             if (summary.Numbers.length >= 2) {
                 let scatter = cb.getChartFrameD3("Scatter", holder);
-                let scatterSelect;
-                if (summary.Categories.length > 0) scatterSelect = $($.parseHTML('<div class="chart_selection"><select></select> and <select></select>, value <select></select></div>'));
-                else scatterSelect = $($.parseHTML('<div class="chart_selection"><select></select> and <select></select></div>'))
+                let scatterSelect = $($.parseHTML(`<div class="chart_selection"><select></select> and <select></select>${hasCategory ? ', value <select></select></div>' : ""}</div>`));
                 scatterSelect.appendTo(scatter.find(".chart_header"));
-                if (summary.Categories.length > 0) jsChart.scatterEDA(scatter, df, summary.Numbers, summary.Categories);
-                else jsChart.scatterEDA(scatter, df, summary.Numbers);
+                jsChart.scatterEDA(scatter, df, summary.Numbers, hasCategory ? summary.Categories : null);
                 
                 let pair = cb.getChartFrame("Pairplot", holder);
-                if (summary.Categories.length > 0) {
+                if (hasCategory) {
                     let pairSelect = $($.parseHTML('<div class="chart_selection">value <select></select></div>'));
                     pairSelect.appendTo(pair.find(".chart_header"));
-                    jsChart.pairEDA(pair, df, summary.Numbers, summary.Categories);
-                } else {
-                    jsChart.pairEDA(pair, df, summary.Numbers);
                 }
+                jsChart.pairEDA(pair, df, summary.Numbers, hasCategory ? summary.Categories : null);
             }
         }
 

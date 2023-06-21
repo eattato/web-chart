@@ -697,6 +697,7 @@ export class scatter extends ChartBase {
 
         // 옵션 추출
         let colors = (this.option && this.option.colors) || ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
+        let nanColor = "#AAAAAA";
         let color = (this.option && this.option.color) || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
         let radius = (this.option && this.option.radius) || 3;
 
@@ -705,6 +706,7 @@ export class scatter extends ChartBase {
         if (x[0].length == 3) {
             sorted = x.reduce((arr, c) => {
                 let value = c[2];
+                if (value == "NaN") return arr; // NaN값은 따로 처리
                 if (arr[value] == null) arr[value] = 0;
                 arr[value] += 1;
                 return arr;
@@ -723,6 +725,7 @@ export class scatter extends ChartBase {
 
         const getColor = (value) => {
             if (value.length == 3) {
+                if (value[2] == "NaN") return nanColor;
                 let colorIndex = sorted.indexOf(value[2]);
                 return colorIndex < colors.length ? colors[colorIndex] : color;
             } else {

@@ -1,35 +1,40 @@
 export class CsvDF {
-    constructor (dataframe) {
+    constructor (dataframe, convert=true) {
         if (dataframe.columns && dataframe.index && dataframe.data) {
             this.columns = dataframe.columns;
             this.rows = dataframe.data;
             this.index = dataframe.index;
         } else { // d3js로 불러온거
-            this.columns = Object.keys(dataframe[0]);
+            // this.columns = Object.keys(dataframe[0]);
+            this.columns = dataframe[0];
+            this.rows = dataframe.slice(1)
             this.index = [...new Array(this.rows.length)].map((v, i) => i);
         }
+        this.length = this.rows.length;
 
-        // 숫자형인 컬럼명만 수집
-        let numberColumns = this.columns.reduce((arr, c) => {
-            if (this.getColumnType(c) == "number") arr.push(c);
-            return arr;
-        }, []);
-        numberColumns.forEach((c) => {
-            if (this.getColumnType(c) == "number") {
-                let columnIndex = this.columns.indexOf(c);
-                let column = this.getColumn(c);
-                column = column.map((v) => v ? Number(v) : v);
-                for (let i in this.index) {
-                    this.rows[i][columnIndex] = column[i];
+        if (convert) {
+            // 숫자형인 컬럼명만 수집
+            let numberColumns = this.columns.reduce((arr, c) => {
+                if (this.getColumnType(c) == "number") arr.push(c);
+                return arr;
+            }, []);
+            numberColumns.forEach((c) => {
+                if (this.getColumnType(c) == "number") {
+                    let columnIndex = this.columns.indexOf(c);
+                    let column = this.getColumn(c);
+                    column = column.map((v) => v ? Number(v) : v);
+                    for (let i in this.index) {
+                        this.rows[i][columnIndex] = column[i];
+                    }
                 }
-            }
-        })
+            })
 
-        // null 처리
-        this.rows = this.rows.reduce((arr, row) => {
-            arr.push(Object.values(row).map((v) => typeof v == "string" && v.length == 0 ? null : v));
-            return arr;
-        }, []);
+            // null 처리
+            this.rows = this.rows.reduce((arr, row) => {
+                arr.push(Object.values(row).map((v) => typeof v == "string" && v.length == 0 ? null : v));
+                return arr;
+            }, []);
+        }
     }
 
     getColumn(column) {
@@ -47,16 +52,26 @@ export class CsvDF {
         }, []);
     }
 
+    getColumnsDF(columns) {
+        let columnIndex = columns.map((v) => this.columns.indexOf(v));
+        let result = this.rows.reduce((arr, row) => {
+            let filteredRow = row.reduce((arr, c, i) => i in columnIndex ? [...arr, c] : arr, []);
+            arr.push(filteredRow);
+            return arr;
+        }, [[...columns]]);
+        return new CsvDF(result, false);
+    }
+
     getRow(index) {
         return this.rows[index];
     }
 
     copy() {
         return new CsvDF({
-            columns: this.columns,
-            index: this.index,
-            data: this.rows
-        });
+            columns: [...this.columns],
+            index: [...this.index],
+            data: this.rows.reduce((arr, c) => [...arr, c], [])
+        }, false);
     }
 
     isNa() {
