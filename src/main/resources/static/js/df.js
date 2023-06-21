@@ -4,6 +4,10 @@ export class CsvDF {
             this.columns = dataframe.columns;
             this.rows = dataframe.data;
             this.index = dataframe.index;
+        } else if (dataframe.length == 1) { // 시리즈
+            this.columns = [0];
+            this.rows = dataframe;
+            this.index = [0];
         } else { // d3js로 불러온거
             // this.columns = Object.keys(dataframe[0]);
             this.columns = dataframe[0];
@@ -37,12 +41,9 @@ export class CsvDF {
         }
     }
 
-    getColumn(column) {
-        let columnIndex = this.columns.indexOf(column);
-        return this.rows.reduce((arr, row) => {
-            arr.push(row[columnIndex]);
-            return arr;
-        }, []);
+    getColumn(column) { // 숫자 또는 문자
+        let columnIndex = typeof column == "string" ? this.columns.indexOf(column) : column;
+        return this.rows.map((row) => row[columnIndex]);
     }
 
     getColumns(columns) {
@@ -55,7 +56,7 @@ export class CsvDF {
     getColumnsDF(columns) {
         let columnIndex = columns.map((v) => this.columns.indexOf(v));
         let result = this.rows.reduce((arr, row) => {
-            let filteredRow = row.reduce((arr, c, i) => i in columnIndex ? [...arr, c] : arr, []);
+            let filteredRow = row.filter((v, i) => i in columnIndex);
             arr.push(filteredRow);
             return arr;
         }, [[...columns]]);
@@ -99,13 +100,16 @@ export class CsvDF {
         return result;
     }
 
-    getColumnValueCount(column) {
+    getColumnValueCount(column, getNull=false) {
         column = this.getColumn(column);
         return column.reduce((arr, c) => {
-            if (c != null) {
-                if (arr[c] == null) arr[c] = 0;
-                arr[c] += 1;
+            if (c == null) {
+                if (getNull) c = "NaN";
+                else return;
             }
+
+            if (arr[c] == null) arr[c] = 0;
+            arr[c] += 1;
             return arr;
         }, {});
     }

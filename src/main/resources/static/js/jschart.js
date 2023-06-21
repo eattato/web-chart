@@ -5,6 +5,7 @@ import * as d3ext from "./d3ext.js";
 import * as eda from "/js/eda.js";
 import { ImageData, toHex } from "/js/image.js";
 import { CsvDF } from "/js/df.js";
+import * as util from "/js/util.js";
 
 // 딕셔너리 값으로 정렬
 const dictSort = (dict) => {
@@ -57,58 +58,85 @@ const getPointRanges = (list, splitCount) => {
 const scatter = (df, val1, val2, val3) => {
     // 결측값 1이나 2에 하나라도 있으면 안씀
     let values = [];
+    let desc = val3 ? [] : null;
+    let colors = val3 ? [] : null;
+
     let x = df.getColumn(val1);
     let y = df.getColumn(val2);
     let v = val3 ? df.getColumn(val3) : null;
 
+    let colorMap = null;
+    let dotColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
+    if (val3) {
+        colorMap = df.getColumnValueCount(val3);
+        colorMap = Object.keys(util.sortByValue(colorMap));
+    }
+
     for (let i in x) {
         // console.log(`${column1[i]} && ${column2[i]}`);
-        if (!val3) {
-            if (x[i] && y[i]) values.push([Number(x[i]), Number(y[i])]);
-        } else {
-            if (x[i] && y[i]) values.push([Number(x[i]), Number(y[i]), v[i] != null ? `${v[i]}` : "NaN"]);
+        if (x[i] && y[i]) values.push([Number(x[i]), Number(y[i])]);
+        if (val3) {
+            let colorIndex = colorMap.indexOf(v[i]);
+            desc.push(`${val3}: ${v[i] != null ? `${v[i]}` : "NaN"}`);
+            colors.push(v[i] != null && colorIndex < dotColors.length ? dotColors[colorIndex] : null)
         }
     }
 
-    return {
-        labels: {
-            x: val1, y: val2, value: val3 ? val3 : null
+    return [
+        {
+            labels: {
+                x: val1, y: val2
+            },
+            values: values,
+            desc: desc
         },
-        values: values
-    };
+        {
+            colors: colors,
+            color: val3 ? "#AAAAAA" : null
+        }
+    ];
 }
 
-const histogram = (column, val) => {
+const histogram = (df, num, val) => {
     let colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
+    let defaultColor = ""
+    let nanColor = "#AAAAAA";
 
-    let useCount;
-    if (val == null) {
-        useCount = column.reduce((arr, c) => {
-            if (arr[c] == null) arr[c] = 0;
-            arr[c] += 1;
-            return arr;
-        }, {});
-    } else {
-        
+    let valueCount = df.getColumnValueCount(num);
+    // let valueColors = null;
+    // if (val) {
+    //     let colorMap = Object.keys(util.sortByValue(valueCount));
+    //     let vals = df.getColumn(val);
 
-        useCount = column.reduce((arr, c, i) => {
-            let v = val[i];
-            if (arr[c] == null) arr[c] = {};
-            if (arr[c][v] == null) arr[c][v] = 0;
-            arr[c][v] += 1;
-        
-        }, {});
-    }
+    //     // {1.2: {a: 12, b: 21}, 3.5: {a: 23, b: 2}, ...}
+    //     valueColors = df.getColumn(num).reduce((arr, c, i) => {
+    //         let v = vals[i];
+    //         if (v == null) v = "NaN";
 
-    let labels = Object.keys(useCount).sort();
-    let values = [];
-    labels.forEach((c) => {
-        values.push(useCount[c]);
-    })
+    //         if (arr[c] == null) arr[c] = {};
+    //         if (arr[c][v] == null) arr[c][v] = 0;
+    //         arr[c][v] += 1;
+    //         return arr;
+    //     }, {})
 
+    //     valueColors = Object.keys(valueColors).map((key) => {
+    //         let valueCount = valueColors[key];
+    //         let color = valueCount.reduce((arr, c) => {
+    //             let color = c == "NaN" ? nanColor : colorMap.indexOf(c) < colors.length ? colors[colorMap.indexOf(c)] : defaultColor;
+    //             color = util.hexColorToDec(color)
+    //             arr = arr.map((v, i) => v + color[i]); // 0, 1, 2 각각 채널에 합산
+    //             return arr;
+    //         }, [0, 0, 0]); // RGB 합계
+    //         color = color.map((v) => v / Object.keys(valueColors).length); // RGB 평균
+    //         color = util.decColorToHex(color);
+    //     });
+    // }
+
+    valueCount = util.sortByKey(valueCount);
     return {
-        labels: labels,
-        values: values
+        labels: Object.keys(valueCount),
+        values: Object.values(valueCount),
+        // colors: valueColors
     };
 }
 
@@ -293,10 +321,8 @@ export const scatterEDA = (element, df, numberColumns, categories) => {
         }
 
         let el = element.find(".chart_body");
-        let data = scatter(df, val1, val2, val3);
-        let options = {
-            reverse: true
-        };
+        let [data, options] = scatter(df, val1, val2, val3);
+        options = {...options, reverse: true};
 
         chart = new d3ext.scatter(el, data, options);
     }
@@ -369,8 +395,9 @@ export const pairEDA = (element, df, numberColumns, categories) => {
                 plot.appendTo(multiplot);
 
                 if (c != r) { // 스캐터
-                    let data = scatter(df, columnNameR, columnNameC, val ? val : null);
-                    let options = {
+                    let [data, options] = scatter(df, columnNameR, columnNameC, val ? val : null);
+                    options = {
+                        ...options,
                         reverse: true,
                         paddingX: 3,//20,
                         paddingY: 3,//20,
@@ -382,7 +409,7 @@ export const pairEDA = (element, df, numberColumns, categories) => {
 
                     new d3ext.scatter(plot, data, options);
                 } else { // 히스토그램
-                    let data = histogram(df.getColumn(columnNameC));
+                    let data = histogram(df, columnNameC, val);
                     let options = {
                         reverse: true,
                         paddingX: 3,//20,
@@ -868,10 +895,7 @@ export const describeEDA = (element, df) => {
     // 데이터 정리
     let tableDF = [[], [], [] ,[], [], [], []];
     df.columns.forEach((c) => {
-        let column = df.getColumn(c).reduce((arr, c) => {
-            if (c) arr.push(c);
-            return arr;
-        }, []);
+        let column = df.getColumn(c).filter((v) => v != null)
         let sorted = [...column].sort();
 
         let sortedMin = Math.floor(sorted.length / 2);

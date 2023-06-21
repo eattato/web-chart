@@ -1,88 +1,5 @@
-const clamp = (min, val, max) => {
-    if (val < min) {
-        return min;
-    } else if (max && val > max) {
-        return max;
-    } else {
-        return val;
-    }
-}
-
-const hex = (x) => {
-    let result = 0;
-    let hexDict = {
-        "0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "A": 10, "B": 11, "C": 12, "D": 13, "E": 14, "F": 15, "a": 10, "b": 11, "c": 12, "d": 13, "e": 14, "f": 15
-    }
-
-    for (let i = 0; i < x.length; i++) {
-        let val = x.charAt(i);
-        val = hexDict[val];
-        val *= Math.pow(16, x.length - i - 1);
-        result += val;
-    }
-    return result;
-}
-
-const toHex = (x, formatLength) => {
-    let resMult = "";
-    if (x < 0) { resMult = "-" }
-
-    let factor = 0;
-    while (Math.pow(16, factor) <= x) {
-        factor++;
-    }
-
-    let hexDict = {
-        0: "0", 1: "1", 2: "2", 3: "3", 4: "4", 5: "5", 6: "6", 7: "7", 8: "8", 9: "9", 10: "A", 11: "B", 12: "C", 13: "D", 14: "E", 15: "F"
-    }
-
-    let result = "";
-    for (let i = factor - 1; i >= 0; i--) {
-        let mult = Math.pow(16, i);
-        let v = Math.floor(x / mult);
-        x -= v * mult;
-        result += hexDict[v];
-    }
-    if (factor == 0) { // 0이 들어와서 결과가 안 나온 경우
-        result = "0";
-    }
-
-    if (formatLength) {
-        let fillCount = formatLength - result.length;
-        for (let i = 1; i <= fillCount; i++) {
-            result = "0" + result;
-        }
-    }
-    return resMult + result;
-}
-
-const lerp = (start, end, alpha) => {
-    // if (start > end) {
-    //     let temp = start;
-    //     start = end
-    //     end = temp;
-    // }
-    return end - (end - start) * alpha;
-}
-
-/**
- * 시작, 끝, 변환값(alpha)를 통해 색의 중간값을 얻음
- * @param {string} start 시작이 되는 16진수 색
- * @param {string} end 끝이 되는 16진수 색
- * @param {number} alpha 알파값
- * @returns 중간색
- */
-const colorLerp = (start, end, alpha) => {
-    let startRGB = [hex(start.substring(1, 3)), hex(start.substring(3, 5)), hex(start.substring(5, 7))];
-    let endRGB = [hex(end.substring(1, 3)), hex(end.substring(3, 5)), hex(end.substring(5, 7))];
-
-    let result = "#";
-    for (let i in startRGB) {
-        let lerped = Math.round(lerp(startRGB[i], endRGB[i], 1 - alpha));
-        result += toHex(lerped, 2);
-    }
-    return result;
-}
+import { CsvDF } from "/js/df.js";
+import * as util from "/js/util.js";
 
 // Additional D3 Prototype Functions
 /**
@@ -363,7 +280,7 @@ export class horizontalBar extends ChartBase {
                     let label = stackLabels[j];
                     let v = stackValues[j];
                     let alpha = j / (stackLabels.length - 1);
-                    let labelColor = colorLerp(stackStartColor, stackEndColor, alpha);
+                    let labelColor = util.colorLerp(stackStartColor, stackEndColor, alpha);
                     // console.log(`${y[i]} and ${label} - ${v}, color: ${labelColor}`);
 
                     // 추가 스택 데이터 표시
@@ -521,7 +438,7 @@ export class heatmap extends ChartBase {
                 let yx = y.x[r]; // x축 라벨
                 let yy = y.y[c]; // y축 라벨
                 let alpha = (v - vMin) / (vMax - vMin) // (v / vMax) 인데 모두 vMin을 뺀 상태
-                let color = colorLerp(startColor, endColor, alpha);
+                let color = util.colorLerp(startColor, endColor, alpha);
                 // console.log(`v: ${v}, x: ${yx}, y: ${yy}, alpha: ${alpha}`);
                 
                 let map = d3Element.append("rect")
@@ -696,42 +613,10 @@ export class scatter extends ChartBase {
         this.createAxis(d3Element, height, xScale, yScale);
 
         // 옵션 추출
-        let colors = (this.option && this.option.colors) || ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
-        let nanColor = "#AAAAAA";
+        let desc = this.data.desc;
+        let colors = this.option ? this.option.colors : null;
         let color = (this.option && this.option.color) || "#47E1A8"; // option.color가 null이면 기본 컬러 사용
         let radius = (this.option && this.option.radius) || 3;
-
-        // 가장 많이 쓴 것부터 색상 할당
-        let sorted = [];
-        if (x[0].length == 3) {
-            sorted = x.reduce((arr, c) => {
-                let value = c[2];
-                if (value == "NaN") return arr; // NaN값은 따로 처리
-                if (arr[value] == null) arr[value] = 0;
-                arr[value] += 1;
-                return arr;
-            }, {});
-
-            sorted = Object.keys(sorted).reduce((arr, c) => {
-                arr.push([c, sorted[c]]);
-                return arr;
-            }, []).sort((a, b) => a[1] - b[1]);
-
-            sorted = sorted.reduce((arr, c) => {
-                arr.push(c[0]);
-                return arr;
-            }, []);
-        }
-
-        const getColor = (value) => {
-            if (value.length == 3) {
-                if (value[2] == "NaN") return nanColor;
-                let colorIndex = sorted.indexOf(value[2]);
-                return colorIndex < colors.length ? colors[colorIndex] : color;
-            } else {
-                return color;
-            }
-        }
 
         // 데이터 표시
         let dots = d3Element.selectAll("circle")
@@ -743,11 +628,11 @@ export class scatter extends ChartBase {
             .attr("cy", v => yScale(v))
             .attr("r", radius)
             .data(x)
-            .attr("fill", (v) => getColor(v))
-            .text((v) => JSON.stringify({
+            .attr("fill", (v, i) => colors && colors[i] ? colors[i] : color)
+            .text((v, i) => JSON.stringify({
                 label: `${y.x}: ${v[0]}, ${y.y}: ${v[1]}`,
-                value: v.length == 3 ? `${y.value}: ${v[2]}` : "",
-                color: getColor(v)
+                value: desc ? desc[i] : "",
+                color: colors && colors[i] ? colors[i] : color
             }))
             .bindHoverTooltip();
     }
